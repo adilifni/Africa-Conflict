@@ -21,7 +21,7 @@ document.getElementById('google-login-trigger').addEventListener('click', () => 
     auth.signInWithRedirect(provider);
 });
 
-// [جديد] 4. مراقبة حالة اللاعب فور عودته من صفحة جوجل بنجاح
+// 3. مراقبة حالة اللاعب فور عودته من صفحة جوجل بنجاح (Redirect)
 auth.getRedirectResult()
     .then((result) => {
         if (result.user) {
@@ -34,7 +34,7 @@ auth.getRedirectResult()
         console.error("خطأ أثناء العودة من جوجل:", error.message);
     });
 
-// دالة فحص ما إذا كان اللاعب مسجلاً بالفعل (تشتغل تلقائياً في الخلفية)
+// 4. دالة فحص ما إذا كان اللاعب مسجلاً بالفعل (تشتغل تلقائياً في الخلفية)
 auth.onAuthStateChanged((user) => {
     if (user) {
         // إذا كان اللاعب مسجلاً دخوله بالفعل، لا داعي ليرى صفحة الدخول مرة أخرى
@@ -42,7 +42,7 @@ auth.onAuthStateChanged((user) => {
     }
 });
 
-// 3. دالة فحص وإنشاء حساب اللاعب والثروات الأساسية (كما هي بدون تغيير)
+// 5. دالة فحص وإنشاء حساب اللاعب والثروات الأساسية
 function checkAndCreateUserAccount(user) {
     const userRef = db.collection('players').doc(user.uid);
 
@@ -74,7 +74,9 @@ function checkAndCreateUserAccount(user) {
     });
 }
 
-// 4. التنبيه بالنجاح
+// 6. التنبيه بالنجاح والتوجيه الفوري إلى الصفحة الرئيسية الفارغة
 function redirectToMainGame(userName) {
-    alert("مرحباً بك يا " + userName + " في Africa Conflict! تم الاتصال بـ Firebase بنجاح.");
+    console.log("توجيه اللاعب " + userName + " إلى الصفحة الرئيسية...");
+    // التوجيه إلى صفحة main.html
+    window.location.href = "main.html";
 }
