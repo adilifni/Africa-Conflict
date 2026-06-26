@@ -1,4 +1,4 @@
-// 1. إعدادات ربط Firebase الحقيقية الخاصة بك (صحيحة تماماً)
+// 1. إعدادات ربط Firebase الحقيقية الخاصة بك
 const firebaseConfig = {
     apiKey: "AIzaSyCdHlC-kvNWRrYO8-ujA4CjkJsVdFLDTf8",
     authDomain: "africagameauth.firebaseapp.com",
@@ -14,35 +14,30 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// 2. تفعيل زر تسجيل الدخول باستخدام الـ Redirect بدلاً من Popup
+// 2. تسجيل الدخول باستخدام Popup (أكثر استقراراً على المتصفحات الحقيقية)
 document.getElementById('google-login-trigger').addEventListener('click', () => {
     const provider = new firebase.auth.GoogleAuthProvider();
-    // استخدام Redirect لضمان العمل على الهواتف والمعاينة داخل Acode بدون مشاكل أمنية
-    auth.signInWithRedirect(provider);
+    
+    auth.signInWithPopup(provider)
+        .then((result) => {
+            alert("نجح تسجيل الدخول عبر الـ Popup! جاري التحقق من الحساب...");
+            checkAndCreateUserAccount(result.user);
+        })
+        .catch((error) => {
+            alert("فشل الـ Popup، جاري تجربة الـ Redirect كبديل: " + error.message);
+            auth.signInWithRedirect(provider);
+        });
 });
 
-// 3. مراقبة حالة اللاعب فور عودته من صفحة جوجل بنجاح (Redirect)
-auth.getRedirectResult()
-    .then((result) => {
-        if (result.user) {
-            const user = result.user;
-            console.log("تم تسجيل الدخول بنجاح بعد إعادة التوجيه:", user.displayName);
-            checkAndCreateUserAccount(user);
-        }
-    })
-    .catch((error) => {
-        console.error("خطأ أثناء العودة من جوجل:", error.message);
-    });
-
-// 4. دالة فحص ما إذا كان اللاعب مسجلاً بالفعل (تشتغل تلقائياً في الخلفية)
+// 3. مراقبة حالة اللاعب إذا كان مسجلاً دخولاً مسبقاً في المتصفح
 auth.onAuthStateChanged((user) => {
     if (user) {
-        // إذا كان اللاعب مسجلاً دخوله بالفعل، لا داعي ليرى صفحة الدخول مرة أخرى
+        alert("تم كشف مستخدم مسجل مسبقاً: " + user.displayName);
         checkAndCreateUserAccount(user);
     }
 });
 
-// 5. دالة فحص وإنشاء حساب اللاعب والثروات الأساسية
+// 4. دافة فحص الحساب في قاعدة البيانات
 function checkAndCreateUserAccount(user) {
     const userRef = db.collection('players').doc(user.uid);
 
@@ -62,26 +57,19 @@ function checkAndCreateUserAccount(user) {
                 gold: 5,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             }).then(() => {
-                console.log("تم إنشاء حساب جديد بنجاح!");
                 redirectToMainGame(user.displayName);
             });
         } else {
-            console.log("لاعب قديم، أهلاً بعودتك!");
             redirectToMainGame(user.displayName);
         }
     }).catch((err) => {
-        console.error("خطأ في الاتصال بقاعدة البيانات (Firestore):", err.message);
+        alert("خطأ في الاتصال بقاعدة البيانات: " + err.message);
     });
 }
 
-// التنبيه بالنجاح والتوجيه الفوري إلى الصفحة الرئيسية الفارغة
+// 5. التوجيه الفوري القاطع باستخدام رابط مطلق
 function redirectToMainGame(userName) {
-    console.log("توجيه اللاعب " + userName + " إلى الصفحة الرئيسية...");
-    
-    // استخدام المسار الديناميكي الآمن لبيئات الاستضافة مثل Netlify
-    const currentOrigin = window.location.origin;
-    const currentPath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'));
-    
-    window.location.href = currentOrigin + currentPath + "/main.html";
+    alert("مرحباً بك يا " + userName + "! جاري توجيهك الآن قطيعاً إلى القائمة الرئيسية.");
+    // استخدام توجيه صريح ومباشر يناسب Netlify
+    window.location.replace("main.html");
 }
-
