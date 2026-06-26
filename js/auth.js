@@ -67,9 +67,12 @@ function checkAndCreateUserAccount(user) {
     });
 }
 
-// 5. التوجيه الفوري القاطع باستخدام رابط مطلق
+// 5. التوجيه الفوري القاطع باستخدام رابط مطلق يناسب السيرفر
 function redirectToMainGame(userName) {
-    alert("مرحباً بك يا " + userName + "! جاري توجيهك الآن قطيعاً إلى القائمة الرئيسية.");
-    // استخدام توجيه صريح ومباشر يناسب Netlify
-    window.location.replace("main.html");
+    // تحديد المسار الكامل ديناميكياً لضمان الانتقال على Netlify
+    const targetUrl = window.location.origin + window.location.pathname.replace("index.html", "") + "main.html";
+    console.log("جاري التوجيه إلى: " + targetUrl);
+    
+    // التوجيه القاطع
+    window.location.assign(targetUrl);
 }
