@@ -74,9 +74,14 @@ function checkAndCreateUserAccount(user) {
     });
 }
 
-// 6. التنبيه بالنجاح والتوجيه الفوري إلى الصفحة الرئيسية الفارغة
+// التنبيه بالنجاح والتوجيه الفوري إلى الصفحة الرئيسية الفارغة
 function redirectToMainGame(userName) {
     console.log("توجيه اللاعب " + userName + " إلى الصفحة الرئيسية...");
-    // التوجيه إلى صفحة main.html
-    window.location.href = "main.html";
+    
+    // استخدام المسار الديناميكي الآمن لبيئات الاستضافة مثل Netlify
+    const currentOrigin = window.location.origin;
+    const currentPath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'));
+    
+    window.location.href = currentOrigin + currentPath + "/main.html";
 }
+
