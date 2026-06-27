@@ -14,35 +14,34 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// 2. تسجيل الدخول باستخدام Popup (أكثر استقراراً على المتصفحات الحقيقية)
+// 2. تسجيل الدخول باستخدام Popup عند الضغط على الزر
 document.getElementById('google-login-trigger').addEventListener('click', () => {
     const provider = new firebase.auth.GoogleAuthProvider();
     
     auth.signInWithPopup(provider)
         .then((result) => {
-            alert("نجح تسجيل الدخول عبر الـ Popup! جاري التحقق من الحساب...");
             checkAndCreateUserAccount(result.user);
         })
         .catch((error) => {
-            alert("فشل الـ Popup، جاري تجربة الـ Redirect كبديل: " + error.message);
+            console.error("خطأ أثناء تسجيل الدخول بالنافذة:", error.message);
+            // حل بديل احتياطي في حال تم حظر النافذة المنبثقة
             auth.signInWithRedirect(provider);
         });
 });
 
-// 3. مراقبة حالة اللاعب إذا كان مسجلاً دخولاً مسبقاً في المتصفح
+// 3. مراقبة حالة اللاعب - التوجيه الفوري المباشر والصامت للمسجلين سابقاً
 auth.onAuthStateChanged((user) => {
     if (user) {
-        alert("تم كشف مستخدم مسجل مسبقاً: " + user.displayName);
+        // يمر مباشرة ودون أي تنبيهات إلى قاعدة البيانات ثم الصفحة الرئيسية
         checkAndCreateUserAccount(user);
     }
 });
 
-// 4. دافة فحص الحساب في قاعدة البيانات
+// 4. دالة فحص الحساب في قاعدة البيانات
 function checkAndCreateUserAccount(user) {
     const userRef = db.collection('players').doc(user.uid);
 
     userRef.get({ source: 'server' }).then((doc) => {
-        // تم إزالة الأقواس من هنا لتصبح خاصية صحيحة
         if (!doc.exists) { 
             userRef.set({
                 uid: user.uid,
@@ -58,22 +57,18 @@ function checkAndCreateUserAccount(user) {
                 gold: 5,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             }).then(() => {
-                redirectToMainGame(user.displayName);
+                redirectToMainGame();
             });
         } else {
-            redirectToMainGame(user.displayName);
+            redirectToMainGame();
         }
     }).catch((err) => {
-        alert("خطأ في Firestore: " + err.message);
+        console.error("خطأ في Firestore:", err.message);
     });
 }
 
-// 5. التوجيه الفوري القاطع باستخدام رابط مطلق يناسب السيرفر
-function redirectToMainGame(userName) {
-    // تحديد المسار الكامل ديناميكياً لضمان الانتقال على Netlify
+// 5. التوجيه الصامت والمباشر إلى الصفحة الرئيسية للعبة
+function redirectToMainGame() {
     const targetUrl = window.location.origin + window.location.pathname.replace("index.html", "") + "main.html";
-    console.log("جاري التوجيه إلى: " + targetUrl);
-    
-    // التوجيه القاطع
     window.location.assign(targetUrl);
 }
