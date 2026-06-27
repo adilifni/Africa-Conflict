@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>صراع أفريقيا - قيادة الدولة</title>
+    <title>Africa Conflict</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
@@ -14,10 +14,11 @@
             margin: 0;
             padding: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            background-color: #0b0c10;
+            background-color: #0d1117;
             color: #ffffff;
             display: flex;
             flex-direction: column;
@@ -25,161 +26,292 @@
             overflow: hidden;
         }
 
-        /* 👑 الجزء العلوي الثابت - شريط مؤشرات اللعبة العام */
+        /* 👑 الجزء العلوي الثابت */
         .top-bar {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
-            height: 60px;
-            background-color: #1f2833;
-            border-bottom: 2px solid #c5a059;
+            height: 50px;
+            background-color: #1a2332;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 20px;
+            padding: 0 15px;
             z-index: 1000;
+            border-bottom: 1px solid #1f2937;
         }
 
         .game-title {
-            font-size: 16px;
+            font-size: 18px;
             font-weight: bold;
-            color: #c5a059;
+            color: #bdc3c7;
         }
 
-        /* 🌍 محتوى اللعبة المتغير في المنتصف - معلومات الدولة ومواردها */
+        /* 🌍 محتوى اللعبة المتغير في المنتصف (قابل للتمرير) */
         .game-content {
-            margin-top: 60px;
-            margin-bottom: 70px;
+            margin-top: 50px;
+            margin-bottom: 60px;
             flex: 1;
             overflow-y: auto;
-            padding: 20px;
+            padding: 12px;
             display: flex;
             flex-direction: column;
-            align-items: center;
+            gap: 12px;
         }
 
-        .country-card {
-            background-color: #1f2833;
-            border: 1px solid #c5a059;
-            border-radius: 8px;
-            width: 100%;
-            max-width: 500px;
-            padding: 20px;
-            text-align: center;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
-        }
-
-        .country-name {
-            font-size: 24px;
+        /* رسالة الانتظار والتحميل المبدئية */
+        .loading-text {
             color: #66fcf1;
-            margin-bottom: 15px;
-            font-weight: bold;
+            font-size: 16px;
+            text-align: center;
+            margin-top: 50px;
         }
 
-        .resources-grid {
+        /* 📦 ستايل البلوكات المشترك */
+        .block-card {
+            background-color: #1a2332;
+            border: 1.5px solid #c5a059;
+            border-radius: 8px;
+            padding: 12px;
+            position: relative;
+        }
+
+        /* 🔄 البلوك الأول: السلايدر التفاعلي */
+        .slider-container {
+            overflow: hidden;
+            position: relative;
+            width: 100%;
+        }
+
+        .slider-wrapper {
+            display: flex;
+            transition: transform 0.4s ease-in-out;
+            width: 200%; /* واجهتين */
+        }
+
+        .slide-page {
+            width: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* تنسيق الخريطة الدائرية أو العلم داخل البلوك */
+        .side-img-box {
+            width: 25%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .side-img-box img {
+            max-width: 100%;
+            max-height: 55px;
+            object-fit: contain;
+            border-radius: 4px;
+        }
+
+        /* شبكة الإحصائيات والأرقام */
+        .stats-grid {
+            width: 75%;
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-top: 20px;
+            grid-template-columns: repeat(4, 1fr);
+            text-align: center;
+            gap: 5px;
         }
 
-        .resource-box {
-            background-color: #0b0c10;
-            border: 1px solid #45f3ff33;
-            border-radius: 6px;
-            padding: 10px;
+        .stat-item {
             display: flex;
             flex-direction: column;
-            align-items: center;
+            justify-content: center;
+            cursor: pointer;
         }
 
-        .resource-label {
-            font-size: 12px;
-            color: #888;
-            margin-bottom: 5px;
+        .stat-label {
+            font-size: 13px;
+            color: #8b949e;
+            margin-bottom: 6px;
         }
 
-        .resource-value {
+        .stat-value {
             font-size: 16px;
             font-weight: bold;
             color: #ffffff;
         }
 
-        /* 📱 الجزء السفلي الثابت - أزرار القوائم للتنقل */
+        /* نقاط السلايدر التفاعلية */
+        .slider-dots {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            background-color: #484f58;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .dot.active {
+            background-color: #ffffff;
+        }
+
+        /* 🔘 زر البرلمان الأزرق المصلح والمعدل */
+        .parliament-btn {
+            width: 100%;
+            background-color: #26cbd4;
+            border: 2px solid #0d1117;
+            outline: none;
+            color: #000000;
+            font-size: 20px;
+            font-weight: bold;
+            padding: 12px;
+            border-radius: 25px;
+            cursor: pointer;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            transition: transform 0.1s;
+        }
+
+        .parliament-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* 🕳️ البلوك الفارغ للشات والمقالات لاحقاً */
+        .empty-placeholder {
+            min-height: 150px;
+        }
+
+        /* 📱 الجزء السفلي الثابت */
         .bottom-nav {
             position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
-            height: 70px;
-            background-color: #1f2833;
-            border-top: 2px solid #c5a059;
+            height: 60px;
+            background-color: #1a2332;
+            border-top: 1.5px solid #c5a059;
             display: flex;
             justify-content: space-around;
             align-items: center;
             z-index: 1000;
         }
 
-        .nav-btn {
+        .nav-link {
             background: none;
             border: none;
-            color: #c5a25d;
-            font-size: 14px;
-            cursor: pointer;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .nav-btn.active {
-            color: #66fcf1;
-        }
-
-        .loading-text {
-            color: #66fcf1;
+            color: #bdc3c7;
             font-size: 16px;
-            margin-top: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            flex: 1;
+            text-align: center;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-link.active {
+            color: #c5a059;
         }
     </style>
 </head>
 <body>
 
     <div class="top-bar">
-        <div class="game-title">صراع أفريقيا 🌍</div>
+        <div class="game-title">Africa Conflict 🌍</div>
         <div id="player-status" style="font-size: 12px; color: #66fcf1;">جاري التحقق...</div>
     </div>
 
-    <div class="game-content" id="main-content-area">
-        <div class="loading-text" id="loading-msg">جاري الاتصال بغرفة العمليات واستدعاء بيانات الدولة...</div>
+    <div class="game-content" id="scrollable-area">
         
-        <div class="country-card" id="country-data-card" style="display: none;">
-            <div class="country-name" id="country-title">اسم الدولة</div>
-            <p style="color: #aaa; font-size: 14px;">مخزون وموارد الدولة الحالية</p>
+        <div class="loading-text" id="loading-msg">جاري الاتصال بغرفة العمليات واستدعاء بيانات الدولة...</div>
+
+        <div id="main-game-blocks" style="display: none; flex-direction: column; gap: 12px;">
             
-            <div class="resources-grid">
-                <div class="resource-box">
-                    <span class="resource-label">الذهب</span>
-                    <span class="resource-value" id="country-gold">0</span>
+            <div class="block-card slider-container" id="sliderCard">
+                <div class="slider-wrapper" id="sliderWrapper">
+                    
+                    <div class="slide-page">
+                        <div class="side-img-box">
+                            <img src="https://flagcdn.com/w320/za.png" id="continent-icon" alt="Africa" style="filter: grayscale(1) brightness(2);">
+                        </div>
+                        <div class="stats-grid">
+                            <div class="stat-item" onclick="alert('الانتقال لصفحة الأحزاب للقارة')">
+                                <span class="stat-label">أحزاب</span>
+                                <span class="stat-value" id="cont-parties">0</span>
+                            </div>
+                            <div class="stat-item" onclick="alert('الانتقال لصفحة الدول')">
+                                <span class="stat-label">دول</span>
+                                <span class="stat-value" id="cont-countries">50</span>
+                            </div>
+                            <div class="stat-item" onclick="alert('الانتقال لصفحة المتصلين بالقارة')">
+                                <span class="stat-label">متصل</span>
+                                <span class="stat-value" id="cont-online">0</span>
+                            </div>
+                            <div class="stat-item" onclick="alert('الانتقال لإحصائيات السكان')">
+                                <span class="stat-label">سكان</span>
+                                <span class="stat-value" id="cont-pop">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="slide-page">
+                        <div class="side-img-box">
+                            <img id="country-flag" src="https://flagcdn.com/w320/ma.png" alt="علم الدولة">
+                        </div>
+                        <div class="stats-grid">
+                            <div class="stat-item" onclick="alert('الانتقال لمصانع الدولة')">
+                                <span class="stat-label">مصانع</span>
+                                <span class="stat-value" id="count-factories">0</span>
+                            </div>
+                            <div class="stat-item" onclick="alert('الانتقال لأحزاب الدولة')">
+                                <span class="stat-label">أحزاب</span>
+                                <span class="stat-value" id="count-parties">0</span>
+                            </div>
+                            <div class="stat-item" onclick="alert('الانتقال للمتصلين في الدولة')">
+                                <span class="stat-label">متصل</span>
+                                <span class="stat-value" id="count-online">0</span>
+                            </div>
+                            <div class="stat-item" onclick="alert('الانتقال لمعلومات الدولة')">
+                                <span class="stat-label">الدولة</span>
+                                <span class="stat-value" id="count-name">...</span>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
-                <div class="resource-box">
-                    <span class="resource-label">النفط</span>
-                    <span class="resource-value" id="country-oil">0</span>
-                </div>
-                <div class="resource-box">
-                    <span class="resource-label">القمح</span>
-                    <span class="resource-value" id="country-wheat">0</span>
+
+                <div class="slider-dots">
+                    <div class="dot active" id="dot1" onclick="switchSlide(0)"></div>
+                    <div class="dot" id="dot2" onclick="switchSlide(1)"></div>
                 </div>
             </div>
+
+            <button class="parliament-btn" onclick="alert('جاري الانتقال إلى قبة البرلمان ومجلس النواب...')">
+                برلمان الدولة
+            </button>
+
+            <div class="block-card empty-placeholder">
+                <p style="color: #57606a; text-align: center; padding-top: 60px; font-size: 14px;">المقالات وغرف الدردشة (قريباً)...</p>
+            </div>
+            
         </div>
+
     </div>
 
     <div class="bottom-nav">
-        <button class="nav-btn active">الدولة</button>
-        <button class="nav-btn">الجيش</button>
-        <button class="nav-btn">المصانع</button>
-        <button class="nav-btn">السوق</button>
-        <button class="nav-btn">التحالفات</button>
+        <a href="#" class="nav-link" onclick="alert('صفحة الحساب قريباً')">الحساب</a>
+        <a href="#" class="nav-link" onclick="alert('صفحة الحروب قريباً')">الحروب</a>
+        <a href="#" class="nav-link" onclick="alert('صفحة العمل قريباً')">العمل</a>
+        <a href="#" class="nav-link active">الرئيسية</a>
     </div>
 
     <script src="js/main_game.js"></script>
