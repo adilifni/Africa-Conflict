@@ -17,36 +17,7 @@ const db = firebase.firestore();
 let currentUserUid = null;
 let currentUserCountry = "morocco"; 
 
-// إدارة حركات السلايدر يميناً ويساراً
-const wrapper = document.getElementById('sliderWrapper');
-const dot1 = document.getElementById('dot1');
-const dot2 = document.getElementById('dot2');
-
-window.switchSlide = function(index) {
-    if (index === 0) {
-        if(wrapper) wrapper.style.transform = 'translateX(0%)';
-        if(dot1) dot1.classList.add('active');
-        if(dot2) dot2.classList.remove('active');
-    } else {
-        if(wrapper) wrapper.style.transform = 'translateX(50%)'; // إزاحة لليمين في اللغات العربية (RTL)
-        if(dot2) dot2.classList.add('active');
-        if(dot1) dot1.classList.remove('active');
-    }
-}
-
-// السحب عبر اللمس للهاتف
-let startX = 0;
-const sliderCard = document.getElementById('sliderCard');
-if(sliderCard) {
-    sliderCard.addEventListener('touchstart', e => { startX = e.touches[0].clientX; });
-    sliderCard.addEventListener('touchend', e => {
-        let diffX = e.changedTouches[0].clientX - startX;
-        if (diffX > 50) switchSlide(0); 
-        if (diffX < -50) switchSlide(1); 
-    });
-}
-
-// مراقبة حالة اتصال الحساب
+// مراقبة حالة اتصال اللاعب المباشر
 auth.onAuthStateChanged((user) => {
     if (user) {
         currentUserUid = user.uid;
@@ -68,13 +39,13 @@ function getPlayerDataAndActivateOnline(uid) {
         }
         startLiveUpdates();
     }).catch((err) => {
-        console.log("خطأ غير مؤثر:", err);
-        startLiveUpdates(); // تشغيل على أي حال لعدم تعليق الشاشة
+        console.log("استدعاء البيانات الاحتياطية:", err);
+        startLiveUpdates(); 
     });
 }
 
 function startLiveUpdates() {
-    // إخفاء رسالة الانتظار وإظهار البلوكات فوراً لتفادي التعليق البصري
+    // إخفاء رسالة الانتظار وإظهار بلوكات اللعبة كاملة تحت بعضها
     const loadingMsg = document.getElementById('loading-msg');
     const mainBlocks = document.getElementById('main-game-blocks');
     if(loadingMsg) loadingMsg.style.display = 'none';
@@ -85,6 +56,7 @@ function startLiveUpdates() {
     activateOnlineStatus(currentUserCountry);
 }
 
+// قراءة حية وإسقاط فوري للبيانات في بلوك القارة العلوي
 function listenToContinentStats() {
     db.collection('game_stats').doc('africa').onSnapshot((doc) => {
         if (doc.exists) {
@@ -94,9 +66,10 @@ function listenToContinentStats() {
             document.getElementById('cont-online').innerText = data.total_online || 0;
             document.getElementById('cont-pop').innerText = data.total_population || 0;
         }
-    }, err => console.log("مستند القارة بانتظار تعبئة حقوله بالكامل:", err));
+    }, err => console.log("في انتظار تعبئة مستند القارة بالكامل:", err));
 }
 
+// قراءة حية وإسقاط فوري للبيانات في بلوك الدولة السفلي
 function listenToCountryStats(countryId) {
     db.collection('countries').doc(countryId).onSnapshot((doc) => {
         if (doc.exists) {
@@ -109,9 +82,10 @@ function listenToCountryStats(countryId) {
                 document.getElementById('country-flag').src = data.flag;
             }
         }
-    }, err => console.log("مستند الدولة بانتظار بيانات الحقول المضافة:", err));
+    }, err => console.log("في انتظار تعبئة مستند هذه الدولة:", err));
 }
 
+// إدارة احتساب عداد المتصلين تلقائياً وبأمان داخل الخوادم
 function activateOnlineStatus(countryId) {
     const increment = firebase.firestore.FieldValue.increment(1);
     const decrement = firebase.firestore.FieldValue.increment(-1);

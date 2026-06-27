@@ -26,7 +26,7 @@
             overflow: hidden;
         }
 
-        /* 👑 الجزء العلوي الثابت */
+        /* 👑 الشريط العلوي الثابت */
         .top-bar {
             position: fixed;
             top: 0;
@@ -68,36 +68,18 @@
             margin-top: 50px;
         }
 
-        /* 📦 ستايل البلوكات المشترك */
+        /* 📦 ستايل البلوكات المنفصلة الثابتة */
         .block-card {
             background-color: #1a2332;
             border: 1.5px solid #c5a059;
             border-radius: 8px;
             padding: 12px;
-            position: relative;
-        }
-
-        /* 🔄 البلوك الأول: السلايدر التفاعلي */
-        .slider-container {
-            overflow: hidden;
-            position: relative;
-            width: 100%;
-        }
-
-        .slider-wrapper {
-            display: flex;
-            transition: transform 0.4s ease-in-out;
-            width: 200%; /* واجهتين */
-        }
-
-        .slide-page {
-            width: 50%;
             display: flex;
             align-items: center;
             justify-content: space-between;
         }
 
-        /* تنسيق الخريطة الدائرية أو العلم داخل البلوك */
+        /* تنسيق الأيقونة الجانبية (خريطة أفريقيا أو العلم) */
         .side-img-box {
             width: 25%;
             display: flex;
@@ -112,7 +94,7 @@
             border-radius: 4px;
         }
 
-        /* شبكة الإحصائيات والأرقام */
+        /* شبكة الإحصائيات والأرقام الأربعة */
         .stats-grid {
             width: 75%;
             display: grid;
@@ -140,28 +122,7 @@
             color: #ffffff;
         }
 
-        /* نقاط السلايدر التفاعلية */
-        .slider-dots {
-            display: flex;
-            justify-content: center;
-            gap: 8px;
-            margin-top: 10px;
-        }
-
-        .dot {
-            width: 8px;
-            height: 8px;
-            background-color: #484f58;
-            border-radius: 50%;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        .dot.active {
-            background-color: #ffffff;
-        }
-
-        /* 🔘 زر البرلمان الأزرق المصلح والمعدل */
+        /* 🔘 زر البرلمان المصلح بالكامل */
         .parliament-btn {
             width: 100%;
             background-color: #26cbd4;
@@ -182,9 +143,10 @@
             transform: scale(0.98);
         }
 
-        /* 🕳️ البلوك الفارغ للشات والمقالات لاحقاً */
+        /* 🕳️ بلوك الشات والمقالات السفلي */
         .empty-placeholder {
             min-height: 150px;
+            display: block;
         }
 
         /* 📱 الجزء السفلي الثابت */
@@ -236,62 +198,51 @@
 
         <div id="main-game-blocks" style="display: none; flex-direction: column; gap: 12px;">
             
-            <div class="block-card slider-container" id="sliderCard">
-                <div class="slider-wrapper" id="sliderWrapper">
-                    
-                    <div class="slide-page">
-                        <div class="side-img-box">
-                            <img src="https://flagcdn.com/w320/za.png" id="continent-icon" alt="Africa" style="filter: grayscale(1) brightness(2);">
-                        </div>
-                        <div class="stats-grid">
-                            <div class="stat-item" onclick="alert('الانتقال لصفحة الأحزاب للقارة')">
-                                <span class="stat-label">أحزاب</span>
-                                <span class="stat-value" id="cont-parties">0</span>
-                            </div>
-                            <div class="stat-item" onclick="alert('الانتقال لصفحة الدول')">
-                                <span class="stat-label">دول</span>
-                                <span class="stat-value" id="cont-countries">50</span>
-                            </div>
-                            <div class="stat-item" onclick="alert('الانتقال لصفحة المتصلين بالقارة')">
-                                <span class="stat-label">متصل</span>
-                                <span class="stat-value" id="cont-online">0</span>
-                            </div>
-                            <div class="stat-item" onclick="alert('الانتقال لإحصائيات السكان')">
-                                <span class="stat-label">سكان</span>
-                                <span class="stat-value" id="cont-pop">0</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="slide-page">
-                        <div class="side-img-box">
-                            <img id="country-flag" src="https://flagcdn.com/w320/ma.png" alt="علم الدولة">
-                        </div>
-                        <div class="stats-grid">
-                            <div class="stat-item" onclick="alert('الانتقال لمصانع الدولة')">
-                                <span class="stat-label">مصانع</span>
-                                <span class="stat-value" id="count-factories">0</span>
-                            </div>
-                            <div class="stat-item" onclick="alert('الانتقال لأحزاب الدولة')">
-                                <span class="stat-label">أحزاب</span>
-                                <span class="stat-value" id="count-parties">0</span>
-                            </div>
-                            <div class="stat-item" onclick="alert('الانتقال للمتصلين في الدولة')">
-                                <span class="stat-label">متصل</span>
-                                <span class="stat-value" id="count-online">0</span>
-                            </div>
-                            <div class="stat-item" onclick="alert('الانتقال لمعلومات الدولة')">
-                                <span class="stat-label">الدولة</span>
-                                <span class="stat-value" id="count-name">...</span>
-                            </div>
-                        </div>
-                    </div>
-
+            <div class="block-card">
+                <div class="side-img-box">
+                    <img src="https://img.icons8.com/ios-filled/100/ffffff/africa.png" id="continent-icon" alt="Africa">
                 </div>
+                <div class="stats-grid">
+                    <div class="stat-item" onclick="alert('الانتقال لصفحة أحزاب القارة')">
+                        <span class="stat-label">أحزاب</span>
+                        <span class="stat-value" id="cont-parties">0</span>
+                    </div>
+                    <div class="stat-item" onclick="alert('الانتقال لصفحة الدول')">
+                        <span class="stat-label">دول</span>
+                        <span class="stat-value" id="cont-countries">50</span>
+                    </div>
+                    <div class="stat-item" onclick="alert('الانتقال لصفحة متصلي القارة')">
+                        <span class="stat-label">متصل</span>
+                        <span class="stat-value" id="cont-online">0</span>
+                    </div>
+                    <div class="stat-item" onclick="alert('الانتقال لإحصائيات سكان القارة')">
+                        <span class="stat-label">سكان</span>
+                        <span class="stat-value" id="cont-pop">0</span>
+                    </div>
+                </div>
+            </div>
 
-                <div class="slider-dots">
-                    <div class="dot active" id="dot1" onclick="switchSlide(0)"></div>
-                    <div class="dot" id="dot2" onclick="switchSlide(1)"></div>
+            <div class="block-card">
+                <div class="side-img-box">
+                    <img id="country-flag" src="https://flagcdn.com/w320/ma.png" alt="علم الدولة">
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-item" onclick="alert('الانتقال لمصانع الدولة')">
+                        <span class="stat-label">مصانع</span>
+                        <span class="stat-value" id="count-factories">0</span>
+                    </div>
+                    <div class="stat-item" onclick="alert('الانتقال لأحزاب الدولة')">
+                        <span class="stat-label">أحزاب</span>
+                        <span class="stat-value" id="count-parties">0</span>
+                    </div>
+                    <div class="stat-item" onclick="alert('الانتقال للمتصلين بالدولة')">
+                        <span class="stat-label">متصل</span>
+                        <span class="stat-value" id="count-online">0</span>
+                    </div>
+                    <div class="stat-item" onclick="alert('الانتقال لمعلومات الدولة')">
+                        <span class="stat-label">الدولة</span>
+                        <span class="stat-value" id="count-name">...</span>
+                    </div>
                 </div>
             </div>
 
