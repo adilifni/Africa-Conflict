@@ -41,8 +41,9 @@ auth.onAuthStateChanged((user) => {
 function checkAndCreateUserAccount(user) {
     const userRef = db.collection('players').doc(user.uid);
 
-    userRef.get().then((doc) => {
-        if (!doc.exists()) {
+    userRef.get({ source: 'server' }).then((doc) => {
+        // تم إزالة الأقواس من هنا لتصبح خاصية صحيحة
+        if (!doc.exists) { 
             userRef.set({
                 uid: user.uid,
                 name: user.displayName,
@@ -63,7 +64,7 @@ function checkAndCreateUserAccount(user) {
             redirectToMainGame(user.displayName);
         }
     }).catch((err) => {
-        alert("خطأ في الاتصال بقاعدة البيانات: " + err.message);
+        alert("خطأ في Firestore: " + err.message);
     });
 }
 
