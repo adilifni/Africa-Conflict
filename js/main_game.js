@@ -15,14 +15,15 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 
 let currentUserUid = null;
+let currentUserName = "لاعب";
 let currentUserCountry = "morocco"; 
 
-// مراقبة حالة اتصال اللاعب
 auth.onAuthStateChanged((user) => {
     if (user) {
         currentUserUid = user.uid;
+        currentUserName = user.displayName || "لاعب غامض";
         const statusBox = document.getElementById('player-status');
-        if(statusBox) statusBox.innerText = "القائد: " + (user.displayName || "لاعب");
+        if(statusBox) statusBox.innerText = "القائد: " + currentUserName;
         getPlayerDataAndActivateOnline(user.uid);
     } else {
         window.location.assign("index.html");
@@ -39,13 +40,12 @@ function getPlayerDataAndActivateOnline(uid) {
         }
         startLiveUpdates();
     }).catch((err) => {
-        console.log("خطأ في جلب بيانات اللاعب:", err);
+        console.log("استدعاء البيانات الاحتياطية:", err);
         startLiveUpdates(); 
     });
 }
 
 function startLiveUpdates() {
-    // إخفاء رسالة الانتظار وإظهار البلوكات
     const loadingMsg = document.getElementById('loading-msg');
     const mainBlocks = document.getElementById('main-game-blocks');
     if(loadingMsg) loadingMsg.style.display = 'none';
@@ -54,11 +54,11 @@ function startLiveUpdates() {
     listenToContinentStats();
     listenToCountryStats(currentUserCountry);
     activateOnlineStatus(currentUserUid, currentUserCountry);
+    checkEmergencyEvents(currentUserUid, currentUserCountry);
+    listenToLiveChat();
 }
 
-// 🌍 قراءة بيانات القارة + حساب عدد اللاعبين المسجلين حياً (السكان)
 function listenToContinentStats() {
-    // 1. جلب البيانات الثابتة للأحزاب والدول من المستند
     db.collection('game_stats').doc('africa').onSnapshot((doc) => {
         if (doc.exists) {
             let data = doc.data();
@@ -67,18 +67,15 @@ function listenToContinentStats() {
         }
     });
 
-    // 2. 🛡️ حساب عدد السكان الفعلي بناءً على عدد الحسابات المسجلة في قاعدة البيانات
     db.collection('players').onSnapshot((snapshot) => {
         document.getElementById('cont-pop').innerText = snapshot.size || 0;
-    }, err => console.log("خطأ في عد الحسابات:", err));
+    });
 
-    // 3. قراءة عدد المتصلين الفعلي بالقارة من مجموعة المراقبة الحية
     db.collection('online_users').onSnapshot((snapshot) => {
         document.getElementById('cont-online').innerText = snapshot.size || 0;
     });
 }
 
-// 🇲🇦 قراءة بيانات الدولة الحالية
 function listenToCountryStats(countryId) {
     db.collection('countries').doc(countryId).onSnapshot((doc) => {
         if (doc.exists) {
@@ -90,26 +87,106 @@ function listenToCountryStats(countryId) {
                 document.getElementById('country-flag').src = data.flag;
             }
         }
-    }, err => console.log("خطأ في مستند الدولة:", err));
+    });
 
-    // قراءة المتصلين الفعليين داخل هذه الدولة فقط
     db.collection('online_users').where('country', '==', countryId).onSnapshot((snapshot) => {
         document.getElementById('count-online').innerText = snapshot.size || 0;
     });
 }
 
-// 🛡️ دالة إدارة المتصلين المحدثة لمنع التكرار (تعتمد على الـ UID الفريد للاعب)
 function activateOnlineStatus(uid, countryId) {
     if (!uid) return;
-
-    // تسجيل الدخول: نضع مستند باسم الـ UID الخاص بك، وبذلك يستحيل تكراره حتى لو حدثت الصفحة
     db.collection('online_users').doc(uid).set({
         country: countryId,
         last_active: firebase.firestore.FieldValue.serverTimestamp()
     }).catch(()=>{});
     
-    // عند الخروج أو قفل المتصفح: نحذف المستند تماماً ليقل العداد فوراً
     window.addEventListener('beforeunload', () => {
         db.collection('online_users').doc(uid).delete();
     });
+}
+
+// 🚨 دالة التحقق الذكي من الأحداث المعلقة وإظهار البلوك الطارئ
+function checkEmergencyEvents(uid, countryId) {
+    const eventsBox = document.getElementById('game-events-box');
+    const btnInvite = document.getElementById('btn-invite');
+    const btnWar = document.getElementById('btn-war');
+
+    // 1. فحص وجود دعوة حزب للاعب
+    db.collection('players').doc(uid).onSnapshot((doc) => {
+        if (doc.exists && doc.data().hasPartyInvite === true) {
+            btnInvite.style.display = 'block';
+            eventsBox.style.display = 'flex';
+        } else {
+            btnInvite.style.display = 'none';
+        }
+    });
+
+    // 2. فحص وجود حالة حرب في دولة اللاعب
+    db.collection('countries').doc(countryId).onSnapshot((doc) => {
+        if (doc.exists && doc.data().inWar === true) {
+            btnWar.style.display = 'block';
+            eventsBox.style.display = 'flex';
+        } else {
+            btnWar.style.display = 'none';
+        }
+    });
+}
+
+// 💬 دالة إرسال برقية دردشة جديدة إلى Firestore
+window.sendChatMessage = function() {
+    const inputField = document.getElementById('chat-input-field');
+    const text = inputField.value.trim();
+    if (!text) return;
+
+    db.collection('global_chat').add({
+        senderName: currentUserName,
+        senderUid: currentUserUid,
+        message: text,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(() => {
+        inputField.value = "";
+    }).catch(err => alert("عذراً، فشل إرسال البرقية: " + err.message));
+}
+
+// ⏳ الاستماع للدردشة الحية وفلترة الرسائل التي تجاوزت 12 ساعة
+function listenToLiveChat() {
+    const chatContainer = document.getElementById('chat-messages-container');
+    const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000);
+
+    db.collection('global_chat')
+      .where('timestamp', '>=', twelveHoursAgo)
+      .orderBy('timestamp', 'asc')
+      .onSnapshot((snapshot) => {
+          chatContainer.innerHTML = "";
+          
+          if(snapshot.empty) {
+              chatContainer.innerHTML = `<p style="color:#57606a; text-align:center; margin-top:40px; font-size:13px;">لا توجد برقيات نشطة في آخر 12 ساعة...</p>`;
+              return;
+          }
+
+          snapshot.forEach((doc) => {
+              const data = doc.data();
+              let timeString = "الآن";
+              if (data.timestamp) {
+                  const date = data.timestamp.toDate();
+                  timeString = date.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+              }
+
+              const msgBubble = document.createElement('div');
+              msgBubble.className = 'msg-bubble';
+              msgBubble.innerHTML = `
+                  <div class="msg-meta">
+                      <span>${data.senderName}</span>
+                      <span>${timeString}</span>
+                  </div>
+                  <div class="msg-text">${data.message}</div>
+              `;
+              chatContainer.appendChild(msgBubble);
+          });
+          // النزول التلقائي لآخر رسالة
+          chatContainer.scrollTop = chatContainer.scrollHeight;
+      }, err => {
+          console.log("مؤشر الفهرسة بانتظار البناء التلقائي في فيربيز:", err);
+      });
 }
