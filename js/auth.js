@@ -17,19 +17,22 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 
 // 2. تسجيل الدخول باستخدام Popup عند الضغط على الزر
-document.getElementById('google-login-trigger').addEventListener('click', () => {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    
-    auth.signInWithPopup(provider)
-        .then((result) => {
-            checkAndCreateUserAccount(result.user);
-        })
-        .catch((error) => {
-            console.error("خطأ أثناء تسجيل الدخول بالنافذة:", error.message);
-            // حل بديل احتياطي في حال تم حظر النافذة المنبثقة من المتصفح
-            auth.signInWithRedirect(provider);
-        });
-});
+const loginButton = document.getElementById('google-login-trigger');
+if (loginButton) {
+    loginButton.addEventListener('click', () => {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        
+        auth.signInWithPopup(provider)
+            .then((result) => {
+                checkAndCreateUserAccount(result.user);
+            })
+            .catch((error) => {
+                console.error("خطأ أثناء تسجيل الدخول بالنافذة:", error.message);
+                // حل بديل احتياطي في حال تم حظر النافذة المنبثقة من المتصفح
+                auth.signInWithRedirect(provider);
+            });
+    });
+}
 
 // 3. مراقبة حالة اللاعب التلقائية عند فتح الصفحة
 auth.onAuthStateChanged((user) => {
@@ -61,11 +64,11 @@ function checkAndCreateUserAccount(user) {
                 wheat: 50,
                 
                 // 🌍 حقول المواقع الجديدة والتنقل والأحزاب والمصانع
-                residence_country: "morocco", // الإقامة الافتراضية بلدك المغرب ويمكن تعديلها لاحقاً
+                residence_country: "morocco", // الإقامة الافتراضية
                 current_location: "morocco",   // التواجد الحالي
                 has_party: false,
                 party_id: "",
-                factories_list: []            // مصفوفة فارغة تعني لا يملك مصانع بعد
+                factories_list: [1]            // يبدأ بالمصنع الأول ذو المستوى 1 تلقائياً
             }).then(() => {
                 console.log("🚀 تم إنشاء ملف القائد الجديد بنجاح وبكافة الحقول التلقائية!");
                 redirectToMainGame();
