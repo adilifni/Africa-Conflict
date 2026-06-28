@@ -68,7 +68,7 @@ function checkAndCreateUserAccount(user) {
                 current_location: "morocco",   // التواجد الحالي
                 has_party: false,
                 party_id: "",
-                factories_list: [1]            // يبدأ بالمصنع الأول ذو المستوى 1 تلقائياً
+                factories_list: [1]            // يبدأ بالمصنع الأول تلقائياً
             }).then(() => {
                 console.log("🚀 تم إنشاء ملف القائد الجديد بنجاح وبكافة الحقول التلقائية!");
                 redirectToMainGame();
@@ -82,9 +82,8 @@ function checkAndCreateUserAccount(user) {
     });
 }
 
-// 5. التوجيه الديناميكي الآمن إلى شاشة اللعبة الرئيسية
+// 5. التوجيه الديناميكي المستقر والآمن 100% المتوافق مع الاستضافة
 function redirectToMainGame() {
-    // يتأكد من التوجيه لملف main_game.html المتواجد في مشروعك
-    const targetUrl = window.location.origin + window.location.pathname.replace("index.html", "") + "main_game.html";
-    window.location.assign(targetUrl);
+    // التوجيه النسبي المباشر يحل مشاكل الروابط على الاستضافات مثل Netlify و GitHub Pages
+    window.location.assign("main_game.html");
 }
