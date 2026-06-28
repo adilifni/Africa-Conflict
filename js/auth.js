@@ -81,9 +81,18 @@ function checkAndCreateUserAccount(user) {
         console.error("خطأ في Firestore:", err.message);
     });
 }
-
-// 5. التوجيه الديناميكي المستقر والآمن 100% المتوافق مع الاستضافة
+// 5. التوجيه الديناميكي المتوافق مع مسارات GitHub Pages والمجلدات الفرعية
 function redirectToMainGame() {
-    // التوجيه النسبي المباشر يحل مشاكل الروابط على الاستضافات مثل Netlify و GitHub Pages
-    window.location.assign("main_game.html");
+    // نتحقق أولاً إذا كان المسار ينتهي بشرطة مائلة لمنع دمج المسارات الخاطئة
+    let currentPath = window.location.pathname;
+    if (!currentPath.endsWith('/')) {
+        // إذا كان واقفا على ملف index.html، نقوم بحذفه لنحصل على المجلد الأب النظيف
+        currentPath = currentPath.substring(0, currentPath.lastIndexOf('/') + 1);
+    }
+    
+    // بناء الرابط الجديد مع الحفاظ التام على اسم مستودع اللعبة
+    const targetUrl = window.location.origin + currentPath + "main_game.html";
+    
+    console.log("🚀 جاري التوجيه الآمن إلى شاشة اللعبة:", targetUrl);
+    window.location.assign(targetUrl);
 }
