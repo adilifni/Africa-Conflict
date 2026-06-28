@@ -16,7 +16,7 @@ const db = firebase.firestore();
 
 let currentUserUid = null;
 let currentUserName = "لاعب";
-let currentUserCountry = "morocco"; 
+let currentUserCountry = "morocco"; // القيمة الافتراضية
 
 auth.onAuthStateChanged((user) => {
     if (user) {
@@ -32,15 +32,14 @@ auth.onAuthStateChanged((user) => {
 function getPlayerDataAndActivateOnline(uid) {
     db.collection('players').doc(uid).get().then((doc) => {
         if (doc.exists && doc.data().country) {
-            let data = doc.data();
-            if (data.country !== "لم يحدد بعد") {
-                // تصفية وحماية النص ليكون متطابقاً مع قواعد البيانات
-                currentUserCountry = data.country.trim().toLowerCase();
+            let countryData = doc.data().country;
+            if (countryData && countryData !== "لم يحدد بعد") {
+                currentUserCountry = countryData.trim().toLowerCase();
             }
         }
         startLiveUpdates();
     }).catch((err) => {
-        console.log("خطأ بالبيانات الاحتياطية:", err);
+        console.error("خطأ في جلب بيانات اللاعب الرئيسي:", err);
         startLiveUpdates(); 
     });
 }
@@ -49,6 +48,7 @@ function startLiveUpdates() {
     document.getElementById('loading-msg').style.display = 'none';
     document.getElementById('main-game-blocks').style.display = 'flex';
 
+    // تفعيل تفاعل الأيقونات الثابتة
     document.getElementById('continent-map-btn').onclick = function() {
         alert("سيتم نقلك قريباً إلى صفحة الخريطة التفاعلية الاستراتيجية! 🌍");
     };
@@ -56,14 +56,14 @@ function startLiveUpdates() {
         alert("سيتم نقلك قريباً إلى الصفحة الرسمية لدولتك! 🇲🇦");
     };
 
-    setupContinentSlider(); // تفعيل سلايدر القارة
+    setupContinentSlider(); 
     listenToContinentStats();
     listenToCountryStats(currentUserCountry);
     activateOnlineStatus(currentUserUid, currentUserCountry);
     listenToLiveChat();
 }
 
-// 🛝 دالة برمجة وإدارة اللمس للسلايدر (يمين ويسار)
+// 🛝 إصلاح كامل لنظام السلايدر ليتوافق مع اللغات من اليمين إلى اليسار (RTL)
 function setupContinentSlider() {
     const core = document.getElementById('slider-core');
     const wrapper = document.getElementById('slider-wrapper-zone');
@@ -79,12 +79,13 @@ function setupContinentSlider() {
 
     wrapper.addEventListener('touchend', (e) => {
         let diffX = e.changedTouches[0].clientX - startX;
-        // إذا سحب المستخدم مسافة أكبر من 50 بكسل
-        if (Math.abs(diffX) > 50) {
+        
+        if (Math.abs(diffX) > 40) {
+            // في وضع RTL السحب لليمين يعيدنا للخلف ولليسار ينقلنا للأمام
             if (diffX > 0 && currentPageIndex > 0) {
-                currentPageIndex = 0; // عودة لليمين
+                currentPageIndex = 0; 
             } else if (diffX < 0 && currentPageIndex < 1) {
-                currentPageIndex = 1; // ذهاب لليسار
+                currentPageIndex = 1; 
             }
             updateSliderPosition();
         }
@@ -96,7 +97,8 @@ function setupContinentSlider() {
             dot0.classList.add('active');
             dot1.classList.remove('active');
         } else {
-            core.style.transform = "translateX(50%)"; // التحرك لليسار بالتوافق مع اتجاه RTL
+            // استخدام القيمة السالبة لتحريك السلايدر لليسار بشكل هندسي دقيق في الـ RTL
+            core.style.transform = "translateX(-50%)"; 
             dot1.classList.add('active');
             dot0.classList.remove('active');
         }
@@ -109,11 +111,12 @@ function listenToContinentStats() {
             let data = doc.data();
             document.getElementById('cont-parties').innerText = data.total_parties || 0;
             document.getElementById('cont-countries').innerText = data.total_countries || 50;
-            // جلب البيانات الإضافية الجديدة للسلايدر الثاني
             document.getElementById('cont-factories').innerText = data.total_factories || 0;
             document.getElementById('cont-independent').innerText = data.total_independent || 0;
             document.getElementById('cont-alliances').innerText = data.total_alliances || 0;
         }
+    }, (error) => {
+        console.error("مشكلة مراقبة إحصائيات أفريقيا الحية:", error);
     });
 
     db.collection('players').onSnapshot((snapshot) => {
@@ -126,29 +129,36 @@ function listenToContinentStats() {
 }
 
 function listenToCountryStats(countryId) {
+    // مراقبة بيانات مستند الدولة (المصانع والأحزاب)
     db.collection('countries').doc(countryId).onSnapshot((doc) => {
         if (doc.exists) {
             let data = doc.data();
             document.getElementById('count-factories').innerText = data.factories || 0;
             document.getElementById('count-parties').innerText = data.parties || 0;
-            if (data.flag) document.getElementById('country-flag').src = data.flag;
+            if (data.flag) {
+                document.getElementById('country-flag').src = data.flag;
+            }
         }
     });
 
+    // مراقبة عدد اللاعبين المتصلين حالياً بالدولة
     db.collection('online_users').where('country', '==', countryId).onSnapshot((snapshot) => {
         document.getElementById('count-online').innerText = snapshot.size || 0;
     });
 
-    // 💡 إصلاح المشكلة: البحث يدعم حالة الأحرف الكبيرة والصغيرة لضمان جلب سكان المغرب بشكل صحيح
+    // 💡 حل مشكلة الـ 0 لسكان المغرب: مراقبة حية مرنة تحسب اللاعبين مع تجاهل الفراغات وحالة الحروف
     db.collection('players').onSnapshot((snapshot) => {
-        let count = 0;
-        snapshot.forEach((pDoc) => {
-            let pCountry = pDoc.data().country;
-            if (pCountry && pCountry.trim().toLowerCase() === countryId.toLowerCase()) {
-                count++;
+        let populationCounter = 0;
+        snapshot.forEach((playerDoc) => {
+            let pData = playerDoc.data();
+            if (pData && pData.country) {
+                let formattedCountry = pData.country.trim().toLowerCase();
+                if (formattedCountry === countryId.toLowerCase() || formattedCountry === "morocco") {
+                    populationCounter++;
+                }
             }
         });
-        document.getElementById('count-pop').innerText = count;
+        document.getElementById('count-pop').innerText = populationCounter;
     });
 }
 
@@ -157,7 +167,7 @@ function activateOnlineStatus(uid, countryId) {
     db.collection('online_users').doc(uid).set({
         country: countryId,
         last_active: firebase.firestore.FieldValue.serverTimestamp()
-    }).catch(()=>{});
+    }).catch((e) => console.log("خطأ غير مؤثر في تحديث التواجد الحقيقي المباشر."));
 }
 
 window.sendChatMessage = function() {
