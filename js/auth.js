@@ -10,7 +10,9 @@ const firebaseConfig = {
 };
 
 // تهيئة تطبيق Firebase
-firebase.initializeApp(firebaseConfig);
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
 const auth = firebase.auth();
 const db = firebase.firestore();
 
@@ -24,42 +26,52 @@ document.getElementById('google-login-trigger').addEventListener('click', () => 
         })
         .catch((error) => {
             console.error("خطأ أثناء تسجيل الدخول بالنافذة:", error.message);
-            // حل بديل احتياطي في حال تم حظر النافذة المنبثقة
+            // حل بديل احتياطي في حال تم حظر النافذة المنبثقة من المتصفح
             auth.signInWithRedirect(provider);
         });
 });
 
-// 3. مراقبة حالة اللاعب - التوجيه الفوري المباشر والصامت للمسجلين سابقاً
+// 3. مراقبة حالة اللاعب التلقائية عند فتح الصفحة
 auth.onAuthStateChanged((user) => {
     if (user) {
-        // يمر مباشرة ودون أي تنبيهات إلى قاعدة البيانات ثم الصفحة الرئيسية
         checkAndCreateUserAccount(user);
     }
 });
 
-// 4. دالة فحص الحساب في قاعدة البيانات
+// 4. دالة فحص الحساب وإنشاء الحقول الجديدة والافتراضية تلقائياً
 function checkAndCreateUserAccount(user) {
     const userRef = db.collection('players').doc(user.uid);
 
     userRef.get({ source: 'server' }).then((doc) => {
         if (!doc.exists) { 
+            // 🚀 الحساب جديد تماماً! نقوم بتوليد كافة الحقول الهيكلية تلقائياً هنا
             userRef.set({
                 uid: user.uid,
-                name: user.displayName,
+                name: user.displayName || "قائد جديد",
                 email: user.email,
-                photo: user.photoURL,
-                country: "لم يحدد بعد",
+                photo: user.photoURL || "",
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                
+                // الموارد الابتدائية للاعب الجديد
                 level: 1,
                 energy: 100,
                 money: 5000,
-                wheat: 50,
-                oil: 20,
                 gold: 5,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                oil: 20,
+                wheat: 50,
+                
+                // 🌍 حقول المواقع الجديدة والتنقل والأحزاب والمصانع
+                residence_country: "morocco", // الإقامة الافتراضية بلدك المغرب ويمكن تعديلها لاحقاً
+                current_location: "morocco",   // التواجد الحالي
+                has_party: false,
+                party_id: "",
+                factories_list: []            // مصفوفة فارغة تعني لا يملك مصانع بعد
             }).then(() => {
+                console.log("🚀 تم إنشاء ملف القائد الجديد بنجاح وبكافة الحقول التلقائية!");
                 redirectToMainGame();
             });
         } else {
+            // اللاعب مسجل مسبقاً ولديه حساب، يوجه مباشرة
             redirectToMainGame();
         }
     }).catch((err) => {
@@ -67,8 +79,9 @@ function checkAndCreateUserAccount(user) {
     });
 }
 
-// 5. التوجيه الصامت والمباشر إلى الصفحة الرئيسية للعبة
+// 5. التوجيه الديناميكي الآمن إلى شاشة اللعبة الرئيسية
 function redirectToMainGame() {
-    const targetUrl = window.location.origin + window.location.pathname.replace("index.html", "") + "main.html";
+    // يتأكد من التوجيه لملف main_game.html المتواجد في مشروعك
+    const targetUrl = window.location.origin + window.location.pathname.replace("index.html", "") + "main_game.html";
     window.location.assign(targetUrl);
 }
