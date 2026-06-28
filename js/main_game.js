@@ -51,6 +51,14 @@ function startLiveUpdates() {
     if(loadingMsg) loadingMsg.style.display = 'none';
     if(mainBlocks) mainBlocks.style.display = 'flex';
 
+    // ربط مستمعات الضغط للخريطة والعلم للتوجيه مستقبلاً
+    document.getElementById('continent-map-btn').onclick = function() {
+        alert("سيتم نقلك قريباً إلى صفحة الخريطة التفاعلية الاستراتيجية! 🌍");
+    };
+    document.getElementById('country-flag').onclick = function() {
+        alert("سيتم نقلك قريباً إلى الصفحة الرسمية لإحصائيات وإدارة دولتك! 🇲🇦");
+    };
+
     listenToContinentStats();
     listenToCountryStats(currentUserCountry);
     activateOnlineStatus(currentUserUid, currentUserCountry);
@@ -80,7 +88,6 @@ function listenToCountryStats(countryId) {
     db.collection('countries').doc(countryId).onSnapshot((doc) => {
         if (doc.exists) {
             let data = doc.data();
-            document.getElementById('count-name').innerText = data.name || "مجهول";
             document.getElementById('count-factories').innerText = data.factories || 0;
             document.getElementById('count-parties').innerText = data.parties || 0;
             if (data.flag) {
@@ -91,6 +98,11 @@ function listenToCountryStats(countryId) {
 
     db.collection('online_users').where('country', '==', countryId).onSnapshot((snapshot) => {
         document.getElementById('count-online').innerText = snapshot.size || 0;
+    });
+
+    // 🎯 حساب عدد سكان هذه الدولة حياً بناءً على حقل الـ country لكل لاعب مسجل
+    db.collection('players').where('country', '==', countryId).onSnapshot((snapshot) => {
+        document.getElementById('count-pop').innerText = snapshot.size || 0;
     });
 }
 
@@ -106,13 +118,11 @@ function activateOnlineStatus(uid, countryId) {
     });
 }
 
-// 🚨 دالة التحقق الذكي من الأحداث المعلقة وإظهار البلوك الطارئ
 function checkEmergencyEvents(uid, countryId) {
     const eventsBox = document.getElementById('game-events-box');
     const btnInvite = document.getElementById('btn-invite');
     const btnWar = document.getElementById('btn-war');
 
-    // 1. فحص وجود دعوة حزب للاعب
     db.collection('players').doc(uid).onSnapshot((doc) => {
         if (doc.exists && doc.data().hasPartyInvite === true) {
             btnInvite.style.display = 'block';
@@ -122,7 +132,6 @@ function checkEmergencyEvents(uid, countryId) {
         }
     });
 
-    // 2. فحص وجود حالة حرب في دولة اللاعب
     db.collection('countries').doc(countryId).onSnapshot((doc) => {
         if (doc.exists && doc.data().inWar === true) {
             btnWar.style.display = 'block';
@@ -133,7 +142,6 @@ function checkEmergencyEvents(uid, countryId) {
     });
 }
 
-// 💬 دالة إرسال برقية دردشة جديدة إلى Firestore
 window.sendChatMessage = function() {
     const inputField = document.getElementById('chat-input-field');
     const text = inputField.value.trim();
@@ -149,7 +157,6 @@ window.sendChatMessage = function() {
     }).catch(err => alert("عذراً، فشل إرسال البرقية: " + err.message));
 }
 
-// ⏳ الاستماع للدردشة الحية وفلترة الرسائل التي تجاوزت 12 ساعة
 function listenToLiveChat() {
     const chatContainer = document.getElementById('chat-messages-container');
     const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000);
@@ -184,9 +191,8 @@ function listenToLiveChat() {
               `;
               chatContainer.appendChild(msgBubble);
           });
-          // النزول التلقائي لآخر رسالة
           chatContainer.scrollTop = chatContainer.scrollHeight;
       }, err => {
-          console.log("مؤشر الفهرسة بانتظار البناء التلقائي في فيربيز:", err);
+          console.log("بانتظار الفهرسة:", err);
       });
 }
