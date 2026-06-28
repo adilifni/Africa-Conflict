@@ -28,7 +28,18 @@ const countryFlagCodes = {
     "libya": "ly", "sudan": "sd", "nigeria": "ng", "south_africa": "za"
 };
 
-// 2. مراقبة حالة الجلسة بصرامة (تعديل المسار لمنع الـ 404)
+// دالة مساعدة لتحديد مسار التوجيه بدقة بناءً على بيئة العمل (GitHub Pages)
+function safeRedirect(targetPage) {
+    const currentPath = window.location.pathname;
+    // إذا كنا نستخدم GitHub Pages نقوم بالحفاظ على اسم المجلد المرفوع عليه المشروع
+    if (currentPath.includes('/Africa-Conflict/')) {
+        window.location.href = `/Africa-Conflict/${targetPage}`;
+    } else {
+        window.location.href = `./${targetPage}`;
+    }
+}
+
+// 2. مراقبة حالة الجلسة بصرامة وبدون طرد عشوائي
 auth.onAuthStateChanged((user) => {
     if (user) {
         currentUserUid = user.uid;
@@ -41,8 +52,10 @@ auth.onAuthStateChanged((user) => {
         getPlayerDataAndActivateOnline(user.uid);
     } else {
         console.log("لا يوجد مستخدم نشط، إعادة توجيه لصفحة الدخول...");
-        // ✔️ تم إصلاح المسار ليكون نسبياً داخل مجلد المشروع
-        window.location.assign("./index.html");
+        // حماية: لا تقم بالتحويل إذا كنت بالفعل في صفحة الدخول لمنع التكرار اللانهائي
+        if (!window.location.pathname.endsWith('index.html')) {
+            safeRedirect('index.html');
+        }
     }
 });
 
@@ -74,17 +87,15 @@ function getPlayerDataAndActivateOnline(uid) {
             // تشغيل التحديثات الحية وإظهار عناصر اللعبة
             startLiveUpdates();
         } else {
-            console.warn("مستند اللاعب غير موجود، يتم تسجيل الخروج...");
-            auth.signOut().then(() => {
-                // ✔️ تم إصلاح المسار هنا أيضاً
-                window.location.assign("./index.html");
-            });
+            console.warn("مستند اللاعب غير موجود في Firestore.");
+            // تفعيل حماية إضافية بدلاً من الطرد الفوري العشوائي لمنع الـ 404
+            startLiveUpdates(); 
         }
     }, (error) => {
         console.error("خطأ حماية في Firestore أو بطء استجابة:", error);
-        // ✔️ لا يتم الطرد الفوري إلا إذا كان الخطأ بسبب الصلاحيات المرفوضة تماماً لمنع مشاكل ضعف الشبكة
+        // لا يتم الطرد الفوري إلا في حالة التأكد التام من رفض الصلاحية المطلقة
         if (error.code === 'permission-denied') {
-            window.location.assign("./index.html");
+            safeRedirect('index.html');
         }
     });
 }
