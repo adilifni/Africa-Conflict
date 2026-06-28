@@ -16,7 +16,8 @@ const db = firebase.firestore();
 
 let currentUserUid = null;
 let currentUserName = "لاعب";
-let currentUserCountry = ""; // سيتم جلبها ديناميكياً بالكامل من حساب اللاعب
+let userResidenceCountry = ""; // 🇲🇦 جنسية اللاعب/إقامته الثابتة (لحساب السكان والمصانع)
+let userCurrentLocation = "";  // ✈️ موقع اللاعب الحالي (لحساب المتواجدين الآن والدردشة)
 
 auth.onAuthStateChanged((user) => {
     if (user) {
@@ -26,7 +27,7 @@ auth.onAuthStateChanged((user) => {
         const playerStatusEl = document.getElementById('player-status');
         if(playerStatusEl) playerStatusEl.innerText = "القائد: " + currentUserName;
         
-        // 1️⃣ الخطوة الأولى: معرفة دولة اللاعب الحالية من مستنده الخاص
+        // 1️⃣ الخطوة الأولى: جلب الحقول الجديدة من مستند اللاعب
         getPlayerDataAndActivateOnline(user.uid);
     } else {
         window.location.assign("index.html");
@@ -35,21 +36,25 @@ auth.onAuthStateChanged((user) => {
 
 function getPlayerDataAndActivateOnline(uid) {
     db.collection('players').doc(uid).onSnapshot((doc) => {
-        if (doc.exists && doc.data().country) {
-            let countryData = doc.data().country;
-            // تنظيف النص لضمان مطابقة تامة مع معرّف المستند في كوليكشن countries
-            currentUserCountry = countryData.trim();
+        if (doc.exists && doc.data().residence_country) {
+            let data = doc.data();
             
-            // 2️⃣ الخطوة الثانية: تشغيل التحديثات الحية للدولة والقارة بناءً على الدولة المستدعاة
+            // جلب القيم الجديدة وتنظيف الفراغات
+            userResidenceCountry = data.residence_country.trim();
+            userCurrentLocation = (data.current_location || data.residence_country).trim();
+            
+            // 2️⃣ الخطوة الثانية: تشغيل التحديثات الحية للواجهة
             startLiveUpdates();
         } else {
-            // حالة احتياطية إذا لم يتم العثور على حقل الدولة للاعب
-            currentUserCountry = "morocco";
+            // حالة احتياطية إذا لم تكن الحقول جاهزة بعد
+            userResidenceCountry = "morocco";
+            userCurrentLocation = "morocco";
             startLiveUpdates();
         }
     }, (error) => {
         console.error("خطأ في قراءة مستند اللاعب:", error);
-        currentUserCountry = "morocco";
+        userResidenceCountry = "morocco";
+        userCurrentLocation = "morocco";
         startLiveUpdates();
     });
 }
@@ -61,9 +66,9 @@ function startLiveUpdates() {
     setupContinentSlider(); 
     listenToContinentStats();
     
-    // تمرير معرف الدولة لجلب بياناتها وعلمها ديناميكياً
-    listenToCountryStats(currentUserCountry);
-    activateOnlineStatus(currentUserUid, currentUserCountry);
+    // تمرير المتغيرات الجديدة بدقة للوظائف الحية
+    listenToCountryStats(userResidenceCountry, userCurrentLocation);
+    activateOnlineStatus(currentUserUid, userCurrentLocation);
     listenToLiveChat();
 }
 
@@ -108,7 +113,7 @@ function setupContinentSlider() {
     }
 }
 
-// 🌍 مراقبة إحصائيات قارة أفريقيا بشكل ديناميكي
+// 🌍 مراقبة إحصائيات قارة أفريقيا بالكامل
 function listenToContinentStats() {
     db.collection('game_stats').doc('africa').onSnapshot((doc) => {
         if (doc.exists) {
@@ -120,65 +125,60 @@ function listenToContinentStats() {
         }
     });
 
-    // عدد الدول الفعلي في الكوليكشن (سيقرأ 2 تلقائياً)
     db.collection('countries').onSnapshot((snapshot) => {
         document.getElementById('cont-countries').innerText = snapshot.size || 0;
     });
 
-    // إجمالي سكان القارة (كل الحسابات المسجلة)
     db.collection('players').onSnapshot((snapshot) => {
         document.getElementById('cont-pop').innerText = snapshot.size || 0;
     });
 
-    // إجمالي المتصلين في القارة كاملة
     db.collection('online_users').onSnapshot((snapshot) => {
         document.getElementById('cont-online').innerText = snapshot.size || 0;
     });
 }
 
-// 🇲🇦 جلب بيانات وعلم الدولة ديناميكياً من السيرفر حسب اختيار اللاعب
-function listenToCountryStats(countryId) {
-    if (!countryId) return;
+// 🇲🇦 جلب بيانات الدولة وعلمها وحساب السكان حياً بناءً على الجنسية والموقع الحالي
+function listenToCountryStats(residenceCountry, currentLocation) {
+    if (!residenceCountry) return;
 
-    // تفعيل تفاعل زر العلم للذهاب لصفحة هذه الدولة ديناميكياً مستقبلاً
     document.getElementById('country-flag').onclick = function() {
-        alert(`سيتم نقلك قريباً إلى الصفحة الرسمية لإدارة دولة: ${countryId} 🚩`);
+        alert(`سيتم نقلك قريباً إلى الصفحة الرسمية لإدارة دولة: ${residenceCountry} 🚩`);
     };
     document.getElementById('continent-map-btn').onclick = function() {
         alert("سيتم نقلك قريباً إلى صفحة الخريطة الاستراتيجية للقارة! 🌍");
     };
 
-    // 1️⃣ جلب المصانع، الأحزاب، ورابط العلم المخزن في الفايربيس للدولة الحالية
-    db.collection('countries').doc(countryId).onSnapshot((doc) => {
+    // 1️⃣ جلب بيانات مصانع وأحزاب وعلم دولة اللاعب الأصلية (الجنسية)
+    db.collection('countries').doc(residenceCountry).onSnapshot((doc) => {
         if (doc.exists) {
             let data = doc.data();
             document.getElementById('count-factories').innerText = data.factories ?? 0;
             document.getElementById('count-parties').innerText = data.parties ?? 0;
             
-            // 🚩 تحديث صورة العلم تلقائياً من الرابط المخزن في الفايربيس بدلاً من الرابط الثابت
             if (data.flag) {
                 document.getElementById('country-flag').src = data.flag;
             }
         } else {
-            console.warn(`المستند ${countryId} غير موجود في كوليكشن countries. يرجى التأكد من تطابق الاسم تماماً.`);
+            console.warn(`المستند ${residenceCountry} غير موجود في كوليكشن countries.`);
         }
     });
 
-    // 2️⃣ جلب المتصلين بالدولة الحالية
-    db.collection('online_users').where('country', '==', countryId).onSnapshot((snapshot) => {
+    // 2️⃣ حساب المتواجدين حالياً في الدولة (بناءً على مكان التواجد الحالي الفعلي)
+    db.collection('online_users').where('country', '==', currentLocation).onSnapshot((snapshot) => {
         document.getElementById('count-online').innerText = snapshot.size || 0;
     });
 
-    // 3️⃣ حساب عدد سكان هذه الدولة حياً بناءً على تطابق حقل country في حسابات اللاعبين
-    db.collection('players').where('country', '==', countryId).onSnapshot((snapshot) => {
+    // 3️⃣ حساب عدد السكان حياً (يشمل حاملي الجنسية حتى لو كانوا مسافرين خارج الدولة)
+    db.collection('players').where('residence_country', '==', residenceCountry).onSnapshot((snapshot) => {
         document.getElementById('count-pop').innerText = snapshot.size || 0;
     }, (error) => {
-        // طريقة احتياطية مرنة لحساب السكان في حال وجود اختلافات في حالة الأحرف (Capital/Small)
+        // طريقة احتياطية مرنة لحساب السكان تفادياً لأي مشاكل
         db.collection('players').onSnapshot((allPlayers) => {
             let counter = 0;
             allPlayers.forEach((pDoc) => {
-                let pCountry = pDoc.data().country;
-                if(pCountry && pCountry.trim().toLowerCase() === countryId.toLowerCase()){
+                let pResidence = pDoc.data().residence_country;
+                if(pResidence && pResidence.trim().toLowerCase() === residenceCountry.toLowerCase()){
                     counter++;
                 }
             });
@@ -187,10 +187,11 @@ function listenToCountryStats(countryId) {
     });
 }
 
-function activateOnlineStatus(uid, countryId) {
-    if (!uid || !countryId) return;
+// 🌐 تفعيل حالة الاتصال بناءً على الموقع الحالي الفعلي للاعب
+function activateOnlineStatus(uid, currentLocation) {
+    if (!uid || !currentLocation) return;
     db.collection('online_users').doc(uid).set({
-        country: countryId,
+        country: currentLocation, // الدولة المتواجد فيها حالياً
         last_active: firebase.firestore.FieldValue.serverTimestamp()
     }).catch(()=>{});
 }
