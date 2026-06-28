@@ -28,7 +28,7 @@ const countryFlagCodes = {
     "libya": "ly", "sudan": "sd", "nigeria": "ng", "south_africa": "za"
 };
 
-// 2. مراقبة حالة الجلسة بصرامة
+// 2. مراقبة حالة الجلسة بصرامة (تعديل المسار لمنع الـ 404)
 auth.onAuthStateChanged((user) => {
     if (user) {
         currentUserUid = user.uid;
@@ -41,7 +41,8 @@ auth.onAuthStateChanged((user) => {
         getPlayerDataAndActivateOnline(user.uid);
     } else {
         console.log("لا يوجد مستخدم نشط، إعادة توجيه لصفحة الدخول...");
-        window.location.assign("index.html");
+        // ✔️ تم إصلاح المسار ليكون نسبياً داخل مجلد المشروع
+        window.location.assign("./index.html");
     }
 });
 
@@ -75,12 +76,16 @@ function getPlayerDataAndActivateOnline(uid) {
         } else {
             console.warn("مستند اللاعب غير موجود، يتم تسجيل الخروج...");
             auth.signOut().then(() => {
-                window.location.assign("index.html");
+                // ✔️ تم إصلاح المسار هنا أيضاً
+                window.location.assign("./index.html");
             });
         }
     }, (error) => {
-        console.error("خطأ حماية في Firestore:", error);
-        window.location.assign("index.html");
+        console.error("خطأ حماية في Firestore أو بطء استجابة:", error);
+        // ✔️ لا يتم الطرد الفوري إلا إذا كان الخطأ بسبب الصلاحيات المرفوضة تماماً لمنع مشاكل ضعف الشبكة
+        if (error.code === 'permission-denied') {
+            window.location.assign("./index.html");
+        }
     });
 }
 
@@ -101,7 +106,7 @@ function startLiveUpdates() {
     listenToLiveChat();
 }
 
-// 🌍 [جديد] الدالة المسؤولة عن جلب إحصائيات قارة إفريقيا بالكامل من السيرفر
+// 🌍 الدالة المسؤولة عن جلب إحصائيات قارة إفريقيا بالكامل من السيرفر
 function listenToContinentStats() {
     db.collection('stats').doc('africa').onSnapshot((doc) => {
         if (doc.exists) {
@@ -116,7 +121,7 @@ function listenToContinentStats() {
     }, err => console.error("خطأ إحصائيات القارة:", err));
 }
 
-// 🗺️ [جديد] الدالة المسؤولة عن جلب إحصائيات الدولة التي يتواجد بها اللاعب حالياً
+// 🗺️ الدالة المسؤولة عن جلب إحصائيات الدولة التي يتواجد بها اللاعب حالياً
 function listenToCountryStats(countryId) {
     if (!countryId) return;
     db.collection('countries').doc(countryId).onSnapshot((doc) => {
@@ -130,7 +135,7 @@ function listenToCountryStats(countryId) {
     }, err => console.error("خطأ إحصائيات الدولة:", err));
 }
 
-// 🟢 [جديد] تحديث حالة اللاعب ليكون متصلاً (Online) داخل السيرفر تلقائياً
+// 🟢 تحديث حالة اللاعب ليكون متصلاً (Online) داخل السيرفر تلقائياً
 function activateOnlineStatus(uid, location) {
     if (!uid) return;
     const onlineRef = db.collection('online_players').doc(uid);
@@ -142,7 +147,7 @@ function activateOnlineStatus(uid, location) {
     }).catch(err => console.error("خطأ تحديث التواجد الحركي الحقيقي:", err));
 }
 
-// 💬 [جديد مصلح] الاستماع الفوري لشات اللعبة وعرض برقيات الرسائل بشكل متتالي
+// 💬 الاستماع الفوري لشات اللعبة وعرض برقيات الرسائل بشكل متتالي
 function listenToLiveChat() {
     const chatContainer = document.getElementById('chat-messages-container');
     if (!chatContainer) return;
