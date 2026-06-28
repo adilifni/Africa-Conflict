@@ -28,18 +28,7 @@ const countryFlagCodes = {
     "libya": "ly", "sudan": "sd", "nigeria": "ng", "south_africa": "za"
 };
 
-// دالة مساعدة لتحديد مسار التوجيه بدقة بناءً على بيئة العمل (GitHub Pages)
-function safeRedirect(targetPage) {
-    const currentPath = window.location.pathname;
-    // إذا كنا نستخدم GitHub Pages نقوم بالحفاظ على اسم المجلد المرفوع عليه المشروع
-    if (currentPath.includes('/Africa-Conflict/')) {
-        window.location.href = `/Africa-Conflict/${targetPage}`;
-    } else {
-        window.location.href = `./${targetPage}`;
-    }
-}
-
-// 2. مراقبة حالة الجلسة بصرامة وبدون طرد عشوائي
+// 2. مراقبة حالة الجلسة بصرامة وبدون طرد عشوائي مكرر
 auth.onAuthStateChanged((user) => {
     if (user) {
         currentUserUid = user.uid;
@@ -52,10 +41,8 @@ auth.onAuthStateChanged((user) => {
         getPlayerDataAndActivateOnline(user.uid);
     } else {
         console.log("لا يوجد مستخدم نشط، إعادة توجيه لصفحة الدخول...");
-        // حماية: لا تقم بالتحويل إذا كنت بالفعل في صفحة الدخول لمنع التكرار اللانهائي
-        if (!window.location.pathname.endsWith('index.html')) {
-            safeRedirect('index.html');
-        }
+        // استخدام رابط نسبي مباشر ونظيف يمنع التكرار تماماً
+        window.location.href = "index.html";
     }
 });
 
@@ -87,16 +74,13 @@ function getPlayerDataAndActivateOnline(uid) {
             // تشغيل التحديثات الحية وإظهار عناصر اللعبة
             startLiveUpdates();
         } else {
-            console.warn("مستند اللاعب غير موجود في Firestore.");
-            // تفعيل حماية إضافية بدلاً من الطرد الفوري العشوائي لمنع الـ 404
+            console.warn("مستند اللاعب غير موجود في Firestore، لكن لن يتم طرده لمنع أخطاء المسارات.");
+            // حماية: حتى لو المستند متأخر أو غير موجود، أظهر الشاشة ولا تطرده لتفادي الـ 404
             startLiveUpdates(); 
         }
     }, (error) => {
         console.error("خطأ حماية في Firestore أو بطء استجابة:", error);
-        // لا يتم الطرد الفوري إلا في حالة التأكد التام من رفض الصلاحية المطلقة
-        if (error.code === 'permission-denied') {
-            safeRedirect('index.html');
-        }
+        // لا تطرد اللاعب أبداً هنا لضمان استقرار الصفحة على الاستضافة
     });
 }
 
@@ -169,7 +153,6 @@ function listenToLiveChat() {
         .onSnapshot((snapshot) => {
             chatContainer.innerHTML = ""; // تصفير الحاوية قبل التحديث لمنع التكرار
             
-            // ترتيب الرسائل من الأقدم للأحدث لتعرض بشكل صحيح في الـ UI
             let messages = [];
             snapshot.forEach(doc => messages.unshift(doc.data()));
 
@@ -184,7 +167,6 @@ function listenToLiveChat() {
                 chatContainer.appendChild(msgBubble);
             });
             
-            // سحب السكرول لأسفل الشات تلقائياً عند وصول أي رسالة جديدة
             chatContainer.scrollTop = chatContainer.scrollHeight;
         }, err => console.error("خطأ جلب شات اللعبة الحية:", err));
 }
