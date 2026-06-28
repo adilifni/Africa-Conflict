@@ -81,21 +81,27 @@ function checkAndCreateUserAccount(user) {
         console.error("خطأ في Firestore:", err.message);
     });
 }
-
-// 5. التوجيه الديناميكي المتوافق تماماً وبأمان مع مسارات GitHub Pages
+// 5. التوجيه الديناميكي المصلح بناءً على الاسم الحقيقي للملف المستهدف (main.html)
 function redirectToMainGame() {
     let currentUrl = window.location.href;
     
-    // إذا كان الرابط ينتهي بـ index.html نستبدله بـ main_game.html للحفاظ على اسم المستودع كاملاً
-    if (currentUrl.includes("index.html")) {
-        currentUrl = currentUrl.replace("index.html", "main_game.html");
+    // إزالة علامات الاستفهام أو الهاشتاج التي ترفقها جوجل بعد تسجيل الدخول
+    if (currentUrl.includes("?")) {
+        currentUrl = currentUrl.split("?")[0];
+    }
+    if (currentUrl.includes("#")) {
+        currentUrl = currentUrl.split("#")[0];
+    }
+
+    let targetUrl;
+    if (currentUrl.endsWith("index.html")) {
+        // إذا كان الرابط ينتهي بـ index.html، نستبدلها مباشرة بـ main.html
+        targetUrl = currentUrl.replace("index.html", "main.html");
     } else {
-        if (!currentUrl.endsWith("/")) {
-            currentUrl += "/";
-        }
-        currentUrl += "main_game.html";
+        // إذا كان واقفا على المجلد الرئيسي، نتأكد من إضافة الشرطة المائلة ثم الملف
+        targetUrl = currentUrl.endsWith("/") ? currentUrl + "main.html" : currentUrl + "/main.html";
     }
     
-    console.log("🚀 جاري التوجيه الآمن إلى شاشة اللعبة:", currentUrl);
-    window.location.assign(currentUrl);
+    console.log("🚀 جاري التوجيه إلى الملف الحقيقي:", targetUrl);
+    window.location.assign(targetUrl);
 }
