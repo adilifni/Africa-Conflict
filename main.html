@@ -138,6 +138,7 @@
             background-color: #57606a;
             border-radius: 50%;
             transition: background-color 0.3s;
+            cursor: pointer;
         }
 
         .dot.active {
@@ -224,6 +225,7 @@
             max-width: 90%;
             align-self: flex-start;
             border: 1px solid #30363d;
+            word-break: break-word;
         }
 
         .msg-meta {
@@ -264,6 +266,10 @@
             width: 40px;
             height: 40px;
             cursor: pointer;
+        }
+         
+        .chat-send-btn:active {
+            transform: scale(0.9);
         }
 
         /* 📱 الفوتر الثابت */
@@ -307,7 +313,7 @@
 
         <div id="main-game-blocks" style="display: none; flex-direction: column; gap: 12px;">
             
-            <div class="block-card" id="continent-card">
+            <div class="block-card" id="continent-card" onclick="toggleContinentSlider()">
                 <div class="side-img-box">
                     <img src="https://img.icons8.com/ios-filled/100/ffffff/africa.png" class="clickable-asset" id="continent-map-btn" alt="Africa">
                 </div>
@@ -389,7 +395,7 @@
                 <div class="chat-messages" id="chat-messages-container"></div>
                 <div class="chat-input-area">
                     <input type="text" class="chat-input" id="chat-input-field" placeholder="اكتب رسالة برقية هنا...">
-                    <button class="chat-send-btn" onclick="sendChatMessage()">◀</button>
+                    <button class="chat-send-btn" id="send-chat-trigger">◀</button>
                 </div>
             </div>
             
@@ -403,6 +409,28 @@
         <a href="#" class="nav-link active">الرئيسية</a>
     </div>
 
+    <script src="js/auth.js"></script>
     <script src="js/main_game.js"></script>
+
+    <script>
+        // دالة سريعة للتحكم بنقر السلايدر الخاص بالقارة
+        let currentSliderPage = 0;
+        function toggleContinentSlider() {
+            const core = document.getElementById('slider-core');
+            const dot0 = document.getElementById('dot0');
+            const dot1 = document.getElementById('dot1');
+            if (currentSliderPage === 0) {
+                core.style.transform = 'translateX(50%)'; // لأن الاتجاه RTL يمين ليسار
+                dot0.classList.remove('active');
+                dot1.classList.add('active');
+                currentSliderPage = 1;
+            } else {
+                core.style.transform = 'translateX(0)';
+                dot1.classList.remove('active');
+                dot0.classList.add('active');
+                currentSliderPage = 0;
+            }
+        }
+    </script>
 </body>
 </html>
