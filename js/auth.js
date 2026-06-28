@@ -81,26 +81,21 @@ function checkAndCreateUserAccount(user) {
         console.error("خطأ في Firestore:", err.message);
     });
 }
-// 5. التوجيه الديناميكي المتوافق مع مسارات GitHub Pages والمجلدات الفرعية
+
+// 5. التوجيه الديناميكي المتوافق تماماً وبأمان مع مسارات GitHub Pages
 function redirectToMainGame() {
-    // نتحقق أولاً إذا كان المسار ينتهي بشرطة مائلة لمنع دمج المسارات الخاطئة
-    let currentPath = window.location.pathname;
-    if (!currentPath.endsWith('/')) {
-        // إذا كان واقفا على ملف index.html، نقوم بحذفه لنحصل على المجلد الأب النظيف
-        currentPath = currentPath.substring(0, currentPath.lastIndexOf('/') + 1);
-    }
-// 5. التوجيه الديناميكي المتوافق مع مسارات GitHub Pages والمجلدات الفرعية
-function redirectToMainGame() {
-    // نتحقق أولاً إذا كان المسار ينتهي بشرطة مائلة لمنع دمج المسارات الخاطئة
-    let currentPath = window.location.pathname;
-    if (!currentPath.endsWith('/')) {
-        // إذا كان واقفا على ملف index.html، نقوم بحذفه لنحصل على المجلد الأب النظيف
-        currentPath = currentPath.substring(0, currentPath.lastIndexOf('/') + 1);
+    let currentUrl = window.location.href;
+    
+    // إذا كان الرابط ينتهي بـ index.html نستبدله بـ main_game.html للحفاظ على اسم المستودع كاملاً
+    if (currentUrl.includes("index.html")) {
+        currentUrl = currentUrl.replace("index.html", "main_game.html");
+    } else {
+        if (!currentUrl.endsWith("/")) {
+            currentUrl += "/";
+        }
+        currentUrl += "main_game.html";
     }
     
-    // بناء الرابط الجديد مع الحفاظ التام على اسم مستودع اللعبة
-    const targetUrl = window.location.origin + currentPath + "main_game.html";
-    
-    console.log("🚀 جاري التوجيه الآمن إلى شاشة اللعبة:", targetUrl);
-    window.location.assign(targetUrl);
+    console.log("🚀 جاري التوجيه الآمن إلى شاشة اللعبة:", currentUrl);
+    window.location.assign(currentUrl);
 }
