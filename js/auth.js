@@ -89,6 +89,14 @@ function redirectToMainGame() {
         // إذا كان واقفا على ملف index.html، نقوم بحذفه لنحصل على المجلد الأب النظيف
         currentPath = currentPath.substring(0, currentPath.lastIndexOf('/') + 1);
     }
+// 5. التوجيه الديناميكي المتوافق مع مسارات GitHub Pages والمجلدات الفرعية
+function redirectToMainGame() {
+    // نتحقق أولاً إذا كان المسار ينتهي بشرطة مائلة لمنع دمج المسارات الخاطئة
+    let currentPath = window.location.pathname;
+    if (!currentPath.endsWith('/')) {
+        // إذا كان واقفا على ملف index.html، نقوم بحذفه لنحصل على المجلد الأب النظيف
+        currentPath = currentPath.substring(0, currentPath.lastIndexOf('/') + 1);
+    }
     
     // بناء الرابط الجديد مع الحفاظ التام على اسم مستودع اللعبة
     const targetUrl = window.location.origin + currentPath + "main_game.html";
