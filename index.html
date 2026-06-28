@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Africa Conflict</title>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <title>تسجيل الدخول - Africa Conflict</title>
     
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
     <style>
         * {
             box-sizing: border-box;
@@ -22,377 +23,100 @@
             color: #ffffff;
             display: flex;
             flex-direction: column;
-            min-height: 100vh;
-        }
-
-        /* 👑 الشريط العلوي الثابت */
-        .top-bar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 50px;
-            background-color: #1a2332;
-            display: flex;
             align-items: center;
-            justify-content: space-between;
-            padding: 0 15px;
-            z-index: 1000;
-            border-bottom: 1px solid #1f2937;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
         }
 
-        .game-title {
-            font-size: 18px;
-            font-weight: bold;
-            color: #bdc3c7;
-        }
-
-        /* 🌍 محتوى اللعبة المتغير في المنتصف - قابل للتحرك الحر بالكامل */
-        .game-content {
-            margin-top: 60px; /* تباعد كافي عن الهيدر */
-            margin-bottom: 80px; /* تباعد كافي عن الفوتر لعدم تداخل الشات */
-            flex: 1;
-            padding: 12px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .loading-text {
-            color: #66fcf1;
-            font-size: 16px;
-            text-align: center;
-            margin-top: 50px;
-        }
-
-        /* 📦 ستايل البلوكات الرئيسية */
-        .block-card {
+        /* 📦 حاوية كارت تسجيل الدخول */
+        .login-card {
             background-color: #1a2332;
             border: 1.5px solid #c5a059;
-            border-radius: 8px;
-            padding: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            border-radius: 12px;
+            padding: 30px 20px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
         }
 
-        .side-img-box {
-            width: 25%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* تحويل الصور المعنية إلى أزرار تفاعلية */
-        .clickable-asset {
-            max-width: 100%;
-            max-height: 55px;
+        .game-logo {
+            width: 90px;
+            height: 90px;
+            margin-bottom: 15px;
             object-fit: contain;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: transform 0.2s, filter 0.2s;
-        }
-        
-        .clickable-asset:active {
-            transform: scale(0.92);
-            filter: brightness(0.8);
         }
 
-        .stats-grid {
-            width: 75%;
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            text-align: center;
-            gap: 5px;
+        .login-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ffffff;
+            margin-bottom: 8px;
         }
 
-        .stat-item {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            cursor: pointer;
-        }
-
-        .stat-label {
-            font-size: 13px;
+        .login-subtitle {
+            font-size: 14px;
             color: #8b949e;
-            margin-bottom: 6px;
+            margin-bottom: 30px;
+            line-height: 1.5;
         }
 
-        .stat-value {
-            font-size: 15px;
-            font-weight: bold;
-            color: #ffffff;
-        }
-
-        /* 🔘 زر البرلمان */
-        .parliament-btn {
+        /* 🔴 زر تسجيل الدخول المطور عبر جوجل */
+        .google-btn {
             width: 100%;
-            background-color: #26cbd4;
-            border: 2px solid #0d1117;
-            outline: none;
+            background-color: #ffffff;
             color: #000000;
-            font-size: 20px;
-            font-weight: bold;
+            border: none;
             padding: 12px;
-            border-radius: 25px;
-            cursor: pointer;
-            text-align: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            transition: transform 0.1s;
-        }
-
-        .parliament-btn:active {
-            transform: scale(0.98);
-        }
-
-        /* 🚨 بلوك الأحداث الطارئة */
-        .events-block {
-            background-color: #1f1616;
-            border: 1.5px solid #ff4a4a;
-            border-radius: 8px;
-            padding: 10px;
-            display: none;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .event-btn {
-            width: 100%;
-            padding: 10px;
-            border-radius: 6px;
-            border: none;
-            font-weight: bold;
-            font-size: 14px;
-            cursor: pointer;
-            color: #ffffff;
-        }
-
-        .party-invite-btn { background-color: #cca43b; color: #000; }
-        .war-alert-btn { background-color: #b71c1c; }
-
-        /* 💬 بلوك غرفة الشات المتطور والمؤمن ضد التداخل */
-        .chat-block {
-            background-color: #161b22;
-            border: 1.5px solid #30363d;
-            border-radius: 8px;
-            display: flex;
-            flex-direction: column;
-            height: 340px;
-            overflow: hidden;
-            margin-bottom: 10px; /* ضمان تباعد إضافي من الأسفل */
-        }
-
-        .chat-header {
-            background-color: #21262d;
-            padding: 10px;
-            font-size: 14px;
-            font-weight: bold;
-            border-bottom: 1px solid #30363d;
-            text-align: center;
-            color: #c9d1d9;
-        }
-
-        .chat-messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 10px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .msg-bubble {
-            background-color: #21262d;
-            padding: 8px 12px;
-            border-radius: 8px;
-            max-width: 90%;
-            align-self: flex-start;
-            border: 1px solid #30363d;
-        }
-
-        .msg-meta {
-            font-size: 11px;
-            color: #58a6ff;
-            margin-bottom: 3px;
-            font-weight: bold;
-            display: flex;
-            justify-content: space-between;
-            gap: 15px;
-        }
-
-        .msg-text {
-            font-size: 14px;
-            color: #f0f6fc;
-            word-break: break-word;
-        }
-
-        .chat-input-area {
-            display: flex;
-            padding: 10px;
-            background-color: #0d1117;
-            border-top: 1px solid #30363d;
-            gap: 8px;
-            align-items: center;
-        }
-
-        .chat-input {
-            flex: 1;
-            background-color: #161b22;
-            border: 1px solid #30363d;
-            border-radius: 20px;
-            padding: 10px 14px;
-            color: #ffffff;
-            font-size: 14px;
-            outline: none;
-        }
-
-        .chat-send-btn {
-            background-color: #2188ff;
-            color: #ffffff;
-            border: none;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            font-weight: bold;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-
-        /* 📱 الجزء السفلي الثابت */
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 60px;
-            background-color: #1a2332;
-            border-top: 1.5px solid #c5a059;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        .nav-link {
-            background: none;
-            border: none;
-            color: #bdc3c7;
             font-size: 16px;
             font-weight: bold;
+            border-radius: 25px;
             cursor: pointer;
-            text-decoration: none;
-            flex: 1;
-            text-align: center;
-            height: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
+            gap: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.2s, transform 0.1s;
         }
 
-        .nav-link.active {
-            color: #c5a059;
+        .google-btn:active {
+            transform: scale(0.98);
+            background-color: #f1f1f1;
+        }
+
+        .google-icon {
+            width: 22px;
+            height: 22px;
+        }
+
+        /* 🔒 تذييل الصفحة */
+        .login-footer {
+            margin-top: 25px;
+            font-size: 11px;
+            color: #57606a;
         }
     </style>
 </head>
 <body>
 
-    <div class="top-bar">
-        <div class="game-title">Africa Conflict 🌍</div>
-        <div id="player-status" style="font-size: 12px; color: #66fcf1;">جاري التحقق...</div>
-    </div>
-
-    <div class="game-content">
+    <div class="login-card">
+        <img src="https://img.icons8.com/ios-filled/150/c5a059/africa.png" class="game-logo" alt="Africa Conflict">
         
-        <div class="loading-text" id="loading-msg">جاري الاتصال بغرفة العمليات واستدعاء بيانات الدولة...</div>
+        <h1 class="login-title">Africa Conflict 🌍</h1>
+        <p class="login-subtitle">قد دولتك، أدر مواردك الاقتصادية، وتحكم في مصير القارة السمراء.</p>
 
-        <div id="main-game-blocks" style="display: none; flex-direction: column; gap: 12px;">
-            
-            <div class="block-card">
-                <div class="side-img-box">
-                    <img src="https://img.icons8.com/ios-filled/100/ffffff/africa.png" class="clickable-asset" id="continent-map-btn" alt="Africa">
-                </div>
-                <div class="stats-grid">
-                    <div class="stat-item" onclick="alert('الانتقال لصفحة أحزاب القارة')">
-                        <span class="stat-label">أحزاب</span>
-                        <span class="stat-value" id="cont-parties">0</span>
-                    </div>
-                    <div class="stat-item" onclick="alert('الانتقال لصفحة الدول')">
-                        <span class="stat-label">دول</span>
-                        <span class="stat-value" id="cont-countries">50</span>
-                    </div>
-                    <div class="stat-item" onclick="alert('الانتقال لصفحة متصلي القارة')">
-                        <span class="stat-label">متصل</span>
-                        <span class="stat-value" id="cont-online">0</span>
-                    </div>
-                    <div class="stat-item" onclick="alert('الانتقال لإحصائيات سكان القارة')">
-                        <span class="stat-label">سكان</span>
-                        <span class="stat-value" id="cont-pop">0</span>
-                    </div>
-                </div>
-            </div>
+        <button class="google-btn" id="google-login-trigger">
+            <img src="https://img.icons8.com/color/48/000000/google-logo.png" class="google-icon" alt="Google">
+            تسجيل الدخول باستخدام Google
+        </button>
 
-            <div class="block-card">
-                <div class="side-img-box">
-                    <img id="country-flag" src="https://flagcdn.com/w320/ma.png" class="clickable-asset" alt="علم الدولة">
-                </div>
-                <div class="stats-grid">
-                    <div class="stat-item" onclick="alert('الانتقال لمصانع الدولة')">
-                        <span class="stat-label">مصانع</span>
-                        <span class="stat-value" id="count-factories">0</span>
-                    </div>
-                    <div class="stat-item" onclick="alert('الانتقال لأحزاب الدولة')">
-                        <span class="stat-label">أحزاب</span>
-                        <span class="stat-value" id="count-parties">0</span>
-                    </div>
-                    <div class="stat-item" onclick="alert('الانتقال للمتصلين بالدولة')">
-                        <span class="stat-label">متصل</span>
-                        <span class="stat-value" id="count-online">0</span>
-                    </div>
-                    <div class="stat-item" onclick="alert('الانتقال لتفاصيل سكان الدولة')">
-                        <span class="stat-label">سكان</span>
-                        <span class="stat-value" id="count-pop">0</span>
-                    </div>
-                </div>
-            </div>
-
-            <button class="parliament-btn" onclick="alert('جاري الانتقال إلى قبة البرلمان ومجلس النواب...')">
-                برلمان الدولة
-            </button>
-
-            <div class="events-block" id="game-events-box">
-                <button class="event-btn party-invite-btn" id="btn-invite" style="display: none;" onclick="alert('فتح تفاصيل دعوة الحزب')">
-                     لديك دعوة معلقة للانضمام إلى أحد الأحزاب!
-                </button>
-                <button class="event-btn war-alert-btn" id="btn-war" style="display: none;" onclick="alert('الذهاب لجبهة القتال الثائرة')">
-                     حالة حرب مسلحة معلنة في الدولة الآن!
-                </button>
-            </div>
-
-            <div class="chat-block">
-                <div class="chat-header">غرفة الدردشة الإقليمية (المقالات والدردشات)</div>
-                <div class="chat-messages" id="chat-messages-container">
-                    </div>
-                <div class="chat-input-area">
-                    <input type="text" class="chat-input" id="chat-input-field" placeholder="اكتب رسالة برقية هنا...">
-                    <button class="chat-send-btn" onclick="sendChatMessage()">◀</button>
-                </div>
-            </div>
-            
+        <div class="login-footer">
+            من خلال الدخول، أنت توافق على شروط استدعاء وتحديث البيانات الحية للعبة.
         </div>
-
     </div>
 
-    <div class="bottom-nav">
-        <a href="#" class="nav-link" onclick="alert('صفحة الحساب قريباً')">الحساب</a>
-        <a href="#" class="nav-link" onclick="alert('صفحة الحروب قريباً')">الحروب</a>
-        <a href="#" class="nav-link" onclick="alert('صفحة العمل قريباً')">العمل</a>
-        <a href="#" class="nav-link active">الرئيسية</a>
-    </div>
-
-    <script src="js/main_game.js"></script>
+    <script src="js/auth.js"></script>
 </body>
 </html>
