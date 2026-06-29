@@ -27,9 +27,11 @@ const countryFlagCodes = {
     "morocco": "ma", "egypt": "eg", "algeria": "dz", "tunisia": "tn",
     "libya": "ly", "sudan": "sd", "nigeria": "ng", "south_africa": "za"
 };
-
-// 2. مراقبة حالة الجلسة بصرامة وبدون طرد عشوائي مكرر
+// 2. مراقبة حالة الجلسة بصرامة تامة ومنع تكرار الروابط
 auth.onAuthStateChanged((user) => {
+    // الحصول على المسار النظيف الحالي بدون الأخطاء الزائدة
+    const currentPath = window.location.pathname;
+
     if (user) {
         currentUserUid = user.uid;
         currentUserName = user.displayName || "لاعب";
@@ -37,12 +39,21 @@ auth.onAuthStateChanged((user) => {
         const playerStatusEl = document.getElementById('player-status');
         if (playerStatusEl) playerStatusEl.innerText = "القائد: " + currentUserName;
         
+        // إذا كان الرابط تالفاً بسب الكاش ومكرراً، أصلحه فوراً برابط نظيف
+        if (currentPath.includes('main.html/main.html')) {
+            window.location.href = "https://adilifni.github.io/Africa-Conflict/main.html";
+            return;
+        }
+
         // استدعاء بيانات اللاعب من السيرفر
         getPlayerDataAndActivateOnline(user.uid);
     } else {
         console.log("لا يوجد مستخدم نشط، إعادة توجيه لصفحة الدخول...");
-        // استخدام رابط نسبي مباشر ونظيف يمنع التكرار تماماً
-        window.location.href = "index.html";
+        
+        // التحويل لصفحة الدخول برابط ثابت ومطلق لمنع التكرار العشوائي
+        if (!currentPath.endsWith('index.html')) {
+            window.location.href = "https://adilifni.github.io/Africa-Conflict/index.html";
+        }
     }
 });
 
