@@ -57,7 +57,7 @@ auth.onAuthStateChanged((user) => {
     }
 });
 
-// 3. جلب بيانات مستند اللاعب بأمان تّام وتحصين الحقول
+// 3. جلب بيانات مستند اللاعب بأمان تّام وتحصين كامل ضد الطرد
 function getPlayerDataAndActivateOnline(uid) {
     if (!uid) return;
     
@@ -65,6 +65,7 @@ function getPlayerDataAndActivateOnline(uid) {
         if (doc.exists) {
             let data = doc.data();
             
+            // تحصين قراءة دولة الإقامة
             if (data.residence_country) {
                 userResidenceCountry = data.residence_country.trim().toLowerCase();
             } else if (data.country) {
@@ -85,16 +86,16 @@ function getPlayerDataAndActivateOnline(uid) {
             // تشغيل التحديثات الحية وإظهار عناصر اللعبة
             startLiveUpdates();
         } else {
-            console.warn("مستند اللاعب غير موجود في Firestore، لكن لن يتم طرده لمنع أخطاء المسارات.");
-            // حماية: حتى لو المستند متأخر أو غير موجود، أظهر الشاشة ولا تطرده لتفادي الـ 404
+            console.warn("مستند اللاعب غير موجود في Firestore، يتم تشغيل الواجهة افتراضياً لمنع الطرد.");
+            // حماية مطلقة: حتى لو لم يجد المستند، افتح اللعبة بالقيم الافتراضية ولا تطرد اللاعب
             startLiveUpdates(); 
         }
     }, (error) => {
-        console.error("خطأ حماية في Firestore أو بطء استجابة:", error);
-        // لا تطرد اللاعب أبداً هنا لضمان استقرار الصفحة على الاستضافة
+        console.error("تنبيه: حدث خطأ أثناء الاتصال بـ Firestore (غالباً بسبب قواعد الحماية أو الكاش):", error);
+        // الحفاظ على استقرار الصفحة: تشغيل الواجهة الرئيسية بالقيم الافتراضية بدلاً من الانتقال لصفحة الخطأ
+        startLiveUpdates();
     });
 }
-
 // 4. دالة تشغيل وتأمين إظهار الشاشة الرئيسية واختفاء شاشة التحميل
 function startLiveUpdates() {
     const loadingMsg = document.getElementById('loading-msg');
