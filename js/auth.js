@@ -92,7 +92,8 @@ function redirectToMainGame() {
         return;
     }
 
+    function redirectToMainGame() {
     console.log("🚀 جاري التوجيه الآمن إلى الصفحة الرئيسية للعبة...");
-    // استخدام طريقة الـ replace المعتمدة على روابط نسبية نظيفة متوافقة تماماً مع مجلدات GitHub
-    window.location.replace("main.html");
+    // التوجيه للاسم الجديد مباشرة بدون تعقيدات الروابط المطلقة
+    window.location.replace("game.html");
 }

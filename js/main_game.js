@@ -39,9 +39,9 @@ auth.onAuthStateChanged((user) => {
         const playerStatusEl = document.getElementById('player-status');
         if (playerStatusEl) playerStatusEl.innerText = "القائد: " + currentUserName;
         
-        // إذا تداخل الرابط بسبب كاش قديم، يتم إصلاحه فوراً بسلاسة
-        if (currentPath.includes('main.html/main.html')) {
-            window.location.replace("https://adilifni.github.io/Africa-Conflict/main.html");
+        // حماية إضافية في حال حدوث تداخل غريب بالمسارات القديمة
+        if (currentPath.includes('game.html/game.html') || currentPath.includes('main.html')) {
+            window.location.replace("game.html");
             return;
         }
 
@@ -49,9 +49,8 @@ auth.onAuthStateChanged((user) => {
         getPlayerDataAndActivateOnline(user.uid);
     } else {
         console.log("لا يوجد مستخدم نشط.");
-        // حماية: لا تقم بالطرد إلى index.html إلا إذا كنت متأكداً تماماً أنك لست فيها ولست في صفحة اللعبة الرئيسية مستقراً
-        // منعاً لخطأ 404 المكرر، يفضل استخدام مسار نسبي مباشر بدلاً من الرابط الكامل لتفادي مشاكل النطاقات على الهواتف
-        if (!currentPath.endsWith('index.html') && currentPath.includes('main.html')) {
+        // حماية: لا يتم الطرد إلا إذا تأكدنا أننا لسنا في صفحة index.html لمنع الـ Infinite Loop والـ 404
+        if (!currentPath.endsWith('index.html')) {
             window.location.replace("index.html");
         }
     }
