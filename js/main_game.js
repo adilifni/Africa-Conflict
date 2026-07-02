@@ -27,9 +27,9 @@ const countryFlagCodes = {
     "morocco": "ma", "egypt": "eg", "algeria": "dz", "tunisia": "tn",
     "libya": "ly", "sudan": "sd", "nigeria": "ng", "south_africa": "za"
 };
-// 2. مراقبة حالة الجلسة بصرامة تامة ومنع تكرار الروابط
+
+// 2. مراقبة حالة الجلسة بصرامة تامة وبدون طرد عشوائي مكرر
 auth.onAuthStateChanged((user) => {
-    // الحصول على المسار النظيف الحالي بدون الأخطاء الزائدة
     const currentPath = window.location.pathname;
 
     if (user) {
@@ -39,20 +39,20 @@ auth.onAuthStateChanged((user) => {
         const playerStatusEl = document.getElementById('player-status');
         if (playerStatusEl) playerStatusEl.innerText = "القائد: " + currentUserName;
         
-        // إذا كان الرابط تالفاً بسب الكاش ومكرراً، أصلحه فوراً برابط نظيف
+        // إذا تداخل الرابط بسبب كاش قديم، يتم إصلاحه فوراً بسلاسة
         if (currentPath.includes('main.html/main.html')) {
-            window.location.href = "https://adilifni.github.io/Africa-Conflict/main.html";
+            window.location.replace("https://adilifni.github.io/Africa-Conflict/main.html");
             return;
         }
 
         // استدعاء بيانات اللاعب من السيرفر
         getPlayerDataAndActivateOnline(user.uid);
     } else {
-        console.log("لا يوجد مستخدم نشط، إعادة توجيه لصفحة الدخول...");
-        
-        // التحويل لصفحة الدخول برابط ثابت ومطلق لمنع التكرار العشوائي
-        if (!currentPath.endsWith('index.html')) {
-            window.location.href = "https://adilifni.github.io/Africa-Conflict/index.html";
+        console.log("لا يوجد مستخدم نشط.");
+        // حماية: لا تقم بالطرد إلى index.html إلا إذا كنت متأكداً تماماً أنك لست فيها ولست في صفحة اللعبة الرئيسية مستقراً
+        // منعاً لخطأ 404 المكرر، يفضل استخدام مسار نسبي مباشر بدلاً من الرابط الكامل لتفادي مشاكل النطاقات على الهواتف
+        if (!currentPath.endsWith('index.html') && currentPath.includes('main.html')) {
+            window.location.replace("index.html");
         }
     }
 });
@@ -92,10 +92,11 @@ function getPlayerDataAndActivateOnline(uid) {
         }
     }, (error) => {
         console.error("تنبيه: حدث خطأ أثناء الاتصال بـ Firestore (غالباً بسبب قواعد الحماية أو الكاش):", error);
-        // الحفاظ على استقرار الصفحة: تشغيل الواجهة الرئيسية بالقيم الافتراضية بدلاً من الانتقال لصفحة الخطأ
+        // الحفاظ على استقرار الصفحة ومنع الانهيار: تشغيل الواجهة الرئيسية بالقيم الافتراضية
         startLiveUpdates();
     });
 }
+
 // 4. دالة تشغيل وتأمين إظهار الشاشة الرئيسية واختفاء شاشة التحميل
 function startLiveUpdates() {
     const loadingMsg = document.getElementById('loading-msg');

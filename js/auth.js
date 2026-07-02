@@ -81,27 +81,18 @@ function checkAndCreateUserAccount(user) {
         console.error("خطأ في Firestore:", err.message);
     });
 }
-// 5. التوجيه الديناميكي المصلح بناءً على الاسم الحقيقي للملف المستهدف (main.html)
+
+// 5. دالة التوجيه النظيفة والمحصنة ضد التكرار والـ 404
 function redirectToMainGame() {
-    let currentUrl = window.location.href;
-    
-    // إزالة علامات الاستفهام أو الهاشتاج التي ترفقها جوجل بعد تسجيل الدخول
-    if (currentUrl.includes("?")) {
-        currentUrl = currentUrl.split("?")[0];
-    }
-    if (currentUrl.includes("#")) {
-        currentUrl = currentUrl.split("#")[0];
+    // بدلاً من التخمين المعقد، نتحقق بذكاء ونوجه مباشرة بشكل استبدالي (replace) لمنع بقاء الكاش التالف
+    const currentPath = window.location.pathname;
+
+    // إذا كنا بالفعل داخل صفحة main.html فلا داعي لأي توجيه إضافي يفسد المسار
+    if (currentPath.endsWith('main.html')) {
+        return;
     }
 
-    let targetUrl;
-    if (currentUrl.endsWith("index.html")) {
-        // إذا كان الرابط ينتهي بـ index.html، نستبدلها مباشرة بـ main.html
-        targetUrl = currentUrl.replace("index.html", "main.html");
-    } else {
-        // إذا كان واقفا على المجلد الرئيسي، نتأكد من إضافة الشرطة المائلة ثم الملف
-        targetUrl = currentUrl.endsWith("/") ? currentUrl + "main.html" : currentUrl + "/main.html";
-    }
-    
-    console.log("🚀 جاري التوجيه إلى الملف الحقيقي:", targetUrl);
-    window.location.assign(targetUrl);
+    console.log("🚀 جاري التوجيه الآمن إلى الصفحة الرئيسية للعبة...");
+    // استخدام طريقة الـ replace المعتمدة على روابط نسبية نظيفة متوافقة تماماً مع مجلدات GitHub
+    window.location.replace("main.html");
 }
