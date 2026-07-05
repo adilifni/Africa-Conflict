@@ -82,18 +82,11 @@ function checkAndCreateUserAccount(user) {
     });
 }
 
-// 5. دالة التوجيه النظيفة والمحصنة ضد التكرار والـ 404
+// 5. دالة التوجيه النظيفة والمحصنة بعد إزالة التداخل
 function redirectToMainGame() {
-    // بدلاً من التخمين المعقد، نتحقق بذكاء ونوجه مباشرة بشكل استبدالي (replace) لمنع بقاء الكاش التالف
-    const currentPath = window.location.pathname;
-
-    // إذا كنا بالفعل داخل صفحة main.html فلا داعي لأي توجيه إضافي يفسد المسار
-    if (currentPath.endsWith('main.html')) {
-        return;
-    }
-
-    function redirectToMainGame() {
     console.log("🚀 جاري التوجيه الآمن إلى الصفحة الرئيسية للعبة...");
-    // التوجيه للاسم الجديد مباشرة بدون تعقيدات الروابط المطلقة
-    window.location.replace("game.html");
+    
+    // بما أننا اتفقنا على استخدام ملف main.html لكسر الكاش، سنوجه إليه مباشرة
+    const cacheBuster = "?v=" + new Date().getTime();
+    window.location.replace("main.html" + cacheBuster);
 }
