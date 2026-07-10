@@ -1,4 +1,3 @@
-// 1. إعدادات ربط Firebase الحقيقية داخل ملف اللعبة الرئيسي
 const firebaseConfig = {
     apiKey: "AIzaSyCdHlC-kvNWRrYO8-ujA4CjkJsVdFLDTf8",
     authDomain: "africagameauth.firebaseapp.com",
@@ -9,26 +8,23 @@ const firebaseConfig = {
     measurementId: "G-02DLE1VMKT"
 };
 
-// تهيئة Firebase بأمان
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// متغيرات عامة آمنة ومجهزة بقيم افتراضية لمنع الـ Crash
 let currentUserUid = null;
 let currentUserName = "لاعب";
 let userResidenceCountry = "morocco";
 let userCurrentLocation = "morocco";
 
-// قاموس ديناميكي لتحويل أسماء الدول لرموز الأعلام الدولية
 const countryFlagCodes = {
     "morocco": "ma", "egypt": "eg", "algeria": "dz", "tunisia": "tn",
     "libya": "ly", "sudan": "sd", "nigeria": "ng", "south_africa": "za"
 };
 
-// 2. مراقبة حالة الجلسة بصرامة تامة والتوجيه الصحيح المستقر
+// مراقبة الجلسة بداخل الصفحة الرئيسية
 auth.onAuthStateChanged((user) => {
     const currentPath = window.location.pathname;
 
@@ -38,25 +34,16 @@ auth.onAuthStateChanged((user) => {
         
         const playerStatusEl = document.getElementById('player-status');
         if (playerStatusEl) playerStatusEl.innerText = "القائد: " + currentUserName;
-        
-        // منع التداخل في المسارات والتوجيه المستقر (إزالة الحلقات المفرغة)
-        if (currentPath.includes('game.html/game.html')) {
-            window.location.replace("/main.html");
-            return;
-        }
 
-        // استدعاء بيانات اللاعب من السيرفر
         getPlayerDataAndActivateOnline(user.uid);
     } else {
-        console.log("لا يوجد مستخدم نشط.");
-        // حماية: إذا لم يكن مسجلاً، يتم توجيهه فوراً لصفحة تسجيل الدخول الرئيسية بأمان
+        console.log("لا يوجد مستخدم نشط، العودة لصفحة الدخول.");
         if (!currentPath.endsWith('/') && !currentPath.endsWith('index.html')) {
             window.location.replace("/");
         }
     }
 });
 
-// 3. جلب بيانات مستند اللاعب بأمان تّام وتحصين كامل ضد الطرد
 function getPlayerDataAndActivateOnline(uid) {
     if (!uid) return;
     
@@ -64,7 +51,6 @@ function getPlayerDataAndActivateOnline(uid) {
         if (doc.exists) {
             let data = doc.data();
             
-            // تحصين قراءة دولة الإقامة
             if (data.residence_country) {
                 userResidenceCountry = data.residence_country.trim().toLowerCase();
             } else if (data.country) {
@@ -75,26 +61,23 @@ function getPlayerDataAndActivateOnline(uid) {
             
             userCurrentLocation = data.current_location ? data.current_location.trim().toLowerCase() : userResidenceCountry;
             
-            // تحديث العلم تلقائياً بناءً على مكان تواجد اللاعب الحالي
             const flagImg = document.getElementById('country-flag');
             if (flagImg) {
                 let flagCode = countryFlagCodes[userCurrentLocation] || "ma"; 
                 flagImg.src = `https://flagcdn.com/w320/${flagCode}.png`;
             }
             
-            // تشغيل التحديثات الحية وإظهار عناصر اللعبة
             startLiveUpdates();
         } else {
-            console.warn("مستند اللاعب غير موجود في Firestore، يتم تشغيل الواجهة افتراضياً.");
+            console.warn("مستند اللاعب غير موجود، تشغيل الواجهة افتراضياً.");
             startLiveUpdates(); 
         }
     }, (error) => {
-        console.error("تنبيه: حدث خطأ أثناء الاتصال بـ Firestore:", error);
+        console.error("حدث خطأ أثناء الاتصال بـ Firestore:", error);
         startLiveUpdates();
     });
 }
 
-// 4. دالة تشغيل وتأمين إظهار الشاشة الرئيسية واختفاء شاشة التحميل
 function startLiveUpdates() {
     const loadingMsg = document.getElementById('loading-msg');
     const mainBlocks = document.getElementById('main-game-blocks');
@@ -104,14 +87,12 @@ function startLiveUpdates() {
 
     if (!currentUserUid || !userResidenceCountry) return;
 
-    // تشغيل الدوال المتصلة بالقاعدة الآن بأمان تام
     listenToContinentStats();
     listenToCountryStats(userResidenceCountry);
     activateOnlineStatus(currentUserUid, userCurrentLocation);
     listenToLiveChat();
 }
 
-// 🌍 جلب إحصائيات قارة إفريقيا
 function listenToContinentStats() {
     db.collection('stats').doc('africa').onSnapshot((doc) => {
         if (doc.exists) {
@@ -126,7 +107,6 @@ function listenToContinentStats() {
     }, err => console.error("خطأ إحصائيات القارة:", err));
 }
 
-// 🗺️ جلب إحصائيات الدولة الحالية
 function listenToCountryStats(countryId) {
     if (!countryId) return;
     db.collection('countries').doc(countryId).onSnapshot((doc) => {
@@ -140,7 +120,6 @@ function listenToCountryStats(countryId) {
     }, err => console.error("خطأ إحصائيات الدولة:", err));
 }
 
-// 🟢 تحديث حالة اللاعب ليكون متصلاً (Online)
 function activateOnlineStatus(uid, location) {
     if (!uid) return;
     db.collection('online_players').doc(uid).set({
@@ -148,10 +127,9 @@ function activateOnlineStatus(uid, location) {
         name: currentUserName,
         location: location,
         lastActive: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true }).catch(err => console.error("خطأ تحديث التواجد الحركي الحقيقي:", err));
+    }, { merge: true }).catch(err => console.error("خطأ تحديث التواجد:", err));
 }
 
-// 💬 الاستماع الفوري لشات اللعبة وعرض برقيات الرسائل بشكل متتالي
 function listenToLiveChat() {
     const chatContainer = document.getElementById('chat-messages-container');
     if (!chatContainer) return;
@@ -160,7 +138,7 @@ function listenToLiveChat() {
         .orderBy('createdAt', 'desc')
         .limit(30)
         .onSnapshot((snapshot) => {
-            chatContainer.innerHTML = ""; // تصفير الحاوية قبل التحديث لمنع التكرار
+            chatContainer.innerHTML = ""; 
             
             let messages = [];
             snapshot.forEach(doc => messages.unshift(doc.data()));
@@ -177,10 +155,9 @@ function listenToLiveChat() {
             });
             
             chatContainer.scrollTop = chatContainer.scrollHeight;
-        }, err => console.error("خطأ جلب شات اللعبة الحية:", err));
+        }, err => console.error("خطأ جلب شات اللعبة:", err));
 }
 
-// 💬 دالة إرسال برقيات الشات
 function sendChatMessage() {
     const inputField = document.getElementById('chat-input-field');
     if (!inputField || !inputField.value.trim() || !currentUserUid) return;
@@ -199,14 +176,12 @@ function sendChatMessage() {
     });
 }
 
-// ربط أحداث الضغط عند تحميل الصفحة كاملة
 document.addEventListener("DOMContentLoaded", () => {
     const sendBtn = document.getElementById('send-chat-trigger');
     if (sendBtn) {
         sendBtn.addEventListener('click', sendChatMessage);
     }
     
-    // دعم الإرسال عبر زر Enter في لوحة المفاتيح لشات أسرع
     const inputField = document.getElementById('chat-input-field');
     if (inputField) {
         inputField.addEventListener('keypress', (e) => {
