@@ -1,4 +1,4 @@
-// 1. إعدادات ربط Firebase الحقيقية الخاصة بك
+// 1. إعدادات ربط Firebase
 const firebaseConfig = {
     apiKey: "AIzaSyCdHlC-kvNWRrYO8-ujA4CjkJsVdFLDTf8",
     authDomain: "africagameauth.firebaseapp.com",
@@ -15,78 +15,75 @@ if (!firebase.apps.length) {
 }
 const auth = firebase.auth();
 const db = firebase.firestore();
+const provider = new firebase.auth.GoogleAuthProvider();
 
-// 2. تسجيل الدخول باستخدام Popup عند الضغط على الزر
+// 2. معالجة الضغط على زر تسجيل الدخول (استخدام Redirect مباشرة لمنع حظر المتصفحات)
 const loginButton = document.getElementById('google-login-trigger');
 if (loginButton) {
     loginButton.addEventListener('click', () => {
-        const provider = new firebase.auth.GoogleAuthProvider();
-        
-        auth.signInWithPopup(provider)
-            .then((result) => {
-                checkAndCreateUserAccount(result.user);
-            })
-            .catch((error) => {
-                console.error("خطأ أثناء تسجيل الدخول بالنافذة:", error.message);
-                // حل بديل احتياطي في حال تم حظر النافذة المنبثقة من المتصفح
-                auth.signInWithRedirect(provider);
-            });
+        auth.signInWithRedirect(provider);
     });
 }
 
-// 3. مراقبة حالة اللاعب التلقائية عند فتح الصفحة
-auth.onAuthStateChanged((user) => {
-    if (user) {
-        checkAndCreateUserAccount(user);
-    }
-});
+// 3. التقاط نتيجة تسجيل الدخول بعد عودة المستخدم من صفحة Google ومراقبة الحالة
+auth.getRedirectResult()
+    .then((result) => {
+        if (result.user) {
+            checkAndCreateUserAccount(result.user);
+        } else {
+            // إذا لم تكن هناك نتيجة راديكت، نتحقق من حالة الجلسة الحالية
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+                    checkAndCreateUserAccount(user);
+                }
+            });
+        }
+    })
+    .catch((error) => {
+        console.error("خطأ أثناء معالجة تسجيل الدخول:", error.message);
+    });
 
-// 4. دالة فحص الحساب وإنشاء الحقول الجديدة والافتراضية تلقائياً
+// 4. دالة فحص الحساب وإنشاء بيانات اللاعب الجديد
 function checkAndCreateUserAccount(user) {
     const userRef = db.collection('players').doc(user.uid);
 
-    userRef.get({ source: 'server' }).then((doc) => {
+    userRef.get().then((doc) => {
         if (!doc.exists) { 
-            // 🚀 الحساب جديد تماماً! نقوم بتوليد كافة الحقول الهيكلية تلقائياً هنا
+            // إنشاء بيانات لاعب جديد تماماً
             userRef.set({
                 uid: user.uid,
                 name: user.displayName || "قائد جديد",
                 email: user.email,
                 photo: user.photoURL || "",
                 createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                
-                // الموارد الابتدائية للاعب الجديد
                 level: 1,
                 energy: 100,
                 money: 5000,
                 gold: 5,
                 oil: 20,
                 wheat: 50,
-                
-                // 🌍 حقول المواقع الجديدة والتنقل والأحزاب والمصانع
-                residence_country: "morocco", // الإقامة الافتراضية
-                current_location: "morocco",   // التواجد الحالي
+                residence_country: "morocco", 
+                current_location: "morocco",   
                 has_party: false,
                 party_id: "",
-                factories_list: [1]            // يبدأ بالمصنع الأول تلقائياً
+                factories_list: [1]            
             }).then(() => {
-                console.log("🚀 تم إنشاء ملف القائد الجديد بنجاح وبكافة الحقول التلقائية!");
                 redirectToMainGame();
             });
         } else {
-            // اللاعب مسجل مسبقاً ولديه حساب، يوجه مباشرة
+            // اللاعب مسجل مسبقاً، توجه مباشرة
             redirectToMainGame();
         }
     }).catch((err) => {
-        console.error("خطأ في Firestore:", err.message);
+        console.error("خطأ في جلب بيانات اللاعب من Firestore:", err.message);
     });
 }
 
-// 5. دالة التوجيه النظيفة والمحصنة بعد إزالة التداخل
+// 5. دالة التوجيه الآمنة والمعدلة لتتوافق مع استضافة Vercel
 function redirectToMainGame() {
-    console.log("🚀 جاري التوجيه الآمن إلى الصفحة الرئيسية للعبة...");
-    
-    // بما أننا اتفقنا على استخدام ملف main.html لكسر الكاش، سنوجه إليه مباشرة
+    console.log("🚀 جاري التوجيه إلى الصفحة الرئيسية للعبة...");
     const cacheBuster = "?v=" + new Date().getTime();
-    window.location.replace("main.html" + cacheBuster);
+    
+    // إضافة '/' في البداية لتوجيه صحيح للمجلد الرئيسي على Vercel
+    window.location.replace("/main.html" + cacheBuster);
 }

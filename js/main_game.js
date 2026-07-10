@@ -28,7 +28,7 @@ const countryFlagCodes = {
     "libya": "ly", "sudan": "sd", "nigeria": "ng", "south_africa": "za"
 };
 
-// 2. مراقبة حالة الجلسة بصرامة تامة وبدون طرد عشوائي مكرر
+// 2. مراقبة حالة الجلسة بصرامة تامة والتوجيه الصحيح المستقر
 auth.onAuthStateChanged((user) => {
     const currentPath = window.location.pathname;
 
@@ -39,9 +39,9 @@ auth.onAuthStateChanged((user) => {
         const playerStatusEl = document.getElementById('player-status');
         if (playerStatusEl) playerStatusEl.innerText = "القائد: " + currentUserName;
         
-        // حماية إضافية في حال حدوث تداخل غريب بالمسارات القديمة
-        if (currentPath.includes('game.html/game.html') || currentPath.includes('main.html')) {
-            window.location.replace("game.html");
+        // منع التداخل في المسارات والتوجيه المستقر (إزالة الحلقات المفرغة)
+        if (currentPath.includes('game.html/game.html')) {
+            window.location.replace("/main.html");
             return;
         }
 
@@ -49,9 +49,9 @@ auth.onAuthStateChanged((user) => {
         getPlayerDataAndActivateOnline(user.uid);
     } else {
         console.log("لا يوجد مستخدم نشط.");
-        // حماية: لا يتم الطرد إلا إذا تأكدنا أننا لسنا في صفحة index.html لمنع الـ Infinite Loop والـ 404
-        if (!currentPath.endsWith('index.html')) {
-            window.location.replace("index.html");
+        // حماية: إذا لم يكن مسجلاً، يتم توجيهه فوراً لصفحة تسجيل الدخول الرئيسية بأمان
+        if (!currentPath.endsWith('/') && !currentPath.endsWith('index.html')) {
+            window.location.replace("/");
         }
     }
 });
@@ -85,13 +85,11 @@ function getPlayerDataAndActivateOnline(uid) {
             // تشغيل التحديثات الحية وإظهار عناصر اللعبة
             startLiveUpdates();
         } else {
-            console.warn("مستند اللاعب غير موجود في Firestore، يتم تشغيل الواجهة افتراضياً لمنع الطرد.");
-            // حماية مطلقة: حتى لو لم يجد المستند، افتح اللعبة بالقيم الافتراضية ولا تطرد اللاعب
+            console.warn("مستند اللاعب غير موجود في Firestore، يتم تشغيل الواجهة افتراضياً.");
             startLiveUpdates(); 
         }
     }, (error) => {
-        console.error("تنبيه: حدث خطأ أثناء الاتصال بـ Firestore (غالباً بسبب قواعد الحماية أو الكاش):", error);
-        // الحفاظ على استقرار الصفحة ومنع الانهيار: تشغيل الواجهة الرئيسية بالقيم الافتراضية
+        console.error("تنبيه: حدث خطأ أثناء الاتصال بـ Firestore:", error);
         startLiveUpdates();
     });
 }
@@ -106,14 +104,14 @@ function startLiveUpdates() {
 
     if (!currentUserUid || !userResidenceCountry) return;
 
-    // تشغيل دوالك المتصلة بالقاعدة الآن بأمان تام
+    // تشغيل الدوال المتصلة بالقاعدة الآن بأمان تام
     listenToContinentStats();
     listenToCountryStats(userResidenceCountry);
     activateOnlineStatus(currentUserUid, userCurrentLocation);
     listenToLiveChat();
 }
 
-// 🌍 الدالة المسؤولة عن جلب إحصائيات قارة إفريقيا بالكامل من السيرفر
+// 🌍 جلب إحصائيات قارة إفريقيا
 function listenToContinentStats() {
     db.collection('stats').doc('africa').onSnapshot((doc) => {
         if (doc.exists) {
@@ -128,7 +126,7 @@ function listenToContinentStats() {
     }, err => console.error("خطأ إحصائيات القارة:", err));
 }
 
-// 🗺️ الدالة المسؤولة عن جلب إحصائيات الدولة التي يتواجد بها اللاعب حالياً
+// 🗺️ جلب إحصائيات الدولة الحالية
 function listenToCountryStats(countryId) {
     if (!countryId) return;
     db.collection('countries').doc(countryId).onSnapshot((doc) => {
@@ -142,16 +140,15 @@ function listenToCountryStats(countryId) {
     }, err => console.error("خطأ إحصائيات الدولة:", err));
 }
 
-// 🟢 تحديث حالة اللاعب ليكون متصلاً (Online) داخل السيرفر تلقائياً
+// 🟢 تحديث حالة اللاعب ليكون متصلاً (Online)
 function activateOnlineStatus(uid, location) {
     if (!uid) return;
-    const onlineRef = db.collection('online_players').doc(uid);
-    onlineRef.set({
+    db.collection('online_players').doc(uid).set({
         uid: uid,
         name: currentUserName,
         location: location,
         lastActive: firebase.firestore.FieldValue.serverTimestamp()
-    }).catch(err => console.error("خطأ تحديث التواجد الحركي الحقيقي:", err));
+    }, { merge: true }).catch(err => console.error("خطأ تحديث التواجد الحركي الحقيقي:", err));
 }
 
 // 💬 الاستماع الفوري لشات اللعبة وعرض برقيات الرسائل بشكل متتالي
@@ -202,10 +199,20 @@ function sendChatMessage() {
     });
 }
 
-// ربط حدث الضغط على زر الإرسال المتواجد في HTML الجديد
+// ربط أحداث الضغط عند تحميل الصفحة كاملة
 document.addEventListener("DOMContentLoaded", () => {
     const sendBtn = document.getElementById('send-chat-trigger');
     if (sendBtn) {
         sendBtn.addEventListener('click', sendChatMessage);
+    }
+    
+    // دعم الإرسال عبر زر Enter في لوحة المفاتيح لشات أسرع
+    const inputField = document.getElementById('chat-input-field');
+    if (inputField) {
+        inputField.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendChatMessage();
+            }
+        });
     }
 });
