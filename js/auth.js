@@ -1,3 +1,4 @@
+// تأكد من مطابقة هذه الإعدادات بنسبة 100% مع الإعدادات الموجودة في مشروعك بـ Firebase
 const firebaseConfig = {
     apiKey: "AIzaSyCdHlC-kvNWRrYO8-ujA4CjkJsVdFLDTf8",
     authDomain: "africagameauth.firebaseapp.com",
@@ -8,9 +9,15 @@ const firebaseConfig = {
     measurementId: "G-02DLE1VMKT"
 };
 
-if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
+// تهيئة Firebase
+try {
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+} catch (e) {
+    alert("فشل تهيئة Firebase: " + e.message);
 }
+
 const auth = firebase.auth();
 const db = firebase.firestore();
 const provider = new firebase.auth.GoogleAuthProvider();
@@ -18,37 +25,32 @@ const provider = new firebase.auth.GoogleAuthProvider();
 const loginButton = document.getElementById('google-login-trigger');
 const loadingScreen = document.getElementById('loading-screen');
 
-// عند الضغط على الزر
 if (loginButton) {
     loginButton.addEventListener('click', () => {
         if (loadingScreen) loadingScreen.style.display = 'flex';
-        auth.signInWithRedirect(provider);
+        
+        // محاولة تسجيل الدخول
+        auth.signInWithRedirect(provider).catch((error) => {
+            if (loadingScreen) loadingScreen.style.display = 'none';
+            alert("خطأ أثناء بدء تسجيل الدخول:\n" + error.code + "\n" + error.message);
+        });
     });
 }
 
-// معالجة العودة بعد اختيار الحساب
+// معالجة العودة من جوجل وكشف الأخطاء المستترة
 auth.getRedirectResult()
     .then((result) => {
         if (result.user) {
             if (loadingScreen) loadingScreen.style.display = 'flex';
             checkAndCreateUserAccount(result.user);
-        } else {
-            // التحقق من الجلسة الحالية
-            auth.onAuthStateChanged((user) => {
-                if (user) {
-                    if (loadingScreen) loadingScreen.style.display = 'flex';
-                    checkAndCreateUserAccount(user);
-                }
-            });
         }
     })
     .catch((error) => {
         if (loadingScreen) loadingScreen.style.display = 'none';
-        console.error("Redirect Error:", error.message);
-        alert("خطأ أثناء تسجيل الدخول: " + error.message);
+        // هذا التنبيه سيخبرنا بالسبب الدقيق لرفض Firebase تسجيل المستخدم
+        alert("🚨 خطأ Firebase Auth الدقيق:\nكود الخطأ: " + error.code + "\nالرسالة: " + error.message);
     });
 
-// التحقق من الحساب وإنشاؤه لضمان تسجيله في لوحة تحكم Firebase أولاً
 function checkAndCreateUserAccount(user) {
     const userRef = db.collection('players').doc(user.uid);
     
@@ -74,21 +76,19 @@ function checkAndCreateUserAccount(user) {
             }).then(() => {
                 redirectToMainGame();
             }).catch((err) => {
-                console.error("Error creating document:", err);
+                alert("خطأ أثناء إنشاء حساب Firestore:\n" + err.message);
                 redirectToMainGame();
             });
         } else {
             redirectToMainGame();
         }
     }).catch((err) => {
-        console.error("Error checking document:", err);
+        alert("خطأ في قراءة Firestore:\n" + err.message);
         redirectToMainGame();
     });
 }
 
 function redirectToMainGame() {
-    setTimeout(() => {
-        const cacheBuster = "?v=" + new Date().getTime();
-        window.location.replace("/main.html" + cacheBuster);
-    }, 1000); // تأخير ثانية واحدة لضمان استقرار الاتصال
+    const cacheBuster = "?v=" + new Date().getTime();
+    window.location.replace("/main.html" + cacheBuster);
 }

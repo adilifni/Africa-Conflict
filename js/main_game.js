@@ -35,45 +35,13 @@ auth.onAuthStateChanged((user) => {
         const playerStatusEl = document.getElementById('player-status');
         if (playerStatusEl) playerStatusEl.innerText = "القائد: " + currentUserName;
 
-        // التحقق من وجود حساب اللاعب في Firestore وإنشائه من داخل الصفحة الرئيسية
-        const userRef = db.collection('players').doc(user.uid);
-        userRef.get().then((doc) => {
-            if (!doc.exists) {
-                console.log("إنشاء بيانات اللاعب الجديد من الصفحة الرئيسية...");
-                userRef.set({
-                    uid: user.uid,
-                    name: currentUserName,
-                    email: user.email,
-                    photo: user.photoURL || "",
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    level: 1,
-                    energy: 100,
-                    money: 5000,
-                    gold: 5,
-                    oil: 20,
-                    wheat: 50,
-                    residence_country: "morocco", 
-                    current_location: "morocco",   
-                    has_party: false,
-                    party_id: "",
-                    factories_list: [1]            
-                }).then(() => {
-                    getPlayerDataAndActivateOnline(user.uid);
-                });
-            } else {
-                getPlayerDataAndActivateOnline(user.uid);
-            }
-        }).catch((err) => {
-            console.error("خطأ Firestore في الصفحة الرئيسية:", err);
-            // حتى لو فشل جلب البيانات، اظهر الواجهة للمستخدم ولا تجعلها معلقة
-            startLiveUpdates();
-        });
-
+        getPlayerDataAndActivateOnline(user.uid);
     } else {
-        console.log("لا يوجد مستخدم نشط، العودة لصفحة الدخول.");
-        if (!currentPath.endsWith('/') && !currentPath.endsWith('index.html')) {
-            window.location.replace("/");
-        }
+        console.log("لا يوجد مستخدم نشط.");
+        // ⚠️ قمنا بتعطيل الطرد التلقائي هنا لكي نمنع الحلقة المفرغة ونكتشف الخطأ بوضوح
+        // if (!currentPath.endsWith('/') && !currentPath.endsWith('index.html')) {
+        //     window.location.replace("/");
+        // }
     }
 });
 
