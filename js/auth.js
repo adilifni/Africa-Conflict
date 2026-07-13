@@ -1,4 +1,3 @@
-// تأكد من مطابقة هذه الإعدادات بنسبة 100% مع الإعدادات الموجودة في مشروعك بـ Firebase
 const firebaseConfig = {
     apiKey: "AIzaSyCdHlC-kvNWRrYO8-ujA4CjkJsVdFLDTf8",
     authDomain: "africagameauth.firebaseapp.com",
@@ -10,14 +9,9 @@ const firebaseConfig = {
 };
 
 // تهيئة Firebase
-try {
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-    }
-} catch (e) {
-    alert("فشل تهيئة Firebase: " + e.message);
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
 }
-
 const auth = firebase.auth();
 const db = firebase.firestore();
 const provider = new firebase.auth.GoogleAuthProvider();
@@ -25,19 +19,39 @@ const provider = new firebase.auth.GoogleAuthProvider();
 const loginButton = document.getElementById('google-login-trigger');
 const loadingScreen = document.getElementById('loading-screen');
 
-if (loginButton) {
-    loginButton.addEventListener('click', () => {
-        if (loadingScreen) loadingScreen.style.display = 'flex';
-        
-        // محاولة تسجيل الدخول
-        auth.signInWithRedirect(provider).catch((error) => {
-            if (loadingScreen) loadingScreen.style.display = 'none';
-            alert("خطأ أثناء بدء تسجيل الدخول:\n" + error.code + "\n" + error.message);
-        });
-    });
-}
+// 1. تحديد حفظ الجلسة محلياً بشكل صارم لضمان بقاء المستخدم مسجلاً
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+    .then(() => {
+        if (loginButton) {
+            loginButton.addEventListener('click', () => {
+                if (loadingScreen) loadingScreen.style.display = 'flex';
 
-// معالجة العودة من جوجل وكشف الأخطاء المستترة
+                // استخدام Pop-up المباشر لتجاوز مشاكل حظر ملفات الكوكيز بالتحويل
+                auth.signInWithPopup(provider)
+                    .then((result) => {
+                        if (result.user) {
+                            console.log("نجح تسجيل الدخول:", result.user.displayName);
+                            checkAndCreateUserAccount(result.user);
+                        }
+                    })
+                    .catch((error) => {
+                        if (loadingScreen) loadingScreen.style.display = 'none';
+                        console.error("Popup Error:", error);
+                        
+                        // إذا تم حظر النافذة المنبثقة من قبل المتصفح، ننتقل للتحويل كخيار احتياطي ثانٍ
+                        if (error.code === 'auth/popup-blocked' || error.code === 'auth/popup-closed-by-user') {
+                            if (loadingScreen) loadingScreen.style.display = 'flex';
+                            auth.signInWithRedirect(provider);
+                        } else {
+                            alert("خطأ أثناء تسجيل الدخول: " + error.message);
+                        }
+                    });
+            });
+        }
+    })
+    .catch((err) => console.error("Persistence Error:", err));
+
+// معالجة التحويل كخيار احتياطي في الخلفية
 auth.getRedirectResult()
     .then((result) => {
         if (result.user) {
@@ -46,11 +60,10 @@ auth.getRedirectResult()
         }
     })
     .catch((error) => {
-        if (loadingScreen) loadingScreen.style.display = 'none';
-        // هذا التنبيه سيخبرنا بالسبب الدقيق لرفض Firebase تسجيل المستخدم
-        alert("🚨 خطأ Firebase Auth الدقيق:\nكود الخطأ: " + error.code + "\nالرسالة: " + error.message);
+        console.error("Redirect Fallback Error:", error);
     });
 
+// الدالة المسؤولة عن فحص وإنشاء اللاعب في Firestore والتوجيه المباشر
 function checkAndCreateUserAccount(user) {
     const userRef = db.collection('players').doc(user.uid);
     
@@ -76,14 +89,14 @@ function checkAndCreateUserAccount(user) {
             }).then(() => {
                 redirectToMainGame();
             }).catch((err) => {
-                alert("خطأ أثناء إنشاء حساب Firestore:\n" + err.message);
-                redirectToMainGame();
+                console.error("Error creating document:", err);
+                redirectToMainGame(); // التوجيه على أي حال لكسر اللوب
             });
         } else {
             redirectToMainGame();
         }
     }).catch((err) => {
-        alert("خطأ في قراءة Firestore:\n" + err.message);
+        console.error("Error checking document:", err);
         redirectToMainGame();
     });
 }
