@@ -24,7 +24,7 @@ const countryFlagCodes = {
     "libya": "ly", "sudan": "sd", "nigeria": "ng", "south_africa": "za"
 };
 
-// ابحث عن دالة auth.onAuthStateChanged في ملف main_game.js واستبدلها بهذا الجزء:
+// مراقبة حالة تسجيل الدخول وإنشاء الحساب تلقائياً إن لم يكن موجوداً
 auth.onAuthStateChanged((user) => {
     const currentPath = window.location.pathname;
 
@@ -35,13 +35,51 @@ auth.onAuthStateChanged((user) => {
         const playerStatusEl = document.getElementById('player-status');
         if (playerStatusEl) playerStatusEl.innerText = "القائد: " + currentUserName;
 
-        getPlayerDataAndActivateOnline(user.uid);
+        // التحقق من وجود بيانات اللاعب في Firestore وإنشائها فوراً إن كانت مفقودة
+        const userRef = db.collection('players').doc(user.uid);
+        userRef.get().then((doc) => {
+            if (!doc.exists) {
+                console.log("لم يتم العثور على مستند اللاعب، جاري تهيئة الحساب بالبيانات الافتراضية...");
+                userRef.set({
+                    uid: user.uid,
+                    name: currentUserName,
+                    email: user.email || "",
+                    photo: user.photoURL || "",
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    level: 1,
+                    energy: 100,
+                    money: 5000,
+                    gold: 5,
+                    oil: 20,
+                    wheat: 50,
+                    residence_country: "morocco", 
+                    current_location: "morocco",   
+                    has_party: false,
+                    party_id: "",
+                    factories_list: [1]            
+                }).then(() => {
+                    console.log("تم إنشاء مستند اللاعب بنجاح! جاري استدعاء البيانات الحية...");
+                    getPlayerDataAndActivateOnline(user.uid);
+                }).catch((err) => {
+                    console.error("خطأ أثناء إنشاء مستند اللاعب الجديد:", err);
+                    getPlayerDataAndActivateOnline(user.uid); // المتابعة على أي حال لتفادي التعليق
+                });
+            } else {
+                console.log("تم العثور على بيانات اللاعب بالفعل.");
+                getPlayerDataAndActivateOnline(user.uid);
+            }
+        }).catch((err) => {
+            console.error("خطأ أثناء جلب بيانات اللاعب من Firestore:", err);
+            // متابعة التشغيل بالبيانات الافتراضية محلياً لتجنب شاشة التحميل اللانهائية
+            getPlayerDataAndActivateOnline(user.uid);
+        });
+
     } else {
-        console.log("لا يوجد مستخدم نشط.");
-        // ⚠️ قمنا بتعطيل الطرد التلقائي هنا لكي نمنع الحلقة المفرغة ونكتشف الخطأ بوضوح
-        // if (!currentPath.endsWith('/') && !currentPath.endsWith('index.html')) {
-        //     window.location.replace("/");
-        // }
+        console.log("لا يوجد مستخدم نشط. جاري إعادة التوجيه لصفحة تسجيل الدخول...");
+        // تفعيل الحماية وطرد الزوار غير المسجلين لصفحة تسجيل الدخول الرئيسية
+        if (!currentPath.endsWith('/') && !currentPath.endsWith('index.html')) {
+            window.location.replace("/");
+        }
     }
 });
 
