@@ -8,7 +8,7 @@ const firebaseConfig = {
     measurementId: "G-02DLE1VMKT"
 };
 
-// تهيئة Firebase مرة واحدة فقط لمنع التكرار
+// تهيئة Firebase
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
@@ -25,10 +25,9 @@ const countryFlagCodes = {
     "libya": "ly", "sudan": "sd", "nigeria": "ng", "south_africa": "za"
 };
 
-// متغيرات التحكم في السلايدشو لقارة أفريقيا
 let currentSlideIndex = 0;
 
-// مراقبة حالة تسجيل الدخول وبدء جلب البيانات
+// مراقبة حالة تسجيل الدخول
 auth.onAuthStateChanged((user) => {
     const currentPath = window.location.pathname;
 
@@ -39,11 +38,9 @@ auth.onAuthStateChanged((user) => {
         const playerStatusEl = document.getElementById('player-status');
         if (playerStatusEl) playerStatusEl.innerText = "القائد: " + currentUserName;
 
-        // فحص وجود مستند اللاعب في قاعدة البيانات
         const userRef = db.collection('players').doc(user.uid);
         userRef.get().then((doc) => {
             if (!doc.exists) {
-                console.log("إنشاء حساب جديد للاعب في Firestore...");
                 userRef.set({
                     uid: user.uid,
                     name: currentUserName,
@@ -64,19 +61,18 @@ auth.onAuthStateChanged((user) => {
                 }).then(() => {
                     getPlayerDataAndActivateOnline(user.uid);
                 }).catch((err) => {
-                    console.error("خطأ أثناء تهيئة حساب جديد:", err);
+                    console.error("خطأ إنشاء الحساب:", err);
                     getPlayerDataAndActivateOnline(user.uid);
                 });
             } else {
                 getPlayerDataAndActivateOnline(user.uid);
             }
         }).catch((err) => {
-            console.error("خطأ جلب حساب اللاعب من Firestore:", err);
+            console.error("خطأ Firestore:", err);
             getPlayerDataAndActivateOnline(user.uid);
         });
 
     } else {
-        console.log("لا يوجد مستخدم نشط.");
         if (!currentPath.endsWith('/') && !currentPath.endsWith('index.html')) {
             window.location.replace("/");
         }
@@ -89,15 +85,7 @@ function getPlayerDataAndActivateOnline(uid) {
     db.collection('players').doc(uid).onSnapshot((doc) => {
         if (doc.exists) {
             let data = doc.data();
-            
-            if (data.residence_country) {
-                userResidenceCountry = data.residence_country.trim().toLowerCase();
-            } else if (data.country) {
-                userResidenceCountry = data.country.trim().toLowerCase();
-            } else {
-                userResidenceCountry = "morocco";
-            }
-            
+            userResidenceCountry = data.residence_country ? data.residence_country.trim().toLowerCase() : "morocco";
             userCurrentLocation = data.current_location ? data.current_location.trim().toLowerCase() : userResidenceCountry;
             
             const flagImg = document.getElementById('country-flag');
@@ -106,11 +94,9 @@ function getPlayerDataAndActivateOnline(uid) {
                 flagImg.src = `https://flagcdn.com/w320/${flagCode}.png`;
             }
         }
-        
         startLiveUpdates();
-
     }, (error) => {
-        console.error("حدث خطأ أثناء الاتصال بـ Firestore:", error);
+        console.error("حدث خطأ:", error);
         startLiveUpdates();
     });
 }
@@ -122,6 +108,7 @@ function startLiveUpdates() {
     if (loadingMsg) loadingMsg.style.display = 'none';
     if (mainBlocks) mainBlocks.style.display = 'flex';
 
+    initializeContinentSlideshow(); // هيكلة السلايدشو برمجياً أولاً
     listenToContinentAndCountryStats();
     
     if (currentUserUid) {
@@ -129,72 +116,69 @@ function startLiveUpdates() {
     }
     
     listenToLiveChat();
-    initializeContinentSlideshow(); // بناء السلايدشو التفاعلي الجديد وهيكلته برمجياً
     setupClickListeners(); 
 }
 
-// بناء وهيكلة السلايدشو التفاعلي لقارة أفريقيا برمجياً دون الحاجة لتعديل ملف الـ HTML
+// بناء وهيكلة السلايدشو مع الحفاظ على صورة أفريقيا ثابتة على اليمين تماماً
 function initializeContinentSlideshow() {
     const continentCard = document.querySelector('.continent-stats-card') || document.getElementById('continent-card');
     if (!continentCard) return;
 
-    // إعادة تصميم الهيكل الداخلي ليدعم الجزء الثابت (الصورة) والجزء المتحرك (السلايدات)
     continentCard.innerHTML = `
-        <div class="slideshow-wrapper" style="display: flex; width: 100%; position: relative; overflow: hidden; align-items: center; justify-content: space-between;">
+        <div class="slideshow-wrapper" style="display: flex; width: 100%; position: relative; overflow: hidden; align-items: center; justify-content: space-between; direction: rtl;">
             
-            <div class="slides-container" style="flex: 1; overflow: hidden; position: relative; height: 75px;">
+            <div class="slides-container" style="flex: 1; overflow: hidden; position: relative; height: 60px;">
                 
-                <div class="slide-item active" id="slide-1" style="display: flex; justify-content: space-around; align-items: center; width: 100%; position: absolute; transition: transform 0.4s ease-in-out; transform: translateX(0);">
+                <div class="slide-item active" id="slide-1" style="display: flex; justify-content: space-around; align-items: center; width: 100%; position: absolute; transition: transform 0.4s ease-in-out, opacity 0.4s; transform: translateX(0); opacity: 1;">
                     <div class="stat-unit" id="cont-pop-wrapper" style="text-align: center; flex: 1;">
-                        <div style="font-size: 0.75rem; color: #888;">سكان</div>
-                        <div id="cont-pop" style="font-size: 1.15rem; font-weight: bold; color: #fff;">0</div>
+                        <div style="font-size: 0.7rem; color: #888; margin-bottom: 3px;">سكان</div>
+                        <div id="cont-pop" style="font-size: 1.1rem; font-weight: bold; color: #fff;">0</div>
                     </div>
                     <div class="stat-unit" id="cont-online-wrapper" style="text-align: center; flex: 1;">
-                        <div style="font-size: 0.75rem; color: #888;">متصل</div>
-                        <div id="cont-online" style="font-size: 1.15rem; font-weight: bold; color: #4ade80;">0</div>
+                        <div style="font-size: 0.7rem; color: #888; margin-bottom: 3px;">متصل</div>
+                        <div id="cont-online" style="font-size: 1.1rem; font-weight: bold; color: #4ade80;">0</div>
                     </div>
                     <div class="stat-unit" id="cont-parties-wrapper" style="text-align: center; flex: 1;">
-                        <div style="font-size: 0.75rem; color: #888;">أحزاب</div>
-                        <div id="cont-parties" style="font-size: 1.15rem; font-weight: bold; color: #fff;">0</div>
+                        <div style="font-size: 0.7rem; color: #888; margin-bottom: 3px;">أحزاب</div>
+                        <div id="cont-parties" style="font-size: 1.1rem; font-weight: bold; color: #fff;">0</div>
                     </div>
                     <div class="stat-unit" id="cont-factories-wrapper" style="text-align: center; flex: 1;">
-                        <div style="font-size: 0.75rem; color: #888;">مصانع</div>
-                        <div id="cont-factories" style="font-size: 1.15rem; font-weight: bold; color: #fff;">0</div>
+                        <div style="font-size: 0.7rem; color: #888; margin-bottom: 3px;">مصانع</div>
+                        <div id="cont-factories" style="font-size: 1.1rem; font-weight: bold; color: #fff;">0</div>
                     </div>
                 </div>
 
-                <div class="slide-item" id="slide-2" style="display: flex; justify-content: space-around; align-items: center; width: 100%; position: absolute; transition: transform 0.4s ease-in-out; transform: translateX(-100%); opacity: 0;">
+                <div class="slide-item" id="slide-2" style="display: flex; justify-content: space-around; align-items: center; width: 100%; position: absolute; transition: transform 0.4s ease-in-out, opacity 0.4s; transform: translateX(100%); opacity: 0;">
                     <div class="stat-unit" id="cont-countries-wrapper" style="text-align: center; flex: 1;">
-                        <div style="font-size: 0.75rem; color: #888;">دول</div>
-                        <div id="cont-countries" style="font-size: 1.15rem; font-weight: bold; color: #fff;">50</div>
+                        <div style="font-size: 0.7rem; color: #888; margin-bottom: 3px;">دول</div>
+                        <div id="cont-countries" style="font-size: 1.1rem; font-weight: bold; color: #fff;">50</div>
                     </div>
                     <div class="stat-unit" id="cont-alliances-wrapper" style="text-align: center; flex: 1;">
-                        <div style="font-size: 0.75rem; color: #888;">تحالف</div>
-                        <div id="cont-alliances" style="font-size: 1.15rem; font-weight: bold; color: #fff;">0</div>
+                        <div style="font-size: 0.7rem; color: #888; margin-bottom: 3px;">تحالف</div>
+                        <div id="cont-alliances" style="font-size: 1.1rem; font-weight: bold; color: #fff;">0</div>
                     </div>
                     <div class="stat-unit" id="cont-independent-wrapper" style="text-align: center; flex: 1;">
-                        <div style="font-size: 0.75rem; color: #888;">مستقلة</div>
-                        <div id="cont-independent" style="font-size: 1.15rem; font-weight: bold; color: #fff;">0</div>
+                        <div style="font-size: 0.7rem; color: #888; margin-bottom: 3px;">مستقلة</div>
+                        <div id="cont-independent" style="font-size: 1.1rem; font-weight: bold; color: #fff;">0</div>
                     </div>
                 </div>
 
             </div>
 
-            <div class="static-continent-image" id="static-africa-img-btn" style="width: 65px; height: 65px; display: flex; align-items: center; justify-content: center; margin-right: 8px; cursor: pointer;" title="اضغط للانتقال للخريطة">
+            <div class="static-continent-image" id="static-africa-img-btn" style="width: 55px; height: 55px; display: flex; align-items: center; justify-content: center; margin-left: 8px; cursor: pointer; flex-shrink: 0;" title="اضغط للانتقال للخريطة">
                 <img src="img/africa-map.png" alt="Africa Map" style="max-width: 100%; max-height: 100%; object-fit: contain;" onerror="this.src='https://img.icons8.com/color/96/africa.png'">
             </div>
         </div>
 
-        <div class="slideshow-dots" style="display: flex; justify-content: center; gap: 6px; margin-top: 4px;">
-            <span class="slide-dot active-dot" data-slide="0" style="width: 8px; height: 8px; border-radius: 50%; background-color: #a1c4fd; cursor: pointer; transition: background-color 0.3s;"></span>
-            <span class="slide-dot" data-slide="1" style="width: 8px; height: 8px; border-radius: 50%; background-color: #555; cursor: pointer; transition: background-color 0.3s;"></span>
+        <div class="slideshow-dots" style="display: flex; justify-content: center; gap: 6px; margin-top: 5px;">
+            <span class="slide-dot active-dot" data-slide="0" style="width: 7px; height: 7px; border-radius: 50%; background-color: #a1c4fd; cursor: pointer; transition: background-color 0.3s;"></span>
+            <span class="slide-dot" data-slide="1" style="width: 7px; height: 7px; border-radius: 50%; background-color: #555; cursor: pointer; transition: background-color 0.3s;"></span>
         </div>
     `;
 
     setupSlideshowSwipeAndClicks();
 }
 
-// برمجة وإعداد حركات السحب بالإصبع (Touch Swipe) والضغط على النقاط
 function setupSlideshowSwipeAndClicks() {
     const slidesContainer = document.querySelector('.slides-container');
     const dots = document.querySelectorAll('.slide-dot');
@@ -206,30 +190,23 @@ function setupSlideshowSwipeAndClicks() {
     function goToSlide(index) {
         currentSlideIndex = index;
         
-        // تحديث النقاط النشطة
         dots.forEach((dot, idx) => {
-            if (idx === index) {
-                dot.style.backgroundColor = '#a1c4fd';
-            } else {
-                dot.style.backgroundColor = '#555';
-            }
+            dot.style.backgroundColor = (idx === index) ? '#a1c4fd' : '#555';
         });
 
-        // حركة الانتقال والتأثير البصري السلس للسلايدات
         if (index === 0) {
             slide1.style.transform = 'translateX(0)';
             slide1.style.opacity = '1';
-            slide2.style.transform = 'translateX(-100%)';
+            slide2.style.transform = 'translateX(100%)';
             slide2.style.opacity = '0';
         } else {
-            slide1.style.transform = 'translateX(100%)';
+            slide1.style.transform = 'translateX(-100%)';
             slide1.style.opacity = '0';
             slide2.style.transform = 'translateX(0)';
             slide2.style.opacity = '1';
         }
     }
 
-    // إضافة تفعيل عند الضغط على النقاط
     dots.forEach((dot, index) => {
         dot.onclick = (e) => {
             e.stopPropagation();
@@ -237,7 +214,6 @@ function setupSlideshowSwipeAndClicks() {
         };
     });
 
-    // التعرف على إيماءات اللمس والسحب بالإصبع (Touch events) للموبايل
     let touchStartX = 0;
     let touchEndX = 0;
 
@@ -252,26 +228,22 @@ function setupSlideshowSwipeAndClicks() {
 
     function handleSwipe() {
         const swipeDistance = touchEndX - touchStartX;
-        if (Math.abs(swipeDistance) > 40) { // حد أدنى للمسافة لتجنب التفاعل مع الاهتزازات الخفيفة
+        if (Math.abs(swipeDistance) > 35) {
             if (swipeDistance < 0) {
-                // سحب لليسار -> الانتقال للسلايد الثاني
-                goToSlide(1);
+                goToSlide(1); // سحب لليسار
             } else {
-                // سحب لليمين -> الانتقال للسلايد الأول
-                goToSlide(0);
+                goToSlide(0); // سحب لليمين
             }
         }
     }
 }
 
-// تحديث إحصائيات القارة والدولة بشكل حي وحساب المتصلين بدقة وبدون أخطاء الفهرسة
 function listenToContinentAndCountryStats() {
     db.collection('players').onSnapshot((snapshot) => {
         const totalPopulation = snapshot.size;
         const contPopEl = document.getElementById('cont-pop');
         if (contPopEl) contPopEl.innerText = totalPopulation;
         
-        // حساب سكان الدولة الحالية
         if (userResidenceCountry) {
             let countryPopulation = 0;
             snapshot.forEach(doc => {
@@ -283,9 +255,8 @@ function listenToContinentAndCountryStats() {
             const countPopEl = document.getElementById('count-pop');
             if (countPopEl) countPopEl.innerText = countryPopulation;
         }
-    }, err => console.error("خطأ حساب السكان الحية:", err));
+    }, err => console.error("خطأ السكان:", err));
 
-    // حساب المتصلين خلال آخر 5 دقائق
     db.collection('online_users').onSnapshot((snapshot) => {
         const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
         let totalOnline = 0;
@@ -307,9 +278,8 @@ function listenToContinentAndCountryStats() {
         const countOnlineEl = document.getElementById('count-online');
         if (contOnlineEl) contOnlineEl.innerText = totalOnline;
         if (countOnlineEl) countOnlineEl.innerText = countryOnline;
-    }, err => console.error("خطأ تحديث المتصلين النشطين:", err));
+    }, err => console.error("خطأ المتصلين:", err));
 
-    // جلب الإحصائيات العامة للقارة
     db.collection('game_stats').doc('africa').onSnapshot((doc) => {
         if (doc.exists) {
             const data = doc.data();
@@ -323,9 +293,8 @@ function listenToContinentAndCountryStats() {
             if (contIndependent) contIndependent.innerText = data.independent || 0;
             if (contAlliances) contAlliances.innerText = data.alliances || 0;
         }
-    }, err => console.error("خطأ إحصائيات القارة الثابتة:", err));
+    }, err => console.error("خطأ إحصائيات أفريقيا:", err));
 
-    // جلب الإحصائيات العامة للدولة
     if (userResidenceCountry) {
         db.collection('countries').doc(userResidenceCountry).onSnapshot((doc) => {
             if (doc.exists) {
@@ -336,7 +305,7 @@ function listenToContinentAndCountryStats() {
                 if (countFactories) countFactories.innerText = data.factories || 0;
                 if (countParties) countParties.innerText = data.parties || 0;
             }
-        }, err => console.error("خطأ بيانات الدولة الإضافية:", err));
+        }, err => console.error("خطأ إحصائيات الدولة:", err));
     }
 }
 
@@ -347,10 +316,9 @@ function activateOnlineStatus(uid, location) {
         name: currentUserName,
         location: location,
         lastActive: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true }).catch(err => console.error("خطأ تحديث التواجد النشط:", err));
+    }, { merge: true }).catch(err => console.error("خطأ التواجد:", err));
 }
 
-// شات اللعبة: فلترة آخر 24 ساعة وعرض التوقيت
 function listenToLiveChat() {
     const chatContainer = document.getElementById('chat-messages-container');
     if (!chatContainer) return;
@@ -363,7 +331,6 @@ function listenToLiveChat() {
         .limit(50)
         .onSnapshot((snapshot) => {
             chatContainer.innerHTML = ""; 
-            
             let messages = [];
             snapshot.forEach(doc => messages.unshift(doc.data()));
 
@@ -386,9 +353,8 @@ function listenToLiveChat() {
                 `;
                 chatContainer.appendChild(msgBubble);
             });
-            
             chatContainer.scrollTop = chatContainer.scrollHeight;
-        }, err => console.error("خطأ جلب شات اللعبة:", err));
+        }, err => console.error("خطأ الشات:", err));
 }
 
 function sendChatMessage() {
@@ -405,14 +371,11 @@ function sendChatMessage() {
     }).then(() => {
         inputField.value = ""; 
     }).catch((err) => {
-        console.error("خطأ أثناء إرسال الرسالة للشات:", err);
+        console.error("خطأ الإرسال:", err);
     });
 }
 
-// 🔗 دالة ربط العناصر وتحويلها لأزرار تفاعلية قابلة للضغط مجهزة للروابط المستقبلية
 function setupClickListeners() {
-    
-    // 1. صورة أفريقيا الثابتة تنقل إلى الخريطة
     const staticAfricaImg = document.getElementById('static-africa-img-btn');
     if (staticAfricaImg) {
         staticAfricaImg.onclick = (e) => {
@@ -421,7 +384,6 @@ function setupClickListeners() {
         };
     }
 
-    // 2. كارت الدولة وعلم المغرب ينقلان لصفحة الدولة
     const countryCard = document.querySelector('.country-stats-card') || document.getElementById('country-card');
     const flagImg = document.getElementById('country-flag');
     
@@ -440,23 +402,21 @@ function setupClickListeners() {
             goToCountryPage();
         };
     }
-// 3. روابط السلايد التفاعلي الأول والثاني ومستندات الدولة
+
     const interactiveStats = [
-        // السلايد الأول
         { id: 'cont-pop-wrapper', url: '/all-players.html' },
         { id: 'cont-online-wrapper', url: '/online-players.html' },
         { id: 'cont-parties-wrapper', url: '/parties.html' },
         { id: 'cont-factories-wrapper', url: '/factories.html' },
-        // السلايد الثاني
         { id: 'cont-countries-wrapper', url: '/all-countries.html' },
         { id: 'cont-alliances-wrapper', url: '/alliances.html' },
         { id: 'cont-independent-wrapper', url: '/independent.html' },
-        // كارت الدولة السفلي
         { id: 'count-pop', url: `/country-players.html?id=${userResidenceCountry}` },
         { id: 'count-online', url: `/country-online.html?id=${userResidenceCountry}` },
         { id: 'count-parties', url: '/parties.html' },
         { id: 'count-factories', url: '/factories.html' }
     ];
+
     interactiveStats.forEach(item => {
         const el = document.getElementById(item.id);
         if (el) {
@@ -470,13 +430,14 @@ function setupClickListeners() {
             el.onmouseleave = () => el.style.transform = 'scale(1)';
         }
     });
-    // 4. شريط التنقل السفلي (أزرار التنقل الرئيسية تظل ثابتة وتعمل بالكامل)
+
     const navItems = [
         { text: 'الرئيسية', url: '/main.html' },
         { text: 'العمل', url: '/work.html' },
         { text: 'الحروب', url: '/wars.html' },
         { text: 'الحساب', url: '/profile.html' }
     ];
+
     const bottomNav = document.querySelector('.bottom-nav-container') || document.body;
     
     navItems.forEach(nav => {
@@ -493,6 +454,7 @@ function setupClickListeners() {
         }
     });
 }
+
 document.addEventListener("DOMContentLoaded", () => {
     const sendBtn = document.getElementById('send-chat-trigger');
     if (sendBtn) {
@@ -503,7 +465,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (inputField) {
         inputField.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
-                sendChatMessage);
+                sendChatMessage();
             }
         });
     }
