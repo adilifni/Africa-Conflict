@@ -8,6 +8,7 @@ const firebaseConfig = {
     measurementId: "G-02DLE1VMKT"
 };
 
+// تهيئة Firebase مرة واحدة فقط لمنع التكرار
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
@@ -35,7 +36,7 @@ auth.onAuthStateChanged((user) => {
         const playerStatusEl = document.getElementById('player-status');
         if (playerStatusEl) playerStatusEl.innerText = "القائد: " + currentUserName;
 
-        // فحص وجود مستند اللاعب وإنشائه تلقائياً إن لم يكن موجوداً
+        // فحص وجود مستند اللاعب في قاعدة البيانات
         const userRef = db.collection('players').doc(user.uid);
         userRef.get().then((doc) => {
             if (!doc.exists) {
@@ -60,15 +61,15 @@ auth.onAuthStateChanged((user) => {
                 }).then(() => {
                     getPlayerDataAndActivateOnline(user.uid);
                 }).catch((err) => {
-                    console.error("خطأ إنشاء الحساب:", err);
-                    getPlayerDataAndActivateOnline(user.uid);
+                    console.error("خطأ أثناء تهيئة حساب جديد:", err);
+                    getPlayerDataAndActivateOnline(user.uid); // المتابعة لتجنب تعليق الواجهة
                 });
             } else {
                 getPlayerDataAndActivateOnline(user.uid);
             }
         }).catch((err) => {
-            console.error("خطأ جلب حساب اللاعب:", err);
-            getPlayerDataAndActivateOnline(user.uid);
+            console.error("خطأ جلب حساب اللاعب من Firestore:", err);
+            getPlayerDataAndActivateOnline(user.uid); // المحاولة بالقيم الافتراضية
         });
 
     } else {
@@ -101,34 +102,41 @@ function getPlayerDataAndActivateOnline(uid) {
                 let flagCode = countryFlagCodes[userCurrentLocation] || "ma"; 
                 flagImg.src = `https://flagcdn.com/w320/${flagCode}.png`;
             }
-            
-            startLiveUpdates();
         } else {
-            console.warn("مستند اللاعب غير موجود، تشغيل الواجهة افتراضياً.");
-            startLiveUpdates(); 
+            console.warn("مستند اللاعب غير موجود بالكامل، المتابعة بالقيم الافتراضية.");
         }
-    }, (error) => {
-        console.error("حدث خطأ أثناء الاتصال بـ Firestore:", error);
+        
+        // تشغيل التحديثات المباشرة فور انتهاء محاولة القراءة
         startLiveUpdates();
+
+    }, (error) => {
+        console.error("حدث خطأ أثناء الاتصال بـ Firestore ( players ):", error);
+        startLiveUpdates(); // تشغيل على أي حال لمنع تعليق شاشة التحميل
     });
 }
 
 function startLiveUpdates() {
+    // إخفاء شاشة التحميل وعرض كروت اللعبة فوراً
     const loadingMsg = document.getElementById('loading-msg');
     const mainBlocks = document.getElementById('main-game-blocks');
     
     if (loadingMsg) loadingMsg.style.display = 'none';
     if (mainBlocks) mainBlocks.style.display = 'flex';
 
-    if (!currentUserUid || !userResidenceCountry) return;
-
+    // استدعاء البيانات الحية بصرف النظر عن حالة اليوزر، في حال وجود تأخر في تعبئة المتغيرات
     listenToContinentStats();
-    listenToCountryStats(userResidenceCountry);
-    activateOnlineStatus(currentUserUid, userCurrentLocation);
+    
+    if (userResidenceCountry) {
+        listenToCountryStats(userResidenceCountry);
+    }
+    
+    if (currentUserUid) {
+        activateOnlineStatus(currentUserUid, userCurrentLocation);
+    }
+    
     listenToLiveChat();
 }
 
-// ⚠️ تعديل هام: تم تعديل اسم المجلد من 'stats' إلى 'game_stats' ليطابق قاعدة البيانات
 function listenToContinentStats() {
     db.collection('game_stats').doc('africa').onSnapshot((doc) => {
         if (doc.exists) {
@@ -139,6 +147,8 @@ function listenToContinentStats() {
             if(document.getElementById('cont-factories')) document.getElementById('cont-factories').innerText = data.factories || 0;
             if(document.getElementById('cont-independent')) document.getElementById('cont-independent').innerText = data.independent || 0;
             if(document.getElementById('cont-alliances')) document.getElementById('cont-alliances').innerText = data.alliances || 0;
+        } else {
+            console.warn("مستند إحصائيات القارة 'game_stats/africa' غير موجود في قاعدة البيانات.");
         }
     }, err => console.error("خطأ إحصائيات القارة:", err));
 }
@@ -152,11 +162,12 @@ function listenToCountryStats(countryId) {
             if(document.getElementById('count-parties')) document.getElementById('count-parties').innerText = data.parties || 0;
             if(document.getElementById('count-online')) document.getElementById('count-online').innerText = data.online || 0;
             if(document.getElementById('count-pop')) document.getElementById('count-pop').innerText = data.population || 0;
+        } else {
+            console.warn(`مستند الدولة 'countries/${countryId}' غير موجود.`);
         }
     }, err => console.error("خطأ إحصائيات الدولة:", err));
 }
 
-// ⚠️ تعديل هام: تم تعديل اسم المجلد من 'online_players' إلى 'online_users' ليطابق قاعدة البيانات
 function activateOnlineStatus(uid, location) {
     if (!uid) return;
     db.collection('online_users').doc(uid).set({
@@ -164,7 +175,7 @@ function activateOnlineStatus(uid, location) {
         name: currentUserName,
         location: location,
         lastActive: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true }).catch(err => console.error("خطأ تحديث التواجد:", err));
+    }, { merge: true }).catch(err => console.error("خطأ تحديث التواجد النشط للاعب:", err));
 }
 
 function listenToLiveChat() {
@@ -209,7 +220,7 @@ function sendChatMessage() {
     }).then(() => {
         inputField.value = ""; 
     }).catch((err) => {
-        console.error("خطأ أثناء إرسال الرسالة:", err);
+        console.error("خطأ أثناء إرسال الرسالة للشات:", err);
     });
 }
 
