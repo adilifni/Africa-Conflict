@@ -62,14 +62,14 @@ auth.onAuthStateChanged((user) => {
                     getPlayerDataAndActivateOnline(user.uid);
                 }).catch((err) => {
                     console.error("خطأ أثناء تهيئة حساب جديد:", err);
-                    getPlayerDataAndActivateOnline(user.uid); // المتابعة لتجنب تعليق الواجهة
+                    getPlayerDataAndActivateOnline(user.uid);
                 });
             } else {
                 getPlayerDataAndActivateOnline(user.uid);
             }
         }).catch((err) => {
             console.error("خطأ جلب حساب اللاعب من Firestore:", err);
-            getPlayerDataAndActivateOnline(user.uid); // المحاولة بالقيم الافتراضية
+            getPlayerDataAndActivateOnline(user.uid);
         });
 
     } else {
@@ -102,28 +102,23 @@ function getPlayerDataAndActivateOnline(uid) {
                 let flagCode = countryFlagCodes[userCurrentLocation] || "ma"; 
                 flagImg.src = `https://flagcdn.com/w320/${flagCode}.png`;
             }
-        } else {
-            console.warn("مستند اللاعب غير موجود بالكامل، المتابعة بالقيم الافتراضية.");
         }
         
-        // تشغيل التحديثات المباشرة فور انتهاء محاولة القراءة
         startLiveUpdates();
 
     }, (error) => {
-        console.error("حدث خطأ أثناء الاتصال بـ Firestore ( players ):", error);
-        startLiveUpdates(); // تشغيل على أي حال لمنع تعليق شاشة التحميل
+        console.error("حدث خطأ أثناء الاتصال بـ Firestore:", error);
+        startLiveUpdates();
     });
 }
 
 function startLiveUpdates() {
-    // إخفاء شاشة التحميل وعرض كروت اللعبة فوراً
     const loadingMsg = document.getElementById('loading-msg');
     const mainBlocks = document.getElementById('main-game-blocks');
     
     if (loadingMsg) loadingMsg.style.display = 'none';
     if (mainBlocks) mainBlocks.style.display = 'flex';
 
-    // استدعاء البيانات الحية بصرف النظر عن حالة اليوزر، في حال وجود تأخر في تعبئة المتغيرات
     listenToContinentStats();
     
     if (userResidenceCountry) {
@@ -137,35 +132,65 @@ function startLiveUpdates() {
     listenToLiveChat();
 }
 
+// تحديث الإحصائيات العامة للقارة بشكل حي وتلقائي
 function listenToContinentStats() {
+    // 1. حساب إجمالي عدد السكان (كل الحسابات المسجلة باللعبة)
+    db.collection('players').onSnapshot((snapshot) => {
+        const totalPopulation = snapshot.size;
+        if(document.getElementById('cont-pop')) document.getElementById('cont-pop').innerText = totalPopulation;
+    }, err => console.error("خطأ حساب سكان القارة الحية:", err));
+
+    // 2. حساب إجمالي المتصلين (الحسابات النشطة خلال آخر 5 دقائق)
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+    db.collection('online_users')
+      .where('lastActive', '>=', fiveMinutesAgo)
+      .onSnapshot((snapshot) => {
+        const totalOnline = snapshot.size;
+        if(document.getElementById('cont-online')) document.getElementById('cont-online').innerText = totalOnline;
+    }, err => console.error("خطأ حساب متصلي القارة الحية:", err));
+
+    // الإحصائيات الثابتة الأخرى (أو المخزنة في المستند لسهولة إدارتها)
     db.collection('game_stats').doc('africa').onSnapshot((doc) => {
         if (doc.exists) {
             const data = doc.data();
             if(document.getElementById('cont-parties')) document.getElementById('cont-parties').innerText = data.parties || 0;
-            if(document.getElementById('cont-online')) document.getElementById('cont-online').innerText = data.online || 0;
-            if(document.getElementById('cont-pop')) document.getElementById('cont-pop').innerText = data.population || 0;
             if(document.getElementById('cont-factories')) document.getElementById('cont-factories').innerText = data.factories || 0;
             if(document.getElementById('cont-independent')) document.getElementById('cont-independent').innerText = data.independent || 0;
             if(document.getElementById('cont-alliances')) document.getElementById('cont-alliances').innerText = data.alliances || 0;
-        } else {
-            console.warn("مستند إحصائيات القارة 'game_stats/africa' غير موجود في قاعدة البيانات.");
         }
-    }, err => console.error("خطأ إحصائيات القارة:", err));
+    }, err => console.error("خطأ إحصائيات القارة الثابتة:", err));
 }
 
+// تحديث إحصائيات الدولة الحية تلقائياً حسب هوية اللاعب وموقعه الحالي
 function listenToCountryStats(countryId) {
     if (!countryId) return;
+
+    // 1. سكان الدولة الحالية (اللاعبين المقيمين في هذه الدولة)
+    db.collection('players')
+      .where('residence_country', '==', countryId)
+      .onSnapshot((snapshot) => {
+        const countryPopulation = snapshot.size;
+        if(document.getElementById('count-pop')) document.getElementById('count-pop').innerText = countryPopulation;
+    }, err => console.error("خطأ حساب سكان الدولة:", err));
+
+    // 2. المتصلون حالياً في هذه الدولة (موقعهم الحالي وتفاعلوا في آخر 5 دقائق)
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+    db.collection('online_users')
+      .where('location', '==', countryId)
+      .where('lastActive', '>=', fiveMinutesAgo)
+      .onSnapshot((snapshot) => {
+        const countryOnline = snapshot.size;
+        if(document.getElementById('count-online')) document.getElementById('count-online').innerText = countryOnline;
+    }, err => console.error("خطأ حساب متصلي الدولة:", err));
+
+    // الإحصائيات المتبقية للدولة من مستندها
     db.collection('countries').doc(countryId).onSnapshot((doc) => {
         if (doc.exists) {
             const data = doc.data();
             if(document.getElementById('count-factories')) document.getElementById('count-factories').innerText = data.factories || 0;
             if(document.getElementById('count-parties')) document.getElementById('count-parties').innerText = data.parties || 0;
-            if(document.getElementById('count-online')) document.getElementById('count-online').innerText = data.online || 0;
-            if(document.getElementById('count-pop')) document.getElementById('count-pop').innerText = data.population || 0;
-        } else {
-            console.warn(`مستند الدولة 'countries/${countryId}' غير موجود.`);
         }
-    }, err => console.error("خطأ إحصائيات الدولة:", err));
+    }, err => console.error("خطأ بيانات الدولة الإضافية:", err));
 }
 
 function activateOnlineStatus(uid, location) {
@@ -175,16 +200,21 @@ function activateOnlineStatus(uid, location) {
         name: currentUserName,
         location: location,
         lastActive: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true }).catch(err => console.error("خطأ تحديث التواجد النشط للاعب:", err));
+    }, { merge: true }).catch(err => console.error("خطأ تحديث التواجد النشط:", err));
 }
 
+// شات اللعبة: عرض التوقيت وفلترة آخر 24 ساعة فقط
 function listenToLiveChat() {
     const chatContainer = document.getElementById('chat-messages-container');
     if (!chatContainer) return;
 
+    // تحديد توقيت قبل 24 ساعة من الآن
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
     db.collection('global_chat')
+        .where('createdAt', '>=', twentyFourHoursAgo)
         .orderBy('createdAt', 'desc')
-        .limit(30)
+        .limit(50)
         .onSnapshot((snapshot) => {
             chatContainer.innerHTML = ""; 
             
@@ -195,9 +225,19 @@ function listenToLiveChat() {
                 const msgBubble = document.createElement('div');
                 msgBubble.className = "msg-bubble";
                 
+                // استخراج الوقت وتنسيقه ليكون مثل (10:30 م) أو (02:15 ص)
+                let timeString = "";
+                if (msg.createdAt && typeof msg.createdAt.toDate === 'function') {
+                    const messageDate = msg.createdAt.toDate();
+                    timeString = messageDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                }
+                
                 msgBubble.innerHTML = `
-                    <div class="msg-meta">${msg.name || "لاعب"}</div>
-                    <div class="msg-text">${msg.text || ""}</div>
+                    <div class="msg-meta">
+                        <span class="msg-author" style="font-weight: bold; color: #a1c4fd;">${msg.name || "لاعب"}</span>
+                        <span class="msg-time" style="font-size: 0.75rem; color: #888; margin-right: 6px;">(${timeString})</span>
+                    </div>
+                    <div class="msg-text" style="margin-top: 3px; word-break: break-word;">${msg.text || ""}</div>
                 `;
                 chatContainer.appendChild(msgBubble);
             });
