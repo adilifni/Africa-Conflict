@@ -29,8 +29,6 @@ let currentSlideIndex = 0;
 
 // مراقبة حالة تسجيل الدخول
 auth.onAuthStateChanged((user) => {
-    const currentPath = window.location.pathname;
-
     if (user) {
         currentUserUid = user.uid;
         currentUserName = user.displayName || "لاعب";
@@ -73,9 +71,8 @@ auth.onAuthStateChanged((user) => {
         });
 
     } else {
-        if (!currentPath.endsWith('/') && !currentPath.endsWith('index.html')) {
-            window.location.replace("/");
-        }
+        // إذا لم يكن مسجلاً، يمكنك توجيهه لصفحة الدخول الأساسية دون كسر التطبيق
+        console.log("الرجاء تسجيل الدخول أولاً.");
     }
 });
 
@@ -96,7 +93,7 @@ function getPlayerDataAndActivateOnline(uid) {
         }
         startLiveUpdates();
     }, (error) => {
-        console.error("حدث خطأ:", error);
+        console.error("حدث خطأ في جلب بيانات اللاعب:", error);
         startLiveUpdates();
     });
 }
@@ -108,7 +105,7 @@ function startLiveUpdates() {
     if (loadingMsg) loadingMsg.style.display = 'none';
     if (mainBlocks) mainBlocks.style.display = 'flex';
 
-    initializeContinentSlideshow(); // هيكلة السلايدشو برمجياً أولاً
+    initializeContinentSlideshow(); 
     listenToContinentAndCountryStats();
     
     if (currentUserUid) {
@@ -119,11 +116,12 @@ function startLiveUpdates() {
     setupClickListeners(); 
 }
 
-// بناء وهيكلة السلايدشو مع الحفاظ على صورة أفريقيا ثابتة على اليمين تماماً
+// بناء وهيكلة السلايدشو مع الحفاظ على صورة أفريقيا ثابتة تماماً على اليمين/اليسار
 function initializeContinentSlideshow() {
     const continentCard = document.querySelector('.continent-stats-card') || document.getElementById('continent-card');
     if (!continentCard) return;
 
+    // تم ضبط الهيكل ليكون متناسقاً تماماً مع السحب بالموبايل
     continentCard.innerHTML = `
         <div class="slideshow-wrapper" style="display: flex; width: 100%; position: relative; overflow: hidden; align-items: center; justify-content: space-between; direction: rtl;">
             
@@ -165,7 +163,7 @@ function initializeContinentSlideshow() {
 
             </div>
 
-            <div class="static-continent-image" id="static-africa-img-btn" style="width: 55px; height: 55px; display: flex; align-items: center; justify-content: center; margin-left: 8px; cursor: pointer; flex-shrink: 0;" title="اضغط للانتقال للخريطة">
+            <div class="static-continent-image" id="static-africa-img-btn" style="width: 55px; height: 55px; display: flex; align-items: center; justify-content: center; margin-left: 8px; cursor: pointer; flex-shrink: 0;">
                 <img src="img/africa-map.png" alt="Africa Map" style="max-width: 100%; max-height: 100%; object-fit: contain;" onerror="this.src='https://img.icons8.com/color/96/africa.png'">
             </div>
         </div>
@@ -230,9 +228,9 @@ function setupSlideshowSwipeAndClicks() {
         const swipeDistance = touchEndX - touchStartX;
         if (Math.abs(swipeDistance) > 35) {
             if (swipeDistance < 0) {
-                goToSlide(1); // سحب لليسار
+                goToSlide(1); 
             } else {
-                goToSlide(0); // سحب لليمين
+                goToSlide(0); 
             }
         }
     }
@@ -375,46 +373,49 @@ function sendChatMessage() {
     });
 }
 
+// 🌐 دالة التوجيه الذكية لتغيير وسط الصفحة بدون تحديث الأجزاء الثابتة
+function navigateTo(targetPage, extraParams = {}) {
+    console.log(`تم استدعاء الصفحة الديناميكية: ${targetPage}`, extraParams);
+    
+    // هنا مستقبلاً ستقوم بربط ملفات الـ JS الخاصة بك لتحديث محتوى حاوية الوسط (#main-game-blocks)
+    // مثال:
+    // if (targetPage === 'factories') { loadFactoriesView(); }
+    
+    alert(`سيتم فتح قسـم: ${targetPage} (مجهز للربط بملفات الـ JS الخاصة بك)`);
+}
+
 function setupClickListeners() {
+    // 1. الضغط على صورة أفريقيا الثابتة تنقلك برمجياً
     const staticAfricaImg = document.getElementById('static-africa-img-btn');
     if (staticAfricaImg) {
         staticAfricaImg.onclick = (e) => {
             e.stopPropagation();
-            window.location.href = "/map.html";
+            navigateTo('map');
         };
     }
 
+    // 2. كارت الدولة بالكامل
     const countryCard = document.querySelector('.country-stats-card') || document.getElementById('country-card');
-    const flagImg = document.getElementById('country-flag');
-    
-    const goToCountryPage = () => {
-        window.location.href = `/country.html?id=${userResidenceCountry}`;
-    };
-
     if (countryCard) {
         countryCard.style.cursor = 'pointer';
-        countryCard.onclick = goToCountryPage;
-    }
-    if (flagImg) {
-        flagImg.style.cursor = 'pointer';
-        flagImg.onclick = (e) => {
-            e.stopPropagation();
-            goToCountryPage();
-        };
+        countryCard.onclick = () => navigateTo('country-main', { country: userResidenceCountry });
     }
 
+    // 3. ربط كافة عناصر الإحصائيات بالسلايدشو والكروت بدالة التوجيه المشتركة
     const interactiveStats = [
-        { id: 'cont-pop-wrapper', url: '/all-players.html' },
-        { id: 'cont-online-wrapper', url: '/online-players.html' },
-        { id: 'cont-parties-wrapper', url: '/parties.html' },
-        { id: 'cont-factories-wrapper', url: '/factories.html' },
-        { id: 'cont-countries-wrapper', url: '/all-countries.html' },
-        { id: 'cont-alliances-wrapper', url: '/alliances.html' },
-        { id: 'cont-independent-wrapper', url: '/independent.html' },
-        { id: 'count-pop', url: `/country-players.html?id=${userResidenceCountry}` },
-        { id: 'count-online', url: `/country-online.html?id=${userResidenceCountry}` },
-        { id: 'count-parties', url: '/parties.html' },
-        { id: 'count-factories', url: '/factories.html' }
+        { id: 'cont-pop-wrapper', page: 'all-players' },
+        { id: 'cont-online-wrapper', page: 'online-players' },
+        { id: 'cont-parties-wrapper', page: 'parties' },
+        { id: 'cont-factories-wrapper', page: 'factories' },
+        { id: 'cont-countries-wrapper', page: 'all-countries' },
+        { id: 'cont-alliances-wrapper', page: 'alliances' },
+        { id: 'cont-independent-wrapper', page: 'independent' },
+        
+        // إحصائيات كارت الدولة السفلي
+        { id: 'count-pop', page: 'country-players' },
+        { id: 'count-online', page: 'country-online' },
+        { id: 'count-parties', page: 'parties' },
+        { id: 'count-factories', page: 'factories' }
     ];
 
     interactiveStats.forEach(item => {
@@ -424,18 +425,19 @@ function setupClickListeners() {
             el.style.transition = 'transform 0.15s';
             el.onclick = (e) => {
                 e.stopPropagation();
-                window.location.href = item.url;
+                navigateTo(item.page, { country: userResidenceCountry });
             };
             el.onmouseenter = () => el.style.transform = 'scale(1.05)';
             el.onmouseleave = () => el.style.transform = 'scale(1)';
         }
     });
 
+    // 4. أزرار شريط التنقل السفلي الثابت
     const navItems = [
-        { text: 'الرئيسية', url: '/main.html' },
-        { text: 'العمل', url: '/work.html' },
-        { text: 'الحروب', url: '/wars.html' },
-        { text: 'الحساب', url: '/profile.html' }
+        { text: 'الرئيسية', page: 'main' },
+        { text: 'العمل', page: 'work' },
+        { text: 'الحروب', page: 'wars' },
+        { text: 'الحساب', page: 'profile' }
     ];
 
     const bottomNav = document.querySelector('.bottom-nav-container') || document.body;
@@ -449,7 +451,7 @@ function setupClickListeners() {
             const clickableArea = element.parentElement || element;
             clickableArea.style.cursor = 'pointer';
             clickableArea.onclick = () => {
-                window.location.href = nav.url;
+                navigateTo(nav.page);
             };
         }
     });
