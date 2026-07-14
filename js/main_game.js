@@ -119,37 +119,61 @@ function startLiveUpdates() {
     if (loadingMsg) loadingMsg.style.display = 'none';
     if (mainBlocks) mainBlocks.style.display = 'flex';
 
-    listenToContinentStats();
-    
-    if (userResidenceCountry) {
-        listenToCountryStats(userResidenceCountry);
-    }
+    listenToContinentAndCountryStats();
     
     if (currentUserUid) {
         activateOnlineStatus(currentUserUid, userCurrentLocation);
     }
     
     listenToLiveChat();
+    setupClickListeners(); // تهيئة الروابط وضغطات العناصر المضافة حديثاً
 }
 
-// تحديث الإحصائيات العامة للقارة بشكل حي وتلقائي
-function listenToContinentStats() {
-    // 1. حساب إجمالي عدد السكان (كل الحسابات المسجلة باللعبة)
+// تحديث إحصائيات القارة والدولة بشكل حي وحساب المتصلين بدقة وبدون أخطاء الفهرسة
+function listenToContinentAndCountryStats() {
+    // 1. حساب السكان لقارة أفريقيا بالكامل
     db.collection('players').onSnapshot((snapshot) => {
         const totalPopulation = snapshot.size;
         if(document.getElementById('cont-pop')) document.getElementById('cont-pop').innerText = totalPopulation;
-    }, err => console.error("خطأ حساب سكان القارة الحية:", err));
+        
+        // سكان الدولة الحالية (اللاعبين الذين يملكون نفس جنسية اللاعب الحالي)
+        if (userResidenceCountry) {
+            let countryPopulation = 0;
+            snapshot.forEach(doc => {
+                const pData = doc.data();
+                if (pData.residence_country && pData.residence_country.trim().toLowerCase() === userResidenceCountry) {
+                    countryPopulation++;
+                }
+            });
+            if(document.getElementById('count-pop')) document.getElementById('count-pop').innerText = countryPopulation;
+        }
+    }, err => console.error("خطأ حساب السكان:", err));
 
-    // 2. حساب إجمالي المتصلين (الحسابات النشطة خلال آخر 5 دقائق)
-    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-    db.collection('online_users')
-      .where('lastActive', '>=', fiveMinutesAgo)
-      .onSnapshot((snapshot) => {
-        const totalOnline = snapshot.size;
+    // 2. حساب المتصلين الحقيقيين (من تفاعل خلال آخر 5 دقائق) في أفريقيا والدولة الحالية معاً
+    db.collection('online_users').onSnapshot((snapshot) => {
+        const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
+        let totalOnline = 0;
+        let countryOnline = 0;
+
+        snapshot.forEach((doc) => {
+            const data = doc.data();
+            // تحويل الطابع الزمني لـ Firestore إلى مللي ثانية للمقارنة البرمجية الفورية
+            const lastActiveMs = (data.lastActive && typeof data.lastActive.toMillis === 'function') ? data.lastActive.toMillis() : 0;
+            
+            if (lastActiveMs >= fiveMinutesAgo) {
+                totalOnline++; // متصل في أفريقيا
+                
+                if (userResidenceCountry && data.location && data.location.trim().toLowerCase() === userResidenceCountry) {
+                    countryOnline++; // متصل في نفس الدولة حالياً
+                }
+            }
+        });
+
         if(document.getElementById('cont-online')) document.getElementById('cont-online').innerText = totalOnline;
-    }, err => console.error("خطأ حساب متصلي القارة الحية:", err));
+        if(document.getElementById('count-online')) document.getElementById('count-online').innerText = countryOnline;
+    }, err => console.error("خطأ تحديث المتصلين الحي:", err));
 
-    // الإحصائيات الثابتة الأخرى (أو المخزنة في المستند لسهولة إدارتها)
+    // جلب باقي الإحصائيات الثابتة للقارة
     db.collection('game_stats').doc('africa').onSnapshot((doc) => {
         if (doc.exists) {
             const data = doc.data();
@@ -159,38 +183,17 @@ function listenToContinentStats() {
             if(document.getElementById('cont-alliances')) document.getElementById('cont-alliances').innerText = data.alliances || 0;
         }
     }, err => console.error("خطأ إحصائيات القارة الثابتة:", err));
-}
 
-// تحديث إحصائيات الدولة الحية تلقائياً حسب هوية اللاعب وموقعه الحالي
-function listenToCountryStats(countryId) {
-    if (!countryId) return;
-
-    // 1. سكان الدولة الحالية (اللاعبين المقيمين في هذه الدولة)
-    db.collection('players')
-      .where('residence_country', '==', countryId)
-      .onSnapshot((snapshot) => {
-        const countryPopulation = snapshot.size;
-        if(document.getElementById('count-pop')) document.getElementById('count-pop').innerText = countryPopulation;
-    }, err => console.error("خطأ حساب سكان الدولة:", err));
-
-    // 2. المتصلون حالياً في هذه الدولة (موقعهم الحالي وتفاعلوا في آخر 5 دقائق)
-    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-    db.collection('online_users')
-      .where('location', '==', countryId)
-      .where('lastActive', '>=', fiveMinutesAgo)
-      .onSnapshot((snapshot) => {
-        const countryOnline = snapshot.size;
-        if(document.getElementById('count-online')) document.getElementById('count-online').innerText = countryOnline;
-    }, err => console.error("خطأ حساب متصلي الدولة:", err));
-
-    // الإحصائيات المتبقية للدولة من مستندها
-    db.collection('countries').doc(countryId).onSnapshot((doc) => {
-        if (doc.exists) {
-            const data = doc.data();
-            if(document.getElementById('count-factories')) document.getElementById('count-factories').innerText = data.factories || 0;
-            if(document.getElementById('count-parties')) document.getElementById('count-parties').innerText = data.parties || 0;
-        }
-    }, err => console.error("خطأ بيانات الدولة الإضافية:", err));
+    // جلب باقي الإحصائيات الثابتة للدولة
+    if (userResidenceCountry) {
+        db.collection('countries').doc(userResidenceCountry).onSnapshot((doc) => {
+            if (doc.exists) {
+                const data = doc.data();
+                if(document.getElementById('count-factories')) document.getElementById('count-factories').innerText = data.factories || 0;
+                if(document.getElementById('count-parties')) document.getElementById('count-parties').innerText = data.parties || 0;
+            }
+        }, err => console.error("خطأ بيانات الدولة الإضافية:", err));
+    }
 }
 
 function activateOnlineStatus(uid, location) {
@@ -203,12 +206,11 @@ function activateOnlineStatus(uid, location) {
     }, { merge: true }).catch(err => console.error("خطأ تحديث التواجد النشط:", err));
 }
 
-// شات اللعبة: عرض التوقيت وفلترة آخر 24 ساعة فقط
+// شات اللعبة: فلترة آخر 24 ساعة وعرض التوقيت
 function listenToLiveChat() {
     const chatContainer = document.getElementById('chat-messages-container');
     if (!chatContainer) return;
 
-    // تحديد توقيت قبل 24 ساعة من الآن
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
     db.collection('global_chat')
@@ -225,7 +227,6 @@ function listenToLiveChat() {
                 const msgBubble = document.createElement('div');
                 msgBubble.className = "msg-bubble";
                 
-                // استخراج الوقت وتنسيقه ليكون مثل (10:30 م) أو (02:15 ص)
                 let timeString = "";
                 if (msg.createdAt && typeof msg.createdAt.toDate === 'function') {
                     const messageDate = msg.createdAt.toDate();
@@ -261,6 +262,96 @@ function sendChatMessage() {
         inputField.value = ""; 
     }).catch((err) => {
         console.error("خطأ أثناء إرسال الرسالة للشات:", err);
+    });
+}
+
+// 🔗 دالة ربط العناصر وتحويلها لأزرار تفاعلية قابلة للضغط
+function setupClickListeners() {
+    // 1. جعل كارت أو خريطة أفريقيا قابلاً للنقر للانتقال لصفحة الخريطة
+    const continentCard = document.querySelector('.continent-stats-card') || document.getElementById('continent-card');
+    if (continentCard) {
+        continentCard.style.cursor = 'pointer';
+        continentCard.title = "اضغط للذهاب إلى الخريطة";
+        continentCard.onclick = () => {
+            window.location.href = "/map.html"; 
+        };
+    }
+
+    // 2. جعل علم المغرب أو كارت إحصائيات الدولة قابلاً للنقر للانتقال لصفحة الدول
+    const countryCard = document.querySelector('.country-stats-card') || document.getElementById('country-card');
+    const flagImg = document.getElementById('country-flag');
+    
+    const goToCountryPage = () => {
+        window.location.href = `/country.html?id=${userResidenceCountry}`;
+    };
+
+    if (countryCard) {
+        countryCard.style.cursor = 'pointer';
+        countryCard.title = "اضغط لعرض تفاصيل الدولة";
+        countryCard.onclick = goToCountryPage;
+    }
+    if (flagImg) {
+        flagImg.style.cursor = 'pointer';
+        flagImg.onclick = (e) => {
+            e.stopPropagation(); // منع تعارض الضغطات مع الكارت الكبير
+            goToCountryPage();
+        };
+    }
+
+    // 3. تحويل عناصر الإحصائيات الفردية (أحزاب، مصانع، تحالفات) إلى روابط قابلة للضغط
+    const statsLinks = [
+        { id: 'count-parties', url: '/parties.html' },
+        { id: 'count-factories', url: '/factories.html' },
+        { id: 'cont-parties', url: '/parties.html' },
+        { id: 'cont-factories', url: '/factories.html' },
+        { id: 'cont-alliances', url: '/alliances.html' }
+    ];
+
+    statsLinks.forEach(item => {
+        const el = document.getElementById(item.id);
+        if (el) {
+            // جعل العنصر الأب المباشر له أو هو نفسه قابلاً للضغط
+            const parent = el.parentElement;
+            if (parent) {
+                parent.style.cursor = 'pointer';
+                parent.style.transition = 'transform 0.2s';
+                parent.title = "اضغط للتفاصيل";
+                parent.onclick = (e) => {
+                    e.stopPropagation();
+                    window.location.href = item.url;
+                };
+                // تأثير خفيف عند تمرير الماوس
+                parent.onmouseenter = () => parent.style.transform = 'scale(1.03)';
+                parent.onmouseleave = () => parent.style.transform = 'scale(1)';
+            }
+        }
+    });
+
+    // 4. جعل شريط التنقل السفلي تفاعلياً بالكامل
+    // سنقوم بربط الكلمات مباشرة بالروابط المناسبة لها
+    const navItems = [
+        { text: 'الرئيسية', url: '/main.html' },
+        { text: 'العمل', url: '/work.html' },
+        { text: 'الحروب', url: '/wars.html' },
+        { text: 'الحساب', url: '/profile.html' }
+    ];
+
+    const bottomNav = document.querySelector('.bottom-nav-container') || document.body; // ابحث في أسفل الشاشة
+    
+    navItems.forEach(nav => {
+        // البحث عن أي عنصر نصي يحتوي على اسم الزر بالصفحة
+        const xpath = `//span[text()='${nav.text}'] | //div[text()='${nav.text}'] | //a[text()='${nav.text}']`;
+        const result = document.evaluate(xpath, bottomNav, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+        const element = result.singleNodeValue;
+        
+        if (element) {
+            // جعل العنصر الأب للكلمة أو الأيقونة قابلاً للنقر لسهولة الضغط بالإصبع في الموبايل
+            const clickableArea = element.parentElement || element;
+            clickableArea.style.cursor = 'pointer';
+            clickableArea.onclick = () => {
+                window.location.href = nav.url;
+            };
+        }
     });
 }
 
