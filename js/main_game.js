@@ -71,7 +71,6 @@ auth.onAuthStateChanged((user) => {
         });
 
     } else {
-        // إذا لم يكن مسجلاً، يمكنك توجيهه لصفحة الدخول الأساسية دون كسر التطبيق
         console.log("الرجاء تسجيل الدخول أولاً.");
     }
 });
@@ -106,6 +105,7 @@ function startLiveUpdates() {
     if (mainBlocks) mainBlocks.style.display = 'flex';
 
     initializeContinentSlideshow(); 
+    initializeCountryCard(); // بناء كارت الدولة الجديد بالمحاذاة البصرية الصحيحة
     listenToContinentAndCountryStats();
     
     if (currentUserUid) {
@@ -116,12 +116,11 @@ function startLiveUpdates() {
     setupClickListeners(); 
 }
 
-// بناء وهيكلة السلايدشو مع الحفاظ على صورة أفريقيا ثابتة تماماً على اليمين/اليسار
+// 1️⃣ بناء وهيكلة السلايدشو (كارت القارة) - الخريطة على اليسار ثابتة
 function initializeContinentSlideshow() {
     const continentCard = document.querySelector('.continent-stats-card') || document.getElementById('continent-card');
     if (!continentCard) return;
 
-    // تم ضبط الهيكل ليكون متناسقاً تماماً مع السحب بالموبايل
     continentCard.innerHTML = `
         <div class="slideshow-wrapper" style="display: flex; width: 100%; position: relative; overflow: hidden; align-items: center; justify-content: space-between; direction: rtl;">
             
@@ -175,6 +174,48 @@ function initializeContinentSlideshow() {
     `;
 
     setupSlideshowSwipeAndClicks();
+}
+
+// 2️⃣ بناء وهيكلة كارت الدولة - العلم على اليسار تماماً (تحت الخريطة) لموازاة بصرية مثالية
+function initializeCountryCard() {
+    const countryCard = document.querySelector('.country-stats-card') || document.getElementById('country-card');
+    if (!countryCard) return;
+
+    countryCard.innerHTML = `
+        <div class="country-wrapper" style="display: flex; width: 100%; align-items: center; justify-content: space-between; direction: rtl;">
+            
+            <div class="country-stats-container" style="flex: 1; display: flex; justify-content: space-around; align-items: center; height: 60px;">
+                <div class="stat-unit" id="count-pop-wrapper" style="text-align: center; flex: 1;">
+                    <div style="font-size: 0.7rem; color: #888; margin-bottom: 3px;">سكان</div>
+                    <div id="count-pop" style="font-size: 1.1rem; font-weight: bold; color: #fff;">0</div>
+                </div>
+                <div class="stat-unit" id="count-online-wrapper" style="text-align: center; flex: 1;">
+                    <div style="font-size: 0.7rem; color: #888; margin-bottom: 3px;">متصل</div>
+                    <div id="count-online" style="font-size: 1.1rem; font-weight: bold; color: #4ade80;">0</div>
+                </div>
+                <div class="stat-unit" id="count-parties-wrapper" style="text-align: center; flex: 1;">
+                    <div style="font-size: 0.7rem; color: #888; margin-bottom: 3px;">أحزاب</div>
+                    <div id="count-parties" style="font-size: 1.1rem; font-weight: bold; color: #fff;">0</div>
+                </div>
+                <div class="stat-unit" id="count-factories-wrapper" style="text-align: center; flex: 1;">
+                    <div style="font-size: 0.7rem; color: #888; margin-bottom: 3px;">مصانع</div>
+                    <div id="count-factories" style="font-size: 1.1rem; font-weight: bold; color: #fff;">0</div>
+                </div>
+            </div>
+
+            <div class="static-country-flag" style="width: 55px; height: 55px; display: flex; align-items: center; justify-content: center; margin-left: 8px; flex-shrink: 0;">
+                <img id="country-flag" src="https://flagcdn.com/w320/ma.png" alt="Country Flag" style="width: 100%; height: 35px; border-radius: 4px; object-fit: cover; cursor: pointer;" onerror="this.src='https://img.icons8.com/color/96/flag.png'">
+            </div>
+
+        </div>
+    `;
+
+    // تحديث العلم فوراً بناءً على موقع اللاعب بعد إنشائه
+    const flagImg = document.getElementById('country-flag');
+    if (flagImg && userCurrentLocation) {
+        let flagCode = countryFlagCodes[userCurrentLocation] || "ma"; 
+        flagImg.src = `https://flagcdn.com/w320/${flagCode}.png`;
+    }
 }
 
 function setupSlideshowSwipeAndClicks() {
@@ -378,14 +419,11 @@ function navigateTo(targetPage, extraParams = {}) {
     console.log(`تم استدعاء الصفحة الديناميكية: ${targetPage}`, extraParams);
     
     // هنا مستقبلاً ستقوم بربط ملفات الـ JS الخاصة بك لتحديث محتوى حاوية الوسط (#main-game-blocks)
-    // مثال:
-    // if (targetPage === 'factories') { loadFactoriesView(); }
-    
     alert(`سيتم فتح قسـم: ${targetPage} (مجهز للربط بملفات الـ JS الخاصة بك)`);
 }
 
 function setupClickListeners() {
-    // 1. الضغط على صورة أفريقيا الثابتة تنقلك برمجياً
+    // 1. الضغط على خريطة أفريقيا الثابتة تنقلك برمجياً
     const staticAfricaImg = document.getElementById('static-africa-img-btn');
     if (staticAfricaImg) {
         staticAfricaImg.onclick = (e) => {
@@ -394,11 +432,13 @@ function setupClickListeners() {
         };
     }
 
-    // 2. كارت الدولة بالكامل
-    const countryCard = document.querySelector('.country-stats-card') || document.getElementById('country-card');
-    if (countryCard) {
-        countryCard.style.cursor = 'pointer';
-        countryCard.onclick = () => navigateTo('country-main', { country: userResidenceCountry });
+    // 2. الضغط على العلم الثابت ينقلك لصفحة الدولة برمجياً
+    const flagImg = document.getElementById('country-flag');
+    if (flagImg) {
+        flagImg.onclick = (e) => {
+            e.stopPropagation();
+            navigateTo('country-main', { country: userResidenceCountry });
+        };
     }
 
     // 3. ربط كافة عناصر الإحصائيات بالسلايدشو والكروت بدالة التوجيه المشتركة
@@ -411,11 +451,11 @@ function setupClickListeners() {
         { id: 'cont-alliances-wrapper', page: 'alliances' },
         { id: 'cont-independent-wrapper', page: 'independent' },
         
-        // إحصائيات كارت الدولة السفلي
-        { id: 'count-pop', page: 'country-players' },
-        { id: 'count-online', page: 'country-online' },
-        { id: 'count-parties', page: 'parties' },
-        { id: 'count-factories', page: 'factories' }
+        // إحصائيات كارت الدولة
+        { id: 'count-pop-wrapper', page: 'country-players' },
+        { id: 'count-online-wrapper', page: 'country-online' },
+        { id: 'count-parties-wrapper', page: 'parties' },
+        { id: 'count-factories-wrapper', page: 'factories' }
     ];
 
     interactiveStats.forEach(item => {
