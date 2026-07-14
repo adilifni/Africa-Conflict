@@ -65,7 +65,7 @@
             margin-top: 50px;
         }
 
-        /* 📦  ستايل البلوكات الرئيسية */
+        /* 📦 ستايل البلوكات الرئيسية */
         .block-card {
             background-color: #1a2332;
             border: 1.5px solid #c5a059;
@@ -159,18 +159,21 @@
             flex-direction: column;
             justify-content: center;
             cursor: pointer;
+            user-select: none;
         }
 
         .stat-label {
             font-size: 12px;
             color: #8b949e;
             margin-bottom: 6px;
+            pointer-events: none; /* لمنع تداخل الضغط مع النص */
         }
 
         .stat-value {
             font-size: 14px;
             font-weight: bold;
             color: #ffffff;
+            pointer-events: none; /* لمنع تداخل الضغط مع النص */
         }
 
         /* 🔘 زر البرلمان */
@@ -364,34 +367,34 @@
                 </div>
             </div>
 
-            <div class="block-card">
+            <div class="block-card" id="country-card">
                 <div class="side-img-box">
                     <img id="country-flag" src="https://flagcdn.com/w320/ma.png" class="clickable-asset" alt="علم الدولة">
                 </div>
                 <div class="stats-grid">
-                    <div class="stat-item">
+                    <div class="stat-item" id="btn-country-factories">
                         <span class="stat-label">مصانع</span>
                         <span class="stat-value" id="count-factories">0</span>
                     </div>
-                    <div class="stat-item">
+                    <div class="stat-item" id="btn-country-parties">
                         <span class="stat-label">أحزاب</span>
                         <span class="stat-value" id="count-parties">0</span>
                     </div>
-                    <div class="stat-item">
+                    <div class="stat-item" id="btn-country-online">
                         <span class="stat-label">متصل</span>
                         <span class="stat-value" id="count-online">0</span>
                     </div>
-                    <div class="stat-item">
+                    <div class="stat-item" id="btn-country-pop">
                         <span class="stat-label">سكان</span>
                         <span class="stat-value" id="count-pop">0</span>
                     </div>
                 </div>
             </div>
 
-            <button class="parliament-btn" onclick="alert('الانتقال للبرلمان قريباً')">برلمان الدولة</button>
+            <button class="parliament-btn" id="parliament-main-btn" onclick="alert('الانتقال للبرلمان قريباً')">برلمان الدولة</button>
 
             <div class="chat-block">
-                <div class="chat-header"> غرفة الدردشة</div>
+                <div class="chat-header">غرفة الدردشة</div>
                 <div class="chat-messages" id="chat-messages-container"></div>
                 <div class="chat-input-area">
                     <input type="text" class="chat-input" id="chat-input-field" placeholder="اكتب رسالة برقية هنا...">
@@ -408,18 +411,17 @@
         <a href="#" class="nav-link">العمل</a>
         <a href="#" class="nav-link active">الرئيسية</a>
     </div>
-<script src="js/main_game.js"></script>
-
 
     <script>
-        // دالة سريعة للتحكم بنقر السلايدر الخاص بالقارة
         let currentSliderPage = 0;
         function toggleContinentSlider() {
             const core = document.getElementById('slider-core');
             const dot0 = document.getElementById('dot0');
             const dot1 = document.getElementById('dot1');
+            if (!core || !dot0 || !dot1) return;
+            
             if (currentSliderPage === 0) {
-                core.style.transform = 'translateX(50%)'; // لأن الاتجاه RTL يمين ليسار
+                core.style.transform = 'translateX(50%)'; // إزاحة RTL صحيحة
                 dot0.classList.remove('active');
                 dot1.classList.add('active');
                 currentSliderPage = 1;
@@ -431,5 +433,7 @@
             }
         }
     </script>
+
+    <script src="js/main_game.js"></script>
 </body>
 </html>
