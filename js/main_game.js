@@ -71,7 +71,6 @@ auth.onAuthStateChanged((user) => {
         });
 
     } else {
-        // إذا لم يكن مسجلاً، يمكنك توجيهه لصفحة الدخول الأساسية دون كسر التطبيق
         console.log("الرجاء تسجيل الدخول أولاً.");
     }
 });
@@ -116,61 +115,52 @@ function startLiveUpdates() {
     setupClickListeners(); 
 }
 
-// بناء وهيكلة السلايدشو مع الحفاظ على صورة أفريقيا ثابتة تماماً على اليمين/اليسار
 function initializeContinentSlideshow() {
-    const continentCard = document.querySelector('.continent-stats-card') || document.getElementById('continent-card');
+    const continentCard = document.getElementById('slider-wrapper-zone');
     if (!continentCard) return;
 
-    // تم ضبط الهيكل ليكون متناسقاً تماماً مع السحب بالموبايل
     continentCard.innerHTML = `
-        <div class="slideshow-wrapper" style="display: flex; width: 100%; position: relative; overflow: hidden; align-items: center; justify-content: space-between; direction: rtl;">
-            
-            <div class="slides-container" style="flex: 1; overflow: hidden; position: relative; height: 60px;">
-                
-                <div class="slide-item active" id="slide-1" style="display: flex; justify-content: space-around; align-items: center; width: 100%; position: absolute; transition: transform 0.4s ease-in-out, opacity 0.4s; transform: translateX(0); opacity: 1;">
-                    <div class="stat-unit" id="cont-pop-wrapper" style="text-align: center; flex: 1;">
-                        <div style="font-size: 0.7rem; color: #888; margin-bottom: 3px;">سكان</div>
-                        <div id="cont-pop" style="font-size: 1.1rem; font-weight: bold; color: #fff;">0</div>
-                    </div>
-                    <div class="stat-unit" id="cont-online-wrapper" style="text-align: center; flex: 1;">
-                        <div style="font-size: 0.7rem; color: #888; margin-bottom: 3px;">متصل</div>
-                        <div id="cont-online" style="font-size: 1.1rem; font-weight: bold; color: #4ade80;">0</div>
-                    </div>
-                    <div class="stat-unit" id="cont-parties-wrapper" style="text-align: center; flex: 1;">
-                        <div style="font-size: 0.7rem; color: #888; margin-bottom: 3px;">أحزاب</div>
-                        <div id="cont-parties" style="font-size: 1.1rem; font-weight: bold; color: #fff;">0</div>
-                    </div>
-                    <div class="stat-unit" id="cont-factories-wrapper" style="text-align: center; flex: 1;">
-                        <div style="font-size: 0.7rem; color: #888; margin-bottom: 3px;">مصانع</div>
-                        <div id="cont-factories" style="font-size: 1.1rem; font-weight: bold; color: #fff;">0</div>
-                    </div>
+        <div class="slider-container" id="slider-core" style="display: flex; transition: transform 0.4s ease-in-out; width: 200%;">
+            <div class="slider-page" style="width: 50%; display: grid; grid-template-columns: repeat(4, 1fr); text-align: center; gap: 5px; flex-shrink: 0;">
+                <div class="stat-item" id="cont-pop-wrapper">
+                    <span class="stat-label">سكان</span>
+                    <span class="stat-value" id="cont-pop">0</span>
                 </div>
-
-                <div class="slide-item" id="slide-2" style="display: flex; justify-content: space-around; align-items: center; width: 100%; position: absolute; transition: transform 0.4s ease-in-out, opacity 0.4s; transform: translateX(100%); opacity: 0;">
-                    <div class="stat-unit" id="cont-countries-wrapper" style="text-align: center; flex: 1;">
-                        <div style="font-size: 0.7rem; color: #888; margin-bottom: 3px;">دول</div>
-                        <div id="cont-countries" style="font-size: 1.1rem; font-weight: bold; color: #fff;">50</div>
-                    </div>
-                    <div class="stat-unit" id="cont-alliances-wrapper" style="text-align: center; flex: 1;">
-                        <div style="font-size: 0.7rem; color: #888; margin-bottom: 3px;">تحالف</div>
-                        <div id="cont-alliances" style="font-size: 1.1rem; font-weight: bold; color: #fff;">0</div>
-                    </div>
-                    <div class="stat-unit" id="cont-independent-wrapper" style="text-align: center; flex: 1;">
-                        <div style="font-size: 0.7rem; color: #888; margin-bottom: 3px;">مستقلة</div>
-                        <div id="cont-independent" style="font-size: 1.1rem; font-weight: bold; color: #fff;">0</div>
-                    </div>
+                <div class="stat-item" id="cont-online-wrapper">
+                    <span class="stat-label">متصل</span>
+                    <span class="stat-value" id="cont-online" style="color: #4ade80;">0</span>
                 </div>
-
+                <div class="stat-item" id="cont-parties-wrapper">
+                    <span class="stat-label">أحزاب</span>
+                    <span class="stat-value" id="cont-parties">0</span>
+                </div>
+                <div class="stat-item" id="cont-factories-wrapper">
+                    <span class="stat-label">مصانع</span>
+                    <span class="stat-value" id="cont-factories">0</span>
+                </div>
             </div>
-
-            <div class="static-continent-image" id="static-africa-img-btn" style="width: 55px; height: 55px; display: flex; align-items: center; justify-content: center; margin-left: 8px; cursor: pointer; flex-shrink: 0;">
-                <img src="img/africa-map.png" alt="Africa Map" style="max-width: 100%; max-height: 100%; object-fit: contain;" onerror="this.src='https://img.icons8.com/color/96/africa.png'">
+            <div class="slider-page" style="width: 50%; display: grid; grid-template-columns: repeat(4, 1fr); text-align: center; gap: 5px; flex-shrink: 0;">
+                <div class="stat-item" id="cont-countries-wrapper">
+                    <span class="stat-label">دول</span>
+                    <span class="stat-value" id="cont-countries">50</span>
+                </div>
+                <div class="stat-item" id="cont-alliances-wrapper">
+                    <span class="stat-label">تحالف</span>
+                    <span class="stat-value" id="cont-alliances">0</span>
+                </div>
+                <div class="stat-item" id="cont-independent-wrapper">
+                    <span class="stat-label">مستقلة</span>
+                    <span class="stat-value" id="cont-independent">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">-</span>
+                    <span class="stat-value">-</span>
+                </div>
             </div>
         </div>
-
-        <div class="slideshow-dots" style="display: flex; justify-content: center; gap: 6px; margin-top: 5px;">
-            <span class="slide-dot active-dot" data-slide="0" style="width: 7px; height: 7px; border-radius: 50%; background-color: #a1c4fd; cursor: pointer; transition: background-color 0.3s;"></span>
-            <span class="slide-dot" data-slide="1" style="width: 7px; height: 7px; border-radius: 50%; background-color: #555; cursor: pointer; transition: background-color 0.3s;"></span>
+        <div class="slider-dots">
+            <div class="dot active" id="dot0"></div>
+            <div class="dot" id="dot1"></div>
         </div>
     `;
 
@@ -178,39 +168,28 @@ function initializeContinentSlideshow() {
 }
 
 function setupSlideshowSwipeAndClicks() {
-    const slidesContainer = document.querySelector('.slides-container');
-    const dots = document.querySelectorAll('.slide-dot');
-    const slide1 = document.getElementById('slide-1');
-    const slide2 = document.getElementById('slide-2');
+    const slidesContainer = document.getElementById('slider-wrapper-zone');
+    const dot0 = document.getElementById('dot0');
+    const dot1 = document.getElementById('dot1');
+    const core = document.getElementById('slider-core');
 
-    if (!slidesContainer || !slide1 || !slide2) return;
+    if (!slidesContainer || !core || !dot0 || !dot1) return;
 
     function goToSlide(index) {
         currentSlideIndex = index;
-        
-        dots.forEach((dot, idx) => {
-            dot.style.backgroundColor = (idx === index) ? '#a1c4fd' : '#555';
-        });
-
         if (index === 0) {
-            slide1.style.transform = 'translateX(0)';
-            slide1.style.opacity = '1';
-            slide2.style.transform = 'translateX(100%)';
-            slide2.style.opacity = '0';
+            core.style.transform = 'translateX(0)';
+            dot1.classList.remove('active');
+            dot0.classList.add('active');
         } else {
-            slide1.style.transform = 'translateX(-100%)';
-            slide1.style.opacity = '0';
-            slide2.style.transform = 'translateX(0)';
-            slide2.style.opacity = '1';
+            core.style.transform = 'translateX(50%)'; // إزاحة الـ RTL المعتمدة بصفحتك
+            dot0.classList.remove('active');
+            dot1.classList.add('active');
         }
     }
 
-    dots.forEach((dot, index) => {
-        dot.onclick = (e) => {
-            e.stopPropagation();
-            goToSlide(index);
-        };
-    });
+    dot0.onclick = (e) => { e.stopPropagation(); goToSlide(0); };
+    dot1.onclick = (e) => { e.stopPropagation(); goToSlide(1); };
 
     let touchStartX = 0;
     let touchEndX = 0;
@@ -373,20 +352,13 @@ function sendChatMessage() {
     });
 }
 
-// 🌐 دالة التوجيه الذكية لتغيير وسط الصفحة بدون تحديث الأجزاء الثابتة
 function navigateTo(targetPage, extraParams = {}) {
     console.log(`تم استدعاء الصفحة الديناميكية: ${targetPage}`, extraParams);
-    
-    // هنا مستقبلاً ستقوم بربط ملفات الـ JS الخاصة بك لتحديث محتوى حاوية الوسط (#main-game-blocks)
-    // مثال:
-    // if (targetPage === 'factories') { loadFactoriesView(); }
-    
     alert(`سيتم فتح قسـم: ${targetPage} (مجهز للربط بملفات الـ JS الخاصة بك)`);
 }
 
 function setupClickListeners() {
-    // 1. الضغط على صورة أفريقيا الثابتة تنقلك برمجياً
-    const staticAfricaImg = document.getElementById('static-africa-img-btn');
+    const staticAfricaImg = document.getElementById('continent-map-btn');
     if (staticAfricaImg) {
         staticAfricaImg.onclick = (e) => {
             e.stopPropagation();
@@ -394,14 +366,15 @@ function setupClickListeners() {
         };
     }
 
-    // 2. كارت الدولة بالكامل
-    const countryCard = document.querySelector('.country-stats-card') || document.getElementById('country-card');
-    if (countryCard) {
-        countryCard.style.cursor = 'pointer';
-        countryCard.onclick = () => navigateTo('country-main', { country: userResidenceCountry });
+    const flagImg = document.getElementById('country-flag');
+    if (flagImg) {
+        flagImg.onclick = (e) => {
+            e.stopPropagation();
+            navigateTo('country-main', { country: userResidenceCountry });
+        };
     }
 
-    // 3. ربط كافة عناصر الإحصائيات بالسلايدشو والكروت بدالة التوجيه المشتركة
+    // ربط الضغطات بكروت الدولة الإحصائية الجديدة
     const interactiveStats = [
         { id: 'cont-pop-wrapper', page: 'all-players' },
         { id: 'cont-online-wrapper', page: 'online-players' },
@@ -411,11 +384,11 @@ function setupClickListeners() {
         { id: 'cont-alliances-wrapper', page: 'alliances' },
         { id: 'cont-independent-wrapper', page: 'independent' },
         
-        // إحصائيات كارت الدولة السفلي
-        { id: 'count-pop', page: 'country-players' },
-        { id: 'count-online', page: 'country-online' },
-        { id: 'count-parties', page: 'parties' },
-        { id: 'count-factories', page: 'factories' }
+        // إحصائيات البلوك الثاني (كارت الدولة في HTML الجديد)
+        { id: 'btn-country-pop', page: 'country-players' },
+        { id: 'btn-country-online', page: 'country-online' },
+        { id: 'btn-country-parties', page: 'parties' },
+        { id: 'btn-country-factories', page: 'factories' }
     ];
 
     interactiveStats.forEach(item => {
@@ -432,7 +405,6 @@ function setupClickListeners() {
         }
     });
 
-    // 4. أزرار شريط التنقل السفلي الثابت
     const navItems = [
         { text: 'الرئيسية', page: 'main' },
         { text: 'العمل', page: 'work' },
@@ -440,7 +412,7 @@ function setupClickListeners() {
         { text: 'الحساب', page: 'profile' }
     ];
 
-    const bottomNav = document.querySelector('.bottom-nav-container') || document.body;
+    const bottomNav = document.querySelector('.bottom-nav') || document.body;
     
     navItems.forEach(nav => {
         const xpath = `//span[text()='${nav.text}'] | //div[text()='${nav.text}'] | //a[text()='${nav.text}']`;
