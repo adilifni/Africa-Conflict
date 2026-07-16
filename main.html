@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Africa Conflict - الصفحة الرئيسية</title>
+    <title>Africa Conflict</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* كود الـ CSS الأساسي وتنسيق الهوية البصرية للعبة */
         * {
             box-sizing: border-box;
             margin: 0;
@@ -23,7 +22,6 @@
             overflow-x: hidden;
         }
 
-        /* الهيدر العلوي */
         header {
             background-color: #161b22;
             padding: 15px 20px;
@@ -50,11 +48,10 @@
             gap: 8px;
         }
 
-        /* الحاوية الرئيسية للمحتوى */
         main {
             flex: 1;
             padding: 15px;
-            padding-bottom: 80px; /* لضمان عدم تغطية الفوتر للمحتوى */
+            padding-bottom: 80px;
             display: flex;
             flex-direction: column;
             gap: 15px;
@@ -63,7 +60,6 @@
             width: 100%;
         }
 
-        /* ستايل الفيو العام */
         .game-view {
             display: flex;
             flex-direction: column;
@@ -71,13 +67,15 @@
             width: 100%;
         }
 
-        /* كروت اللعبة */
         .card {
             background-color: #161b22;
             border: 1px solid #30363d;
             border-radius: 12px;
             padding: 15px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
         }
 
         .card-header-stats {
@@ -92,6 +90,9 @@
             display: flex;
             flex-direction: column;
             gap: 5px;
+            padding: 8px 4px;
+            border-radius: 8px;
+            transition: background-color 0.2s;
         }
 
         .stat-label {
@@ -109,12 +110,17 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #21262d;
+            padding: 5px;
         }
 
         .continent-img {
-            width: 50px;
-            height: auto;
-            filter: drop-shadow(0px 0px 8px rgba(88, 166, 255, 0.5));
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
         }
 
         .flag-img {
@@ -123,7 +129,6 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.5);
         }
 
-        /* برلمان الدولة Button */
         .parliament-btn {
             background-color: #38bdf8;
             color: #0f172a;
@@ -143,15 +148,12 @@
 
         /* غرفة الدردشة */
         .chat-container {
-            display: flex;
-            flex-direction: column;
             height: 300px;
         }
 
         .chat-title {
             font-size: 15px;
             font-weight: bold;
-            margin-bottom: 10px;
             color: #f0f6fc;
             text-align: center;
         }
@@ -192,12 +194,12 @@
             font-size: 10px;
             color: #8b949e;
             margin-bottom: 4px;
+            gap: 15px;
         }
 
         .chat-input-area {
             display: flex;
             gap: 8px;
-            margin-top: 10px;
         }
 
         .chat-input {
@@ -258,7 +260,6 @@
             font-size: 18px;
         }
 
-        /* تنسيق الصفحات الداخلية الخاصة بالعناصر */
         .page-inner-card {
             background-color: #161b22;
             border: 1px solid #30363d;
@@ -283,7 +284,6 @@
             display: flex;
             justify-content: center;
             gap: 5px;
-            margin-top: 8px;
         }
 
         .dot {
@@ -301,10 +301,10 @@
 <body>
 
     <header>
-        <div id="leader-tag" class="user-welcome">القائد: <span id="user-name">تحميل...</span></div>
+        <div class="user-welcome">القائد: <span id="user-name">تحميل...</span></div>
         <div class="game-logo">
             <span>Africa Conflict</span>
-            <span role="img" aria-label="globe">🌍</span>
+            <span>🌍</span>
         </div>
     </header>
 
@@ -316,24 +316,24 @@
                 <div class="card-header-stats">
                     <div class="stat-box" id="btn-continent-pop">
                         <span class="stat-label">سكان</span>
-                        <span id="cont-pop-val" class="stat-value">2</span>
+                        <span class="stat-value">2</span>
                     </div>
                     <div class="stat-box" id="btn-continent-online">
                         <span class="stat-label">متصل</span>
-                        <span id="cont-online-val" class="stat-value" style="color: #39d353;">1</span>
+                        <span class="stat-value" style="color: #39d353;">1</span>
                     </div>
                     <div class="stat-box" id="btn-continent-parties">
                         <span class="stat-label">أحزاب</span>
-                        <span id="cont-parties-val" class="stat-value">0</span>
+                        <span class="stat-value">0</span>
                     </div>
                     <div class="stat-box" id="btn-continent-factories">
                         <span class="stat-label">مصانع</span>
-                        <span id="cont-factories-val" class="stat-value">0</span>
+                        <span class="stat-value">0</span>
                     </div>
                 </div>
 
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; border-top: 1px solid #21262d; padding-top: 10px;">
-                    <div style="display: flex; gap: 4px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #21262d; padding-top: 10px;">
+                    <div class="slider-dots">
                         <span class="dot active"></span>
                         <span class="dot"></span>
                     </div>
@@ -362,9 +362,11 @@
                         <span class="stat-value">-</span>
                     </div>
                 </div>
-                <div class="slider-dots">
-                    <span class="dot"></span>
-                    <span class="dot active"></span>
+                <div style="display: flex; justify-content: flex-start; border-top: 1px solid #21262d; padding-top: 10px;">
+                    <div class="slider-dots">
+                        <span class="dot"></span>
+                        <span class="dot active"></span>
+                    </div>
                 </div>
             </div>
 
@@ -387,8 +389,10 @@
                         <span class="stat-value">0</span>
                     </div>
                 </div>
-                <div style="display: flex; justify-content: flex-end; margin-top: 15px; border-top: 1px solid #21262d; padding-top: 10px;" id="btn-country-flag">
-                    <img src="https://flagcdn.com/w160/ma.png" alt="علم الدولة" class="flag-img">
+                <div style="display: flex; justify-content: flex-end; border-top: 1px solid #21262d; padding-top: 10px;">
+                    <div id="btn-country-flag" style="cursor: pointer;">
+                        <img src="https://flagcdn.com/w160/ma.png" alt="علم الدولة" class="flag-img">
+                    </div>
                 </div>
             </div>
 
@@ -400,28 +404,14 @@
                     <div class="chat-message others">
                         <div class="msg-header">
                             <span>adil tabia</span>
-                            <span>02:08 ص</span>
+                            <span>10:50 ص</span>
                         </div>
-                        مرحبا
-                    </div>
-                    <div class="chat-message others">
-                        <div class="msg-header">
-                            <span>adil tabia</span>
-                            <span>02:11 ص</span>
-                        </div>
-                        فقط
-                    </div>
-                    <div class="chat-message me">
-                        <div class="msg-header">
-                            <span>القائد</span>
-                            <span>02:21 م</span>
-                        </div>
-                        فقط حيث يمكن للاعب انشاء حزب
+                        صباح الخير
                     </div>
                 </div>
                 <div class="chat-input-area">
                     <input type="text" class="chat-input" placeholder="اكتب رسالة برقية هنا...">
-                    <button class="chat-send-btn"><i class="fa-solid fa-paper-plane-invert"></i>✈️</button>
+                    <button class="chat-send-btn">✈️</button>
                 </div>
             </div>
 
@@ -430,21 +420,21 @@
         <div id="view-work" class="game-view" style="display: none;">
             <div class="page-inner-card">
                 <div class="page-title-banner">💼 قطاع العمل والإنتاج المالي</div>
-                <p style="text-align: center; color: #8b949e; padding: 20px;">يمكنك هنا البحث عن وظائف، العمل لتجميع الأموال، والمساهمة في بناء بنية الدولة التحتية.</p>
+                <p style="text-align: center; color: #8b949e; padding: 20px;">يمكنك هنا البحث عن وظائف، العمل لتجميع الأموال، والمساهمة في البنية التحتية.</p>
             </div>
         </div>
 
         <div id="view-wars" class="game-view" style="display: none;">
             <div class="page-inner-card">
                 <div class="page-title-banner">⚔️ الحروب والعمليات العسكرية</div>
-                <p style="text-align: center; color: #8b949e; padding: 20px;">استعرض النزاعات الحدودية القائمة، شارك في جبهات القتال، أو ساهم بالدعم اللوجستي لجيش بلادك.</p>
+                <p style="text-align: center; color: #8b949e; padding: 20px;">استعرض النزاعات الحدودية القائمة، شارك في جبهات القتال، أو ساهم بالدعم اللوجستي.</p>
             </div>
         </div>
 
         <div id="view-profile" class="game-view" style="display: none;">
             <div class="page-inner-card">
                 <div class="page-title-banner">👤 الملف الشخصي للقائد</div>
-                <p style="text-align: center; color: #8b949e; padding: 20px;">هنا يمكنك متابعة رتبتك العسكرية، ثروتك النقدية، بطاقاتك والمعدات الخاصة بك.</p>
+                <p style="text-align: center; color: #8b949e; padding: 20px;">هنا يمكنك متابعة رتبتك العسكرية، ثروتك النقدية، بطاقاتك ومعداتك الخاصة.</p>
             </div>
         </div>
 

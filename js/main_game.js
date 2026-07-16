@@ -1,16 +1,16 @@
 // ==========================================
-// 🚀 التحكم بالتوجيه والتنقل بين الصفحات والأقسام
+// 🚀 دالة الانتقال بين الصفحات والأقسام
 // ==========================================
 function navigateTo(targetPage, extraParams = {}) {
-    console.log(`الانتقال الذكي إلى: ${targetPage}`, extraParams);
+    console.log(`محاولة الانتقال إلى: ${targetPage}`, extraParams);
 
-    // 1. إخفاء جميع كتل وعروض اللعبة الوسطى
+    // 1. إخفاء جميع الصفحات (Views)
     const allViews = document.querySelectorAll('.game-view');
     allViews.forEach(view => {
         view.style.display = 'none';
     });
 
-    // 2. تحديد المعرّف (ID) المناسب بناءً على الصفحة المطلوبة
+    // 2. مطابقة الصفحة المستهدفة بالـ ID الخاص بالحاوية
     let viewId = 'view-main';
 
     switch (targetPage) {
@@ -19,7 +19,7 @@ function navigateTo(targetPage, extraParams = {}) {
         case 'wars': viewId = 'view-wars'; break;
         case 'profile': viewId = 'view-profile'; break;
         
-        // 🌍 مسارات القارة (البلوك 1)
+        // 🌍 القارة
         case 'continent-map': viewId = 'view-continent-map'; break;
         case 'continent-players': viewId = 'view-continent-players'; break;
         case 'continent-online': viewId = 'view-continent-online'; break;
@@ -29,7 +29,7 @@ function navigateTo(targetPage, extraParams = {}) {
         case 'continent-alliances': viewId = 'view-continent-alliances'; break;
         case 'continent-independent': viewId = 'view-continent-independent'; break;
         
-        // 🇲🇦 مسارات الدولة الحالية (البلوك 2)
+        // 🇲🇦 الدولة
         case 'country-info': viewId = 'view-country-info'; break;
         case 'country-players': viewId = 'view-country-players'; break;
         case 'country-online': viewId = 'view-country-online'; break;
@@ -39,20 +39,20 @@ function navigateTo(targetPage, extraParams = {}) {
         default: viewId = 'view-main';
     }
 
-    // إظهار الصفحة المستهدفة
+    // إظهار الحاوية المطلوبة بنجاح
     const activeView = document.getElementById(viewId);
     if (activeView) {
         activeView.style.display = 'flex';
-        // تمرير الشاشة للأعلى تلقائياً عند فتح الصفحة الجديدة لمظهر أفضل بالهواتف
         window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+        console.warn(`تعذر العثور على الحاوية المعرّفة بـ: ${viewId}`);
     }
 
-    // 3. تعديل الفئة النشطة (Active Class) بالفوتر ليتناسب مع موقع اللاعب الحالي
+    // 3. تحديث مظهر زر التنقل الفوتر النشط (Bottom Navigation)
     const allLinks = document.querySelectorAll('.bottom-nav .nav-link');
     allLinks.forEach(link => link.classList.remove('active'));
 
     let activeBtnId = 'nav-btn-main';
-    // نربط الأقسام الفرعية بالزر الأب بالفوتر لتظل الأضواء صحيحة
     if (targetPage === 'work') activeBtnId = 'nav-btn-work';
     else if (targetPage === 'wars') activeBtnId = 'nav-btn-wars';
     else if (targetPage === 'profile') activeBtnId = 'nav-btn-profile';
@@ -64,82 +64,77 @@ function navigateTo(targetPage, extraParams = {}) {
 }
 
 // ==========================================
-// 🎯 ربط الأحداث وإعطاء العناصر تأثيرات تفاعلية
+// 🎯 ربط الأحداث وإضافة تأثيرات التفاعل
 // ==========================================
 function setupInteractiveElements() {
-    // خريطة الربط الكاملة للمعرفات وتوجهاتها
     const interactiveStats = [
-        // 🌍 البلوك الأول (مستوى القارة)
-        { id: 'btn-continent-map', page: 'continent-map' },          // الخريطة
-        { id: 'btn-continent-pop', page: 'continent-players' },       // سكان أفريقيا
-        { id: 'btn-continent-online', page: 'continent-online' },    // متصلين أفريقيا
-        { id: 'btn-continent-parties', page: 'continent-parties' },  // أحزاب أفريقيا
-        { id: 'btn-continent-factories', page: 'continent-factories' }, // مصانع أفريقيا
-        { id: 'btn-continent-countries', page: 'continent-countries' }, // قائمة دول القارة
-        { id: 'btn-continent-alliances', page: 'continent-alliances' }, // تحالفات القارة
-        { id: 'btn-continent-independent', page: 'continent-independent' }, // مستقلة القارة
+        // 🌍 مستوى القارة (البلوك الأول)
+        { id: 'btn-continent-map', page: 'continent-map' },
+        { id: 'btn-continent-pop', page: 'continent-players' },
+        { id: 'btn-continent-online', page: 'continent-online' },
+        { id: 'btn-continent-parties', page: 'continent-parties' },
+        { id: 'btn-continent-factories', page: 'continent-factories' },
+        { id: 'btn-continent-countries', page: 'continent-countries' },
+        { id: 'btn-continent-alliances', page: 'continent-alliances' },
+        { id: 'btn-continent-independent', page: 'continent-independent' },
         
-        // 🇲🇦 البلوك الثاني (مستوى الدولة)
-        { id: 'btn-country-flag', page: 'country-info' },            // العلم (ديوان الرئاسة)
-        { id: 'btn-country-pop', page: 'country-players' },          // سكان الدولة
-        { id: 'btn-country-online', page: 'country-online' },        // متصلين الدولة
-        { id: 'btn-country-parties', page: 'country-parties' },      // أحزاب الدولة
-        { id: 'btn-country-factories', page: 'country-factories' }   // مصانع الدولة
+        // 🇲🇦 مستوى الدولة (البلوك الثاني)
+        { id: 'btn-country-flag', page: 'country-info' },
+        { id: 'btn-country-pop', page: 'country-players' },
+        { id: 'btn-country-online', page: 'country-online' },
+        { id: 'btn-country-parties', page: 'country-parties' },
+        { id: 'btn-country-factories', page: 'country-factories' }
     ];
 
     interactiveStats.forEach(item => {
         const element = document.getElementById(item.id);
         if (element) {
-            // إعلام المتصفح واللاعب بأن العنصر زر تفاعلي
+            console.log(`تم ربط الحدث للعنصر: ${item.id}`);
+            // تعديل مؤشر الماوس وإضافة حركات بصرية عند التمرير والضغط
             element.style.cursor = 'pointer';
-            element.style.transition = 'transform 0.1s ease, background-color 0.15s ease, opacity 0.15s';
+            element.style.transition = 'transform 0.1s ease, background-color 0.15s ease';
 
-            // إضافة لمسة جمالية خفيفة جداً للضغط بالهواتف والماوس بالكمبيوتر
+            element.addEventListener('click', (e) => {
+                e.stopPropagation(); // منع انتقال الحدث للحاويات الأكبر
+                navigateTo(item.page);
+            });
+
             element.addEventListener('mouseenter', () => {
-                element.style.transform = 'scale(1.03)';
-                element.style.opacity = '0.9';
+                element.style.transform = 'scale(1.05)';
+                element.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
             });
 
             element.addEventListener('mouseleave', () => {
                 element.style.transform = 'scale(1)';
-                element.style.opacity = '1';
+                element.style.backgroundColor = 'transparent';
             });
-
-            // عند النقر يتم استدعاء دالة التوجيه بصفحتها المعزولة
-            element.addEventListener('click', () => {
-                navigateTo(item.page);
-            });
+        } else {
+            console.warn(`تنبيه: لم يتم العثور على العنصر ذو الـ id: ${item.id} في الـ HTML`);
         }
     });
 
-    // ربط زر برلمان الدولة (مثال إضافي جاهز للتوجيه مستقبلاً)
+    // ربط زر البرلمان
     const parliamentBtn = document.getElementById('btn-parliament');
     if (parliamentBtn) {
         parliamentBtn.addEventListener('click', () => {
-            alert('سيتم توجيهك لغرفة مناقشات وقرارات البرلمان قريباً جداً!');
+            alert('سيتم فتح بوابة برلمان الدولة والترشح للمناصب قريباً!');
         });
     }
 }
 
 // ==========================================
-// 📥 جلب بيانات اللاعب والمخدم عند التحميل
+// 📥 تحميل البيانات والأسماء المستعارة
 // ==========================================
 function fetchInitialGameData() {
-    console.log("جاري استيراد معلومات اللعبة وبيانات القائد...");
-    
-    // محاكاة سريعة لتحميل البيانات وتعبئة اسم المستخدم
     setTimeout(() => {
         const userNameSpan = document.getElementById('user-name');
         if (userNameSpan) {
-            userNameSpan.textContent = 'adil tabia'; // اسم اللاعب الافتراضي
+            userNameSpan.textContent = 'Bidro Fingers'; // تحديث الاسم من الصورة
         }
-        console.log("تم تحديث الواجهة والبيانات بنجاح!");
-    }, 800);
+    }, 500);
 }
 
-// ==========================================
-// ⚙️ تشغيل الأكواد فور استقرار الواجهة (DOMContentLoaded)
-// ==========================================
+// تشغيل التهيئة عند استقرار الصفحة
 document.addEventListener('DOMContentLoaded', () => {
     fetchInitialGameData();
     setupInteractiveElements();
