@@ -1,5 +1,5 @@
 // ==========================================
-// 🚀 دالة الانتقال بين الصفحات والأقسام
+// 🚀 دالة الانتقال بين الصفحات والأقسام الرئيسية
 // ==========================================
 function navigateTo(targetPage, extraParams = {}) {
     console.log(`محاولة الانتقال إلى: ${targetPage}`, extraParams);
@@ -39,13 +39,11 @@ function navigateTo(targetPage, extraParams = {}) {
         default: viewId = 'view-main';
     }
 
-    // إظهار الحاوية المطلوبة بنجاح
+    // إظهار الحاوية المطلوبة
     const activeView = document.getElementById(viewId);
     if (activeView) {
         activeView.style.display = 'flex';
         window.scrollTo({ top: 0, behavior: 'smooth' });
-    } else {
-        console.warn(`تعذر العثور على الحاوية المعرّفة بـ: ${viewId}`);
     }
 
     // 3. تحديث مظهر زر التنقل الفوتر النشط (Bottom Navigation)
@@ -64,11 +62,41 @@ function navigateTo(targetPage, extraParams = {}) {
 }
 
 // ==========================================
-// 🎯 ربط الأحداث وإضافة تأثيرات التفاعل
+// 🔁 منطق تحويل وعرض شرائح البلوك الأول (Slider/Swipe)
+// ==========================================
+function setupSliderLogic() {
+    const dot1 = document.getElementById('dot-1');
+    const dot2 = document.getElementById('dot-2');
+    const slide1 = document.getElementById('slide-1');
+    const slide2 = document.getElementById('slide-2');
+
+    if (dot1 && dot2 && slide1 && slide2) {
+        // تفعيل الشريحة الأولى
+        dot1.addEventListener('click', (e) => {
+            e.stopPropagation();
+            slide1.classList.add('active');
+            slide2.classList.remove('active');
+            dot1.classList.add('active');
+            dot2.classList.remove('active');
+        });
+
+        // تفعيل الشريحة الثانية
+        dot2.addEventListener('click', (e) => {
+            e.stopPropagation();
+            slide2.classList.add('active');
+            slide1.classList.remove('active');
+            dot2.classList.add('active');
+            dot1.classList.remove('active');
+        });
+    }
+}
+
+// ==========================================
+// 🎯 ربط الأحداث وإضافة تأثيرات التفاعل للمربعات
 // ==========================================
 function setupInteractiveElements() {
     const interactiveStats = [
-        // 🌍 مستوى القارة (البلوك الأول)
+        // 🌍 مستوى القارة (البلوك الأول - الشريحة الأولى والثانية)
         { id: 'btn-continent-map', page: 'continent-map' },
         { id: 'btn-continent-pop', page: 'continent-players' },
         { id: 'btn-continent-online', page: 'continent-online' },
@@ -89,13 +117,12 @@ function setupInteractiveElements() {
     interactiveStats.forEach(item => {
         const element = document.getElementById(item.id);
         if (element) {
-            console.log(`تم ربط الحدث للعنصر: ${item.id}`);
-            // تعديل مؤشر الماوس وإضافة حركات بصرية عند التمرير والضغط
+            // إضافة مؤشر الماوس (اليد) والتأثيرات البصرية
             element.style.cursor = 'pointer';
             element.style.transition = 'transform 0.1s ease, background-color 0.15s ease';
 
             element.addEventListener('click', (e) => {
-                e.stopPropagation(); // منع انتقال الحدث للحاويات الأكبر
+                e.stopPropagation(); // منع تداخل الأحداث
                 navigateTo(item.page);
             });
 
@@ -108,8 +135,6 @@ function setupInteractiveElements() {
                 element.style.transform = 'scale(1)';
                 element.style.backgroundColor = 'transparent';
             });
-        } else {
-            console.warn(`تنبيه: لم يتم العثور على العنصر ذو الـ id: ${item.id} في الـ HTML`);
         }
     });
 
@@ -117,25 +142,26 @@ function setupInteractiveElements() {
     const parliamentBtn = document.getElementById('btn-parliament');
     if (parliamentBtn) {
         parliamentBtn.addEventListener('click', () => {
-            alert('سيتم فتح بوابة برلمان الدولة والترشح للمناصب قريباً!');
+            alert('سيتم فتح بوابة برلمان الدولة قريباً!');
         });
     }
 }
 
 // ==========================================
-// 📥 تحميل البيانات والأسماء المستعارة
+// 📥 تهيئة البيانات والتحميل المبدئي
 // ==========================================
 function fetchInitialGameData() {
     setTimeout(() => {
         const userNameSpan = document.getElementById('user-name');
         if (userNameSpan) {
-            userNameSpan.textContent = 'Bidro Fingers'; // تحديث الاسم من الصورة
+            userNameSpan.textContent = 'Bidro Fingers';
         }
     }, 500);
 }
 
-// تشغيل التهيئة عند استقرار الصفحة
+// تشغيل الأكواد فور استقرار الواجهة
 document.addEventListener('DOMContentLoaded', () => {
     fetchInitialGameData();
-    setupInteractiveElements();
+    setupSliderLogic();          // تشغيل محول السلايدر في البلوك الأول
+    setupInteractiveElements();  // ربط الأزرار بالصفحات
 });

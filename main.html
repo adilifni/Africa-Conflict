@@ -76,6 +76,25 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
+            position: relative;
+        }
+
+        /* حاوية السلايدر لمنع تمدد العناصر */
+        .slider-container {
+            width: 100%;
+            position: relative;
+        }
+
+        /* كل شريحة داخل السلايدر */
+        .slide {
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .slide.active {
+            display: flex;
         }
 
         .card-header-stats {
@@ -283,14 +302,17 @@
         .slider-dots {
             display: flex;
             justify-content: center;
-            gap: 5px;
+            gap: 8px;
+            margin-top: 5px;
         }
 
         .dot {
-            width: 6px;
-            height: 6px;
+            width: 8px;
+            height: 8px;
             background-color: #30363d;
             border-radius: 50%;
+            cursor: pointer;
+            transition: background-color 0.2s;
         }
 
         .dot.active {
@@ -313,59 +335,59 @@
         <div id="view-main" class="game-view">
             
             <div class="card">
-                <div class="card-header-stats">
-                    <div class="stat-box" id="btn-continent-pop">
-                        <span class="stat-label">سكان</span>
-                        <span class="stat-value">2</span>
+                <div class="slider-container">
+                    
+                    <div id="slide-1" class="slide active">
+                        <div class="card-header-stats">
+                            <div class="stat-box" id="btn-continent-pop">
+                                <span class="stat-label">سكان</span>
+                                <span class="stat-value">2</span>
+                            </div>
+                            <div class="stat-box" id="btn-continent-online">
+                                <span class="stat-label">متصل</span>
+                                <span class="stat-value" style="color: #39d353;">1</span>
+                            </div>
+                            <div class="stat-box" id="btn-continent-parties">
+                                <span class="stat-label">أحزاب</span>
+                                <span class="stat-value">0</span>
+                            </div>
+                            <div class="stat-box" id="btn-continent-factories">
+                                <span class="stat-label">مصانع</span>
+                                <span class="stat-value">0</span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="stat-box" id="btn-continent-online">
-                        <span class="stat-label">متصل</span>
-                        <span class="stat-value" style="color: #39d353;">1</span>
+
+                    <div id="slide-2" class="slide">
+                        <div class="card-header-stats">
+                            <div class="stat-box" id="btn-continent-countries">
+                                <span class="stat-label">دول</span>
+                                <span class="stat-value">50</span>
+                            </div>
+                            <div class="stat-box" id="btn-continent-alliances">
+                                <span class="stat-label">تحالف</span>
+                                <span class="stat-value">0</span>
+                            </div>
+                            <div class="stat-box" id="btn-continent-independent">
+                                <span class="stat-label">مستقلة</span>
+                                <span class="stat-value">0</span>
+                            </div>
+                            <div class="stat-box">
+                                <span class="stat-label">-</span>
+                                <span class="stat-value">-</span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="stat-box" id="btn-continent-parties">
-                        <span class="stat-label">أحزاب</span>
-                        <span class="stat-value">0</span>
-                    </div>
-                    <div class="stat-box" id="btn-continent-factories">
-                        <span class="stat-label">مصانع</span>
-                        <span class="stat-value">0</span>
-                    </div>
+
                 </div>
 
-                <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #21262d; padding-top: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #21262d; padding-top: 10px; margin-top: 5px;">
                     <div class="slider-dots">
-                        <span class="dot active"></span>
-                        <span class="dot"></span>
+                        <span class="dot active" id="dot-1"></span>
+                        <span class="dot" id="dot-2"></span>
                     </div>
                     <div class="continent-img-container" id="btn-continent-map">
                         <img src="https://upload.wikimedia.org/wikipedia/commons/8/86/Africa_%28orthographic_projection%29.svg" alt="Africa" class="continent-img">
-                    </div>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header-stats">
-                    <div class="stat-box" id="btn-continent-countries">
-                        <span class="stat-label">دول</span>
-                        <span class="stat-value">50</span>
-                    </div>
-                    <div class="stat-box" id="btn-continent-alliances">
-                        <span class="stat-label">تحالف</span>
-                        <span class="stat-value">0</span>
-                    </div>
-                    <div class="stat-box" id="btn-continent-independent">
-                        <span class="stat-label">مستقلة</span>
-                        <span class="stat-value">0</span>
-                    </div>
-                    <div class="stat-box">
-                        <span class="stat-label">-</span>
-                        <span class="stat-value">-</span>
-                    </div>
-                </div>
-                <div style="display: flex; justify-content: flex-start; border-top: 1px solid #21262d; padding-top: 10px;">
-                    <div class="slider-dots">
-                        <span class="dot"></span>
-                        <span class="dot active"></span>
                     </div>
                 </div>
             </div>
