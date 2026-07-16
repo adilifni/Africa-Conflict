@@ -1,16 +1,14 @@
 // ==========================================
-// 🚀 نظام الانتقال السلس والمستقر بين الصفحات
+// 🛡️ نظام التنقل المحمي والمستقر بين الصفحات
 // ==========================================
 function navigateTo(targetPage) {
-    console.log(`الانتقال البرمجي إلى: ${targetPage}`);
+    console.log(`محاولة الانتقال إلى الصفحة: ${targetPage}`);
 
-    // 1. إخفاء كافة الواجهات
     const allViews = document.querySelectorAll('.game-view');
     allViews.forEach(view => {
-        view.style.display = 'none';
+        if (view) view.style.display = 'none';
     });
 
-    // 2. تعيين الواجهة المطلوبة
     let viewId = 'view-main';
     switch (targetPage) {
         case 'main': viewId = 'view-main'; break;
@@ -44,9 +42,11 @@ function navigateTo(targetPage) {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // 3. تحديث نشاط الفوتر السفلي
+    // تحديث الأزرار النشطة بالفوتر السفلي
     const allNavButtons = document.querySelectorAll('.bottom-nav .nav-link');
-    allNavButtons.forEach(btn => btn.classList.remove('active'));
+    allNavButtons.forEach(btn => {
+        if (btn) btn.classList.remove('active');
+    });
 
     let activeNavId = 'nav-btn-main';
     if (targetPage === 'work') activeNavId = 'nav-btn-work';
@@ -60,7 +60,7 @@ function navigateTo(targetPage) {
 }
 
 // ==========================================
-// 🔁 نظام سلايدر القارة (التبديل الأفقي السلس)
+// 🔁 نظام السلايدشو الذاتي واليدوي المحمي
 // ==========================================
 function setupSliderSystem() {
     const slidesContainer = document.getElementById('slides-container');
@@ -68,7 +68,6 @@ function setupSliderSystem() {
     const dot2 = document.getElementById('dot-2');
 
     if (slidesContainer && dot1 && dot2) {
-        // الشريحة الأولى
         dot1.addEventListener('click', (e) => {
             e.stopPropagation();
             slidesContainer.style.transform = 'translateX(0%)';
@@ -76,18 +75,21 @@ function setupSliderSystem() {
             dot2.classList.remove('active');
         });
 
-        // الشريحة الثانية
         dot2.addEventListener('click', (e) => {
             e.stopPropagation();
-            slidesContainer.style.transform = 'translateX(-50%)'; // إزاحة بمقدار نصف الحاوية الثنائية
+            slidesContainer.style.transform = 'translateX(-50%)';
             dot2.classList.add('active');
             dot1.classList.remove('active');
         });
+        
+        console.log("✔️ تم تفعيل نظام السلايدشو بنجاح.");
+    } else {
+        console.warn("⚠️ عناصر السلايدشو غير متواجدة بالصفحة الحالية.");
     }
 }
 
 // ==========================================
-// 💬 نظام الدردشة التفاعلية (الشتات)
+// 💬 نظام الشات وإرسال الرسائل الفوري
 // ==========================================
 function setupChatSystem() {
     const sendBtn = document.getElementById('chat-send-btn');
@@ -95,21 +97,18 @@ function setupChatSystem() {
     const chatMessagesBox = document.getElementById('chat-messages-box');
 
     if (sendBtn && chatInput && chatMessagesBox) {
-        // دالة لإرسال الرسالة وإدراجها ديناميكياً
         const handleSendMessage = () => {
             const textValue = chatInput.value.trim();
             if (textValue === '') return;
 
-            // الحصول على التوقيت الحالي بشكل منسق
             const now = new Date();
             let hours = now.getHours();
             const minutes = String(now.getMinutes()).padStart(2, '0');
             const ampm = hours >= 12 ? 'م' : 'ص';
             hours = hours % 12;
-            hours = hours ? hours : 12; // الساعة 12 بدلاً من 0
+            hours = hours ? hours : 12;
             const timeString = `${hours}:${minutes} ${ampm}`;
 
-            // إنشاء كتلة الرسالة الخاصة بي
             const messageDiv = document.createElement('div');
             messageDiv.className = 'chat-message me';
             messageDiv.innerHTML = `
@@ -120,32 +119,32 @@ function setupChatSystem() {
                 ${textValue}
             `;
 
-            // إضافة الرسالة إلى صندوق المحادثات وتمرير الصندوق للأسفل بسلاسة
             chatMessagesBox.appendChild(messageDiv);
-            chatInput.value = ''; // تصفية حقل الإدخال
+            chatInput.value = '';
             chatMessagesBox.scrollTop = chatMessagesBox.scrollHeight;
         };
 
-        // الضغط على زر الإرسال
         sendBtn.addEventListener('click', handleSendMessage);
-
-        // الضغط على زر Enter من الكيبورد
         chatInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
                 handleSendMessage();
             }
         });
+
+        console.log("✔️ تم تفعيل نظام محادثات الشات بنجاح.");
+    } else {
+        console.warn("⚠️ عناصر الشات غير متوفرة بالصفحة حالياً.");
     }
 }
 
 // ==========================================
-// 🎯 ربط الأحداث لجميع أزرار الإحصائيات (تأمين ضد الكراش)
+// 🎯 ربط تفاعل الخلايا وعناصر التحكم بالكامل
 // ==========================================
 function setupInteractiveElements() {
-    // مصفوفة تعريفية بكافة العناصر التفاعلية
+    // مصفوفة الربط للخلايا التفاعلية في البلوكين الأول والثاني
     const interactiveStats = [
-        // القارة (البلوك الأول)
+        // البلوك الأول (القارة)
         { id: 'btn-continent-map', page: 'continent-map' },
         { id: 'btn-continent-pop', page: 'continent-players' },
         { id: 'btn-continent-online', page: 'continent-online' },
@@ -155,7 +154,7 @@ function setupInteractiveElements() {
         { id: 'btn-continent-alliances', page: 'continent-alliances' },
         { id: 'btn-continent-independent', page: 'continent-independent' },
         
-        // الدولة (البلوك الثاني)
+        // البلوك الثاني (الدولة)
         { id: 'btn-country-flag', page: 'country-info' },
         { id: 'btn-country-pop', page: 'country-players' },
         { id: 'btn-country-online', page: 'country-online' },
@@ -163,7 +162,6 @@ function setupInteractiveElements() {
         { id: 'btn-country-factories', page: 'country-factories' }
     ];
 
-    // تفعيل التفاعل للأزرار وحمايتها برمجياً
     interactiveStats.forEach(item => {
         const element = document.getElementById(item.id);
         if (element) {
@@ -174,7 +172,7 @@ function setupInteractiveElements() {
         }
     });
 
-    // ربط الفوتر السفلي (Bottom Nav) بشكل حتمي وآمن
+    // ربط مستقر وثابت لأزرار شريط التنقل السفلي
     const navButtons = [
         { id: 'nav-btn-main', page: 'main' },
         { id: 'nav-btn-work', page: 'work' },
@@ -192,35 +190,38 @@ function setupInteractiveElements() {
         }
     });
 
-    // ربط زر البرلمان للدولة
+    // ربط زر البرلمان
     const parliamentBtn = document.getElementById('btn-parliament');
     if (parliamentBtn) {
         parliamentBtn.addEventListener('click', () => {
-            alert('سيتم فتح بوابة برلمان الدولة والتصويت قريباً!');
+            alert('أهلاً بك في برلمان الدولة السيادي! جاري تحضير جلسة التصويت...');
         });
     }
+
+    console.log("✔️ تم تهيئة وربط كافة الخلايا والأزرار التفاعلية بنجاح.");
 }
 
 // ==========================================
-// 📥 تحميل واستدعاء البيانات الحية
+// 📥 محاكاة تحميل بيانات اللاعب بشكل آمن
 // ==========================================
 function fetchInitialGameData() {
-    // محاكاة الاتصال وتنزيل الاسم المستعار
+    // محاكاة سريعة ومضمونة لإلغاء حالة الانتظار
     setTimeout(() => {
         const userNameSpan = document.getElementById('user-name');
         if (userNameSpan) {
-            userNameSpan.textContent = 'adil tabia';
+            userNameSpan.textContent = 'adil tabia'; // حل فوري لمشكلة "جاري التحميل" المعلقة بالصورة
+            console.log("✔️ تم جلب بيانات واسم القائد بنجاح.");
         }
-    }, 400);
+    }, 200);
 }
 
 // ==========================================
-// 🏁 تشغيل كود التهيئة بمجرد اكتمال الـ DOM بشكل مستقر
+// 🏁 تهيئة مستقرة عند تحميل الصفحة
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("تم تحميل مستند اللعبة بالكامل بنجاح.");
+    console.log("بوابة التحكم: مستند اللعبة جاهز ومستقر بالكامل.");
     
-    // تشغيل الأنظمة المستقلة تباعاً
+    // تشغيل الأنظمة بعد اكتمال بناء الصفحة لتفادي الأخطاء نهائياً
     fetchInitialGameData();
     setupSliderSystem();
     setupChatSystem();

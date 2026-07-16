@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Africa Conflict</title>
-    <!-- استدعاء الأيقونات -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -12,7 +11,7 @@
             margin: 0;
             padding: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            -webkit-tap-highlight-color: transparent; /* منع الوميض عند الضغط في الجوال */
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -53,7 +52,7 @@
         main {
             flex: 1;
             padding: 15px;
-            padding-bottom: 85px; /* مسافة للفوتر السفلي */
+            padding-bottom: 85px;
             display: flex;
             flex-direction: column;
             gap: 15px;
@@ -80,7 +79,7 @@
             gap: 12px;
         }
 
-        /* حاوية السلايدر لمنع انقسام البلوك */
+        /* حاوية السلايدشو */
         .slider-wrapper {
             position: relative;
             width: 100%;
@@ -89,7 +88,7 @@
 
         .slides-container {
             display: flex;
-            transition: transform 0.3s ease-in-out;
+            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
             width: 200%; /* شريحتين */
         }
 
@@ -193,7 +192,7 @@
             transform: scale(0.98);
         }
 
-        /* تصميم غرفة الدردشة */
+        /* حاوية صندوق الشات والدردشة */
         .chat-container {
             height: 320px;
             display: flex;
@@ -292,7 +291,7 @@
             background-color: #2ea043;
         }
 
-        /* شريط التنقل السفلي */
+        /* شريط التنقل السفلي الاحترافي */
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -329,7 +328,7 @@
             font-size: 18px;
         }
 
-        /* الصفحات الداخلية */
+        /* الصفحات الداخلية وتصميماتها */
         .page-inner-card {
             background-color: #161b22;
             border: 1px solid #30363d;
@@ -350,7 +349,6 @@
             margin-bottom: 15px;
         }
 
-        /* النقاط التفاعلية للسلايدر */
         .slider-footer {
             display: flex;
             justify-content: space-between;
@@ -362,20 +360,22 @@
 
         .slider-dots {
             display: flex;
-            gap: 8px;
+            gap: 12px;
+            padding: 5px;
         }
 
         .dot {
-            width: 8px;
-            height: 8px;
+            width: 12px;
+            height: 12px;
             background-color: #30363d;
             border-radius: 50%;
             cursor: pointer;
-            transition: background-color 0.2s;
+            transition: background-color 0.2s, transform 0.1s;
         }
 
         .dot.active {
             background-color: #58a6ff;
+            transform: scale(1.2);
         }
     </style>
 </head>
@@ -391,17 +391,12 @@
 
     <main>
 
-        <!-- ========================================== -->
-        <!-- 🏠 الشاشة الرئيسية ولعبة الحرب -->
-        <!-- ========================================== -->
         <div id="view-main" class="game-view">
             
-            <!-- 🌍 البلوك الأول الموحد -->
             <div class="card">
                 <div class="slider-wrapper">
                     <div class="slides-container" id="slides-container">
                         
-                        <!-- الشريحة الأولى -->
                         <div class="slide">
                             <div class="card-header-stats">
                                 <div class="stat-box" id="btn-continent-pop">
@@ -423,7 +418,6 @@
                             </div>
                         </div>
 
-                        <!-- الشريحة الثانية -->
                         <div class="slide">
                             <div class="card-header-stats">
                                 <div class="stat-box" id="btn-continent-countries">
@@ -448,7 +442,6 @@
                     </div>
                 </div>
 
-                <!-- التحكم أسفل السلايدر -->
                 <div class="slider-footer">
                     <div class="slider-dots">
                         <span class="dot active" id="dot-1"></span>
@@ -460,7 +453,6 @@
                 </div>
             </div>
 
-            <!-- 🇲🇦 البلوك الثاني -->
             <div class="card">
                 <div class="card-header-stats">
                     <div class="stat-box" id="btn-country-pop">
@@ -487,10 +479,8 @@
                 </div>
             </div>
 
-            <!-- زر البرلمان التفاعلي -->
             <button class="parliament-btn" id="btn-parliament">برلمان الدولة</button>
 
-            <!-- 💬 غرفة الدردشة (الشتات) -->
             <div class="card chat-container">
                 <div class="chat-title">غرفة الدردشة العامة</div>
                 <div class="chat-messages" id="chat-messages-box">
@@ -512,11 +502,6 @@
 
         </div>
 
-        <!-- ========================================== -->
-        <!-- صفحات التنقل الفرعية والداخلية -->
-        <!-- ========================================== -->
-
-        <!-- 💼 العمل -->
         <div id="view-work" class="game-view" style="display: none;">
             <div class="page-inner-card">
                 <div class="page-title-banner">💼 قطاع العمل والإنتاج المالي</div>
@@ -524,7 +509,6 @@
             </div>
         </div>
 
-        <!-- ⚔️ الحروب -->
         <div id="view-wars" class="game-view" style="display: none;">
             <div class="page-inner-card">
                 <div class="page-title-banner">⚔️ الحروب والعمليات العسكرية</div>
@@ -532,7 +516,6 @@
             </div>
         </div>
 
-        <!-- 👤 الحساب الشخصي -->
         <div id="view-profile" class="game-view" style="display: none;">
             <div class="page-inner-card">
                 <div class="page-title-banner">👤 الملف الشخصي للقائد</div>
@@ -540,7 +523,6 @@
             </div>
         </div>
 
-        <!-- 🌍 صفحات القارة -->
         <div id="view-continent-map" class="game-view" style="display: none;">
             <div class="page-inner-card">
                 <div class="page-title-banner">🗺️ خريطة قارة أفريقيا السياسية</div>
@@ -558,7 +540,7 @@
         <div id="view-continent-online" class="game-view" style="display: none;">
             <div class="page-inner-card">
                 <div class="page-title-banner">🟢 المتواجدون على الخط الآن</div>
-                <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">قائمة باللاعبين النشطون حالياً في مختلف بقاع القارة الإفريقية.</p>
+                <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">قائمة باللاعبين النشطين حالياً في مختلف بقاع القارة الإفريقية.</p>
             </div>
         </div>
 
@@ -597,7 +579,6 @@
             </div>
         </div>
 
-        <!-- 🇲🇦 صفحات الدولة -->
         <div id="view-country-info" class="game-view" style="display: none;">
             <div class="page-inner-card">
                 <div class="page-title-banner">🏛️ ديوان رئاسة الدولة وعلم الوطن</div>
@@ -635,7 +616,6 @@
 
     </main>
 
-    <!-- شريط التنقل السفلي -->
     <nav class="bottom-nav">
         <button id="nav-btn-main" class="nav-link active">
             <i class="fa-solid fa-house"></i>
