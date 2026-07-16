@@ -2,8 +2,9 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Africa Conflict</title>
+    <!-- استدعاء الأيقونات -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -11,6 +12,7 @@
             margin: 0;
             padding: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-tap-highlight-color: transparent; /* منع الوميض عند الضغط في الجوال */
         }
 
         body {
@@ -51,7 +53,7 @@
         main {
             flex: 1;
             padding: 15px;
-            padding-bottom: 80px;
+            padding-bottom: 85px; /* مسافة للفوتر السفلي */
             display: flex;
             flex-direction: column;
             gap: 15px;
@@ -76,25 +78,24 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
+        }
+
+        /* حاوية السلايدر لمنع انقسام البلوك */
+        .slider-wrapper {
             position: relative;
-        }
-
-        /* حاوية السلايدر لمنع تمدد العناصر */
-        .slider-container {
             width: 100%;
-            position: relative;
+            overflow: hidden;
         }
 
-        /* كل شريحة داخل السلايدر */
-        .slide {
-            display: none;
-            flex-direction: column;
-            gap: 12px;
-            width: 100%;
-        }
-
-        .slide.active {
+        .slides-container {
             display: flex;
+            transition: transform 0.3s ease-in-out;
+            width: 200%; /* شريحتين */
+        }
+
+        .slide {
+            width: 50%;
+            flex-shrink: 0;
         }
 
         .card-header-stats {
@@ -109,9 +110,16 @@
             display: flex;
             flex-direction: column;
             gap: 5px;
-            padding: 8px 4px;
+            padding: 10px 4px;
             border-radius: 8px;
-            transition: background-color 0.2s;
+            background-color: transparent;
+            transition: background-color 0.15s, transform 0.1s;
+            cursor: pointer;
+        }
+
+        .stat-box:active {
+            background-color: rgba(255, 255, 255, 0.08);
+            transform: scale(0.95);
         }
 
         .stat-label {
@@ -129,11 +137,17 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            width: 50px;
-            height: 50px;
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
             background-color: #21262d;
-            padding: 5px;
+            padding: 4px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .continent-img-container:active {
+            transform: scale(0.9);
         }
 
         .continent-img {
@@ -142,39 +156,56 @@
             object-fit: contain;
         }
 
+        .flag-img-container {
+            display: flex;
+            justify-content: flex-end;
+            cursor: pointer;
+        }
+
         .flag-img {
-            width: 60px;
+            width: 55px;
+            height: 35px;
+            object-fit: cover;
             border-radius: 6px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+            transition: transform 0.1s;
+        }
+
+        .flag-img:active {
+            transform: scale(0.9);
         }
 
         .parliament-btn {
             background-color: #38bdf8;
             color: #0f172a;
             border: none;
-            padding: 15px;
+            padding: 14px;
             border-radius: 12px;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
             cursor: pointer;
             text-align: center;
-            transition: background 0.2s, transform 0.1s;
+            transition: background-color 0.2s, transform 0.1s;
         }
 
         .parliament-btn:active {
+            background-color: #0ea5e9;
             transform: scale(0.98);
         }
 
-        /* غرفة الدردشة */
+        /* تصميم غرفة الدردشة */
         .chat-container {
-            height: 300px;
+            height: 320px;
+            display: flex;
+            flex-direction: column;
         }
 
         .chat-title {
-            font-size: 15px;
+            font-size: 14px;
             font-weight: bold;
             color: #f0f6fc;
             text-align: center;
+            margin-bottom: 5px;
         }
 
         .chat-messages {
@@ -183,28 +214,35 @@
             background-color: #0d1117;
             border: 1px solid #30363d;
             border-radius: 8px;
-            padding: 10px;
+            padding: 12px;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 10px;
+            margin-bottom: 10px;
         }
 
         .chat-message {
-            background-color: #21262d;
             padding: 8px 12px;
-            border-radius: 8px;
+            border-radius: 12px;
             max-width: 85%;
             font-size: 13px;
+            line-height: 1.4;
+            word-wrap: break-word;
         }
 
         .chat-message.me {
             align-self: flex-start;
-            background-color: #238636;
+            background-color: #1f6feb;
+            color: #ffffff;
+            border-bottom-right-radius: 2px;
         }
 
         .chat-message.others {
             align-self: flex-end;
-            background-color: #1f6feb;
+            background-color: #21262d;
+            color: #f0f6fc;
+            border: 1px solid #30363d;
+            border-bottom-left-radius: 2px;
         }
 
         .msg-header {
@@ -226,21 +264,32 @@
             background-color: #21262d;
             border: 1px solid #30363d;
             border-radius: 8px;
-            padding: 10px;
+            padding: 10px 12px;
             color: #f0f6fc;
             font-size: 13px;
+            outline: none;
+        }
+
+        .chat-input:focus {
+            border-color: #58a6ff;
         }
 
         .chat-send-btn {
             background-color: #238636;
             color: white;
             border: none;
-            width: 40px;
+            width: 42px;
+            height: 40px;
             border-radius: 8px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: background-color 0.2s;
+        }
+
+        .chat-send-btn:active {
+            background-color: #2ea043;
         }
 
         /* شريط التنقل السفلي */
@@ -253,7 +302,7 @@
             border-top: 1px solid #30363d;
             display: flex;
             justify-content: space-around;
-            padding: 10px 0;
+            padding: 8px 0;
             z-index: 100;
         }
 
@@ -261,14 +310,15 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 5px;
+            gap: 4px;
             color: #8b949e;
             text-decoration: none;
-            font-size: 12px;
+            font-size: 11px;
             cursor: pointer;
             background: none;
             border: none;
             flex: 1;
+            outline: none;
         }
 
         .nav-link.active {
@@ -279,6 +329,7 @@
             font-size: 18px;
         }
 
+        /* الصفحات الداخلية */
         .page-inner-card {
             background-color: #161b22;
             border: 1px solid #30363d;
@@ -299,11 +350,19 @@
             margin-bottom: 15px;
         }
 
+        /* النقاط التفاعلية للسلايدر */
+        .slider-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #21262d;
+            padding-top: 10px;
+            margin-top: 5px;
+        }
+
         .slider-dots {
             display: flex;
-            justify-content: center;
             gap: 8px;
-            margin-top: 5px;
         }
 
         .dot {
@@ -323,7 +382,7 @@
 <body>
 
     <header>
-        <div class="user-welcome">القائد: <span id="user-name">تحميل...</span></div>
+        <div class="user-welcome">القائد: <span id="user-name">جاري التحميل...</span></div>
         <div class="game-logo">
             <span>Africa Conflict</span>
             <span>🌍</span>
@@ -332,56 +391,65 @@
 
     <main>
 
+        <!-- ========================================== -->
+        <!-- 🏠 الشاشة الرئيسية ولعبة الحرب -->
+        <!-- ========================================== -->
         <div id="view-main" class="game-view">
             
+            <!-- 🌍 البلوك الأول الموحد -->
             <div class="card">
-                <div class="slider-container">
-                    
-                    <div id="slide-1" class="slide active">
-                        <div class="card-header-stats">
-                            <div class="stat-box" id="btn-continent-pop">
-                                <span class="stat-label">سكان</span>
-                                <span class="stat-value">2</span>
-                            </div>
-                            <div class="stat-box" id="btn-continent-online">
-                                <span class="stat-label">متصل</span>
-                                <span class="stat-value" style="color: #39d353;">1</span>
-                            </div>
-                            <div class="stat-box" id="btn-continent-parties">
-                                <span class="stat-label">أحزاب</span>
-                                <span class="stat-value">0</span>
-                            </div>
-                            <div class="stat-box" id="btn-continent-factories">
-                                <span class="stat-label">مصانع</span>
-                                <span class="stat-value">0</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div id="slide-2" class="slide">
-                        <div class="card-header-stats">
-                            <div class="stat-box" id="btn-continent-countries">
-                                <span class="stat-label">دول</span>
-                                <span class="stat-value">50</span>
-                            </div>
-                            <div class="stat-box" id="btn-continent-alliances">
-                                <span class="stat-label">تحالف</span>
-                                <span class="stat-value">0</span>
-                            </div>
-                            <div class="stat-box" id="btn-continent-independent">
-                                <span class="stat-label">مستقلة</span>
-                                <span class="stat-value">0</span>
-                            </div>
-                            <div class="stat-box">
-                                <span class="stat-label">-</span>
-                                <span class="stat-value">-</span>
+                <div class="slider-wrapper">
+                    <div class="slides-container" id="slides-container">
+                        
+                        <!-- الشريحة الأولى -->
+                        <div class="slide">
+                            <div class="card-header-stats">
+                                <div class="stat-box" id="btn-continent-pop">
+                                    <span class="stat-label">سكان</span>
+                                    <span class="stat-value">2</span>
+                                </div>
+                                <div class="stat-box" id="btn-continent-online">
+                                    <span class="stat-label">متصل</span>
+                                    <span class="stat-value" style="color: #39d353;">1</span>
+                                </div>
+                                <div class="stat-box" id="btn-continent-parties">
+                                    <span class="stat-label">أحزاب</span>
+                                    <span class="stat-value">0</span>
+                                </div>
+                                <div class="stat-box" id="btn-continent-factories">
+                                    <span class="stat-label">مصانع</span>
+                                    <span class="stat-value">0</span>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
+                        <!-- الشريحة الثانية -->
+                        <div class="slide">
+                            <div class="card-header-stats">
+                                <div class="stat-box" id="btn-continent-countries">
+                                    <span class="stat-label">دول</span>
+                                    <span class="stat-value">50</span>
+                                </div>
+                                <div class="stat-box" id="btn-continent-alliances">
+                                    <span class="stat-label">تحالف</span>
+                                    <span class="stat-value">0</span>
+                                </div>
+                                <div class="stat-box" id="btn-continent-independent">
+                                    <span class="stat-label">مستقلة</span>
+                                    <span class="stat-value">0</span>
+                                </div>
+                                <div class="stat-box">
+                                    <span class="stat-label">-</span>
+                                    <span class="stat-value">-</span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
                 </div>
 
-                <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #21262d; padding-top: 10px; margin-top: 5px;">
+                <!-- التحكم أسفل السلايدر -->
+                <div class="slider-footer">
                     <div class="slider-dots">
                         <span class="dot active" id="dot-1"></span>
                         <span class="dot" id="dot-2"></span>
@@ -392,6 +460,7 @@
                 </div>
             </div>
 
+            <!-- 🇲🇦 البلوك الثاني -->
             <div class="card">
                 <div class="card-header-stats">
                     <div class="stat-box" id="btn-country-pop">
@@ -411,18 +480,20 @@
                         <span class="stat-value">0</span>
                     </div>
                 </div>
-                <div style="display: flex; justify-content: flex-end; border-top: 1px solid #21262d; padding-top: 10px;">
-                    <div id="btn-country-flag" style="cursor: pointer;">
-                        <img src="https://flagcdn.com/w160/ma.png" alt="علم الدولة" class="flag-img">
+                <div class="flag-img-container">
+                    <div id="btn-country-flag">
+                        <img src="https://flagcdn.com/w160/ma.png" alt="Morocco Flag" class="flag-img">
                     </div>
                 </div>
             </div>
 
+            <!-- زر البرلمان التفاعلي -->
             <button class="parliament-btn" id="btn-parliament">برلمان الدولة</button>
 
+            <!-- 💬 غرفة الدردشة (الشتات) -->
             <div class="card chat-container">
                 <div class="chat-title">غرفة الدردشة العامة</div>
-                <div class="chat-messages" id="chat-box">
+                <div class="chat-messages" id="chat-messages-box">
                     <div class="chat-message others">
                         <div class="msg-header">
                             <span>adil tabia</span>
@@ -432,141 +503,153 @@
                     </div>
                 </div>
                 <div class="chat-input-area">
-                    <input type="text" class="chat-input" placeholder="اكتب رسالة برقية هنا...">
-                    <button class="chat-send-btn">✈️</button>
+                    <input type="text" class="chat-input" id="chat-input-field" placeholder="اكتب رسالة برقية هنا...">
+                    <button class="chat-send-btn" id="chat-send-btn">
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
                 </div>
             </div>
 
         </div>
 
+        <!-- ========================================== -->
+        <!-- صفحات التنقل الفرعية والداخلية -->
+        <!-- ========================================== -->
+
+        <!-- 💼 العمل -->
         <div id="view-work" class="game-view" style="display: none;">
             <div class="page-inner-card">
                 <div class="page-title-banner">💼 قطاع العمل والإنتاج المالي</div>
-                <p style="text-align: center; color: #8b949e; padding: 20px;">يمكنك هنا البحث عن وظائف، العمل لتجميع الأموال، والمساهمة في البنية التحتية.</p>
+                <p style="text-align: center; color: #8b949e; padding: 20px;">يمكنك هنا البحث عن وظائف، العمل لتجميع الأموال، والمساهمة في بناء بنية تحتية مستدامة للدولة.</p>
             </div>
         </div>
 
+        <!-- ⚔️ الحروب -->
         <div id="view-wars" class="game-view" style="display: none;">
             <div class="page-inner-card">
                 <div class="page-title-banner">⚔️ الحروب والعمليات العسكرية</div>
-                <p style="text-align: center; color: #8b949e; padding: 20px;">استعرض النزاعات الحدودية القائمة، شارك في جبهات القتال، أو ساهم بالدعم اللوجستي.</p>
+                <p style="text-align: center; color: #8b949e; padding: 20px;">استعرض جبهات النزاع المشتعلة، شارك في تدريبات الدفاع الشعبي، أو قد جيوشك لتحرير وتأمين قارتنا.</p>
             </div>
         </div>
 
+        <!-- 👤 الحساب الشخصي -->
         <div id="view-profile" class="game-view" style="display: none;">
             <div class="page-inner-card">
                 <div class="page-title-banner">👤 الملف الشخصي للقائد</div>
-                <p style="text-align: center; color: #8b949e; padding: 20px;">هنا يمكنك متابعة رتبتك العسكرية، ثروتك النقدية، بطاقاتك ومعداتك الخاصة.</p>
+                <p style="text-align: center; color: #8b949e; padding: 20px;">هنا تظهر رتبتك القيادية، ممتلكاتك المالية، والعتاد العسكري ومقدار هيبتك السياسية.</p>
             </div>
         </div>
 
+        <!-- 🌍 صفحات القارة -->
         <div id="view-continent-map" class="game-view" style="display: none;">
             <div class="page-inner-card">
-                <div class="page-title-banner">🗺️ خريطة قارة أفريقيا</div>
-                <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">جاري تحميل الحدود السياسية وخارطة الصراع الكبرى...</p>
+                <div class="page-title-banner">🗺️ خريطة قارة أفريقيا السياسية</div>
+                <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">جاري معالجة وتجهيز الخارطة الاستراتيجية للنزاعات الدولية والحدودية...</p>
             </div>
         </div>
 
         <div id="view-continent-players" class="game-view" style="display: none;">
             <div class="page-inner-card">
                 <div class="page-title-banner">👥 التعداد السكاني للقارة</div>
-                <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">عرض قائمة بكافة مواطني وقادة القارة الأفريقية بكافة دولها.</p>
+                <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">تعداد كافة قادة وجنرالات الدول الإفريقية الحلفاء والخصوم.</p>
             </div>
         </div>
 
         <div id="view-continent-online" class="game-view" style="display: none;">
             <div class="page-inner-card">
-                <div class="page-title-banner">🟢 المتصلون الآن في القارة</div>
-                <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">هنا يظهر اللاعبون النشطون والمتصلون حالياً على مستوى الخادم بالكامل.</p>
+                <div class="page-title-banner">🟢 المتواجدون على الخط الآن</div>
+                <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">قائمة باللاعبين النشطون حالياً في مختلف بقاع القارة الإفريقية.</p>
             </div>
         </div>
 
         <div id="view-continent-parties" class="game-view" style="display: none;">
             <div class="page-inner-card">
-                <div class="page-title-banner">🤝 الأحزاب السياسية في أفريقيا</div>
-                <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">استكشف الأحزاب المسجلة، الأيديولوجيات المختلفة وتوزع النفوذ الحزبي.</p>
+                <div class="page-title-banner">🤝 الأحزاب السياسية الإقليمية</div>
+                <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">قائمة بكافة التكتلات السياسية المعترف بها دولياً في البرلمانات الإقليمية.</p>
             </div>
         </div>
 
         <div id="view-continent-factories" class="game-view" style="display: none;">
             <div class="page-inner-card">
-                <div class="page-title-banner">🏭 مصانع قارة أفريقيا</div>
-                <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">قائمة بكافة المجمعات الصناعية والمنشآت الانتاجية على امتداد القارة.</p>
+                <div class="page-title-banner">🏭 قطاع الصناعة القاري</div>
+                <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">بيانات وتحديثات خطوط الإنتاج والمصانع الثقيلة في قارة أفريقيا.</p>
             </div>
         </div>
 
         <div id="view-continent-countries" class="game-view" style="display: none;">
             <div class="page-inner-card">
-                <div class="page-title-banner">🏳️ قائمة دول أفريقيا المعترف بها</div>
-                <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">إحصائيات وقائمة الـ 50 دولة ومقدار قوتها وتحالفاتها.</p>
+                <div class="page-title-banner">🏳️ سجل الـ 50 دولة إفريقية</div>
+                <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">استعرض البيانات الاقتصادية والقدرة الدفاعية لجميع الدول الـ 50.</p>
             </div>
         </div>
 
         <div id="view-continent-alliances" class="game-view" style="display: none;">
             <div class="page-inner-card">
-                <div class="page-title-banner">🛡️ تحالفات ومعاهدات الدفاع المشترك</div>
-                <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">كل الكتل العسكرية ومواثيق التحالف الدولية المبرمة بين الدول.</p>
+                <div class="page-title-banner">🛡️ تحالفات الدفاع العسكري المشترك</div>
+                <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">عرض المعاهدات ومواثيق التعاون العسكري بين القوى الكبرى وحلفاء اللعبة.</p>
             </div>
         </div>
 
         <div id="view-continent-independent" class="game-view" style="display: none;">
             <div class="page-inner-card">
-                <div class="page-title-banner">🔓 الدول والمناطق المستقلة</div>
-                <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">الدول والكيانات السيادية غير المنضمة لأي ائتلاف دولي حالياً.</p>
+                <div class="page-title-banner">🔓 الدول والكيانات المستقلة</div>
+                <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">سجل الدول غير المنضوية تحت مظلة أي تكتل عسكري دولي حالياً.</p>
             </div>
         </div>
 
+        <!-- 🇲🇦 صفحات الدولة -->
         <div id="view-country-info" class="game-view" style="display: none;">
             <div class="page-inner-card">
-                <div class="page-title-banner">🏛️ ديوان وقصر رئاسة الدولة</div>
-                <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">تفاصيل الدستور، الميزانية السيادية العامة، ومعدلات الفوائد والضرائب.</p>
+                <div class="page-title-banner">🏛️ ديوان رئاسة الدولة وعلم الوطن</div>
+                <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">هنا يتم اتخاذ القرارات السيادية وتغيير الضرائب واستعراض مخزون الخزانة العامة للدولة.</p>
             </div>
         </div>
 
         <div id="view-country-players" class="game-view" style="display: none;">
             <div class="page-inner-card">
-                <div class="page-title-banner">👥 مواطنو الدولة الحالية</div>
-                <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">سجل سكان وطنك الحالي، ترتيبهم، وتحديثات الإقامة والعمل والامتيازات.</p>
+                <div class="page-title-banner">👥 سجل مواطني وسكان الدولة</div>
+                <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">قائمة بأسماء ومرتبات القادة الحاملين جنسية الدولة الحالية ورتبهم الفعالة.</p>
             </div>
         </div>
 
         <div id="view-country-online" class="game-view" style="display: none;">
             <div class="page-inner-card">
-                <div class="page-title-banner">🟢 النشطون من الدولة حالياً</div>
-                <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">قائمة باللاعبين المتواجدين على الخط في دولتك بالوقت الحاضر.</p>
+                <div class="page-title-banner">🟢 المتصلون بالوطن حالياً</div>
+                <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">شاشة المراقبة اللحظية للاعبي ومواطني وطنك المتواجدين على خوادم اللعبة الآن.</p>
             </div>
         </div>
 
         <div id="view-country-parties" class="game-view" style="display: none;">
             <div class="page-inner-card">
-                <div class="page-title-banner">🤝 الأحزاب والكتل الوطنية المحلية</div>
-                <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">صراع المقاعد البرلمانية والانتخابات وتأسيس الأحزاب الخاصة داخل دولتك.</p>
+                <div class="page-title-banner">🤝 الأحزاب والائتلافات المحلية</div>
+                <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">انضم أو أسس حزبك السياسي الخاص لتنافس على الأغلبية البرلمانية وإدارة الحكومة.</p>
             </div>
         </div>
 
         <div id="view-country-factories" class="game-view" style="display: none;">
             <div class="page-inner-card">
                 <div class="page-title-banner">🏭 إدارة وتطوير المصانع المحلية</div>
-                <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">ابنِ مصنعك الخاص، قم بتوسعة خطوط إنتاج المواد الغذائية والذخائر والأسلحة.</p>
+                <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">أدر خطوط إنتاج المعدات والأسلحة والذخائر والمنتجات الغذائية لتأمين جبهات القتال.</p>
             </div>
         </div>
 
     </main>
 
+    <!-- شريط التنقل السفلي -->
     <nav class="bottom-nav">
-        <button id="nav-btn-main" class="nav-link active" onclick="navigateTo('main')">
+        <button id="nav-btn-main" class="nav-link active">
             <i class="fa-solid fa-house"></i>
             <span>الرئيسية</span>
         </button>
-        <button id="nav-btn-work" class="nav-link" onclick="navigateTo('work')">
+        <button id="nav-btn-work" class="nav-link">
             <i class="fa-solid fa-briefcase"></i>
             <span>العمل</span>
         </button>
-        <button id="nav-btn-wars" class="nav-link" onclick="navigateTo('wars')">
+        <button id="nav-btn-wars" class="nav-link">
             <i class="fa-solid fa-shield-halved"></i>
             <span>الحروب</span>
         </button>
-        <button id="nav-btn-profile" class="nav-link" onclick="navigateTo('profile')">
+        <button id="nav-btn-profile" class="nav-link">
             <i class="fa-solid fa-user"></i>
             <span>الحساب</span>
         </button>

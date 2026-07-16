@@ -1,25 +1,24 @@
 // ==========================================
-// 🚀 دالة الانتقال بين الصفحات والأقسام الرئيسية
+// 🚀 نظام الانتقال السلس والمستقر بين الصفحات
 // ==========================================
-function navigateTo(targetPage, extraParams = {}) {
-    console.log(`محاولة الانتقال إلى: ${targetPage}`, extraParams);
+function navigateTo(targetPage) {
+    console.log(`الانتقال البرمجي إلى: ${targetPage}`);
 
-    // 1. إخفاء جميع الصفحات (Views)
+    // 1. إخفاء كافة الواجهات
     const allViews = document.querySelectorAll('.game-view');
     allViews.forEach(view => {
         view.style.display = 'none';
     });
 
-    // 2. مطابقة الصفحة المستهدفة بالـ ID الخاص بالحاوية
+    // 2. تعيين الواجهة المطلوبة
     let viewId = 'view-main';
-
     switch (targetPage) {
         case 'main': viewId = 'view-main'; break;
         case 'work': viewId = 'view-work'; break;
         case 'wars': viewId = 'view-wars'; break;
         case 'profile': viewId = 'view-profile'; break;
         
-        // 🌍 القارة
+        // القارة
         case 'continent-map': viewId = 'view-continent-map'; break;
         case 'continent-players': viewId = 'view-continent-players'; break;
         case 'continent-online': viewId = 'view-continent-online'; break;
@@ -29,7 +28,7 @@ function navigateTo(targetPage, extraParams = {}) {
         case 'continent-alliances': viewId = 'view-continent-alliances'; break;
         case 'continent-independent': viewId = 'view-continent-independent'; break;
         
-        // 🇲🇦 الدولة
+        // الدولة
         case 'country-info': viewId = 'view-country-info'; break;
         case 'country-players': viewId = 'view-country-players'; break;
         case 'country-online': viewId = 'view-country-online'; break;
@@ -39,52 +38,48 @@ function navigateTo(targetPage, extraParams = {}) {
         default: viewId = 'view-main';
     }
 
-    // إظهار الحاوية المطلوبة
-    const activeView = document.getElementById(viewId);
-    if (activeView) {
-        activeView.style.display = 'flex';
+    const targetElement = document.getElementById(viewId);
+    if (targetElement) {
+        targetElement.style.display = 'flex';
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // 3. تحديث مظهر زر التنقل الفوتر النشط (Bottom Navigation)
-    const allLinks = document.querySelectorAll('.bottom-nav .nav-link');
-    allLinks.forEach(link => link.classList.remove('active'));
+    // 3. تحديث نشاط الفوتر السفلي
+    const allNavButtons = document.querySelectorAll('.bottom-nav .nav-link');
+    allNavButtons.forEach(btn => btn.classList.remove('active'));
 
-    let activeBtnId = 'nav-btn-main';
-    if (targetPage === 'work') activeBtnId = 'nav-btn-work';
-    else if (targetPage === 'wars') activeBtnId = 'nav-btn-wars';
-    else if (targetPage === 'profile') activeBtnId = 'nav-btn-profile';
+    let activeNavId = 'nav-btn-main';
+    if (targetPage === 'work') activeNavId = 'nav-btn-work';
+    else if (targetPage === 'wars') activeNavId = 'nav-btn-wars';
+    else if (targetPage === 'profile') activeNavId = 'nav-btn-profile';
 
-    const activeBtn = document.getElementById(activeBtnId);
-    if (activeBtn) {
-        activeBtn.classList.add('active');
+    const activeNavBtn = document.getElementById(activeNavId);
+    if (activeNavBtn) {
+        activeNavBtn.classList.add('active');
     }
 }
 
 // ==========================================
-// 🔁 منطق تحويل وعرض شرائح البلوك الأول (Slider/Swipe)
+// 🔁 نظام سلايدر القارة (التبديل الأفقي السلس)
 // ==========================================
-function setupSliderLogic() {
+function setupSliderSystem() {
+    const slidesContainer = document.getElementById('slides-container');
     const dot1 = document.getElementById('dot-1');
     const dot2 = document.getElementById('dot-2');
-    const slide1 = document.getElementById('slide-1');
-    const slide2 = document.getElementById('slide-2');
 
-    if (dot1 && dot2 && slide1 && slide2) {
-        // تفعيل الشريحة الأولى
+    if (slidesContainer && dot1 && dot2) {
+        // الشريحة الأولى
         dot1.addEventListener('click', (e) => {
             e.stopPropagation();
-            slide1.classList.add('active');
-            slide2.classList.remove('active');
+            slidesContainer.style.transform = 'translateX(0%)';
             dot1.classList.add('active');
             dot2.classList.remove('active');
         });
 
-        // تفعيل الشريحة الثانية
+        // الشريحة الثانية
         dot2.addEventListener('click', (e) => {
             e.stopPropagation();
-            slide2.classList.add('active');
-            slide1.classList.remove('active');
+            slidesContainer.style.transform = 'translateX(-50%)'; // إزاحة بمقدار نصف الحاوية الثنائية
             dot2.classList.add('active');
             dot1.classList.remove('active');
         });
@@ -92,11 +87,65 @@ function setupSliderLogic() {
 }
 
 // ==========================================
-// 🎯 ربط الأحداث وإضافة تأثيرات التفاعل للمربعات
+// 💬 نظام الدردشة التفاعلية (الشتات)
+// ==========================================
+function setupChatSystem() {
+    const sendBtn = document.getElementById('chat-send-btn');
+    const chatInput = document.getElementById('chat-input-field');
+    const chatMessagesBox = document.getElementById('chat-messages-box');
+
+    if (sendBtn && chatInput && chatMessagesBox) {
+        // دالة لإرسال الرسالة وإدراجها ديناميكياً
+        const handleSendMessage = () => {
+            const textValue = chatInput.value.trim();
+            if (textValue === '') return;
+
+            // الحصول على التوقيت الحالي بشكل منسق
+            const now = new Date();
+            let hours = now.getHours();
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const ampm = hours >= 12 ? 'م' : 'ص';
+            hours = hours % 12;
+            hours = hours ? hours : 12; // الساعة 12 بدلاً من 0
+            const timeString = `${hours}:${minutes} ${ampm}`;
+
+            // إنشاء كتلة الرسالة الخاصة بي
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'chat-message me';
+            messageDiv.innerHTML = `
+                <div class="msg-header">
+                    <span>أنت (القائد)</span>
+                    <span>${timeString}</span>
+                </div>
+                ${textValue}
+            `;
+
+            // إضافة الرسالة إلى صندوق المحادثات وتمرير الصندوق للأسفل بسلاسة
+            chatMessagesBox.appendChild(messageDiv);
+            chatInput.value = ''; // تصفية حقل الإدخال
+            chatMessagesBox.scrollTop = chatMessagesBox.scrollHeight;
+        };
+
+        // الضغط على زر الإرسال
+        sendBtn.addEventListener('click', handleSendMessage);
+
+        // الضغط على زر Enter من الكيبورد
+        chatInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                handleSendMessage();
+            }
+        });
+    }
+}
+
+// ==========================================
+// 🎯 ربط الأحداث لجميع أزرار الإحصائيات (تأمين ضد الكراش)
 // ==========================================
 function setupInteractiveElements() {
+    // مصفوفة تعريفية بكافة العناصر التفاعلية
     const interactiveStats = [
-        // 🌍 مستوى القارة (البلوك الأول - الشريحة الأولى والثانية)
+        // القارة (البلوك الأول)
         { id: 'btn-continent-map', page: 'continent-map' },
         { id: 'btn-continent-pop', page: 'continent-players' },
         { id: 'btn-continent-online', page: 'continent-online' },
@@ -106,7 +155,7 @@ function setupInteractiveElements() {
         { id: 'btn-continent-alliances', page: 'continent-alliances' },
         { id: 'btn-continent-independent', page: 'continent-independent' },
         
-        // 🇲🇦 مستوى الدولة (البلوك الثاني)
+        // الدولة (البلوك الثاني)
         { id: 'btn-country-flag', page: 'country-info' },
         { id: 'btn-country-pop', page: 'country-players' },
         { id: 'btn-country-online', page: 'country-online' },
@@ -114,54 +163,66 @@ function setupInteractiveElements() {
         { id: 'btn-country-factories', page: 'country-factories' }
     ];
 
+    // تفعيل التفاعل للأزرار وحمايتها برمجياً
     interactiveStats.forEach(item => {
         const element = document.getElementById(item.id);
         if (element) {
-            // إضافة مؤشر الماوس (اليد) والتأثيرات البصرية
-            element.style.cursor = 'pointer';
-            element.style.transition = 'transform 0.1s ease, background-color 0.15s ease';
-
             element.addEventListener('click', (e) => {
-                e.stopPropagation(); // منع تداخل الأحداث
+                e.stopPropagation();
                 navigateTo(item.page);
-            });
-
-            element.addEventListener('mouseenter', () => {
-                element.style.transform = 'scale(1.05)';
-                element.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
-            });
-
-            element.addEventListener('mouseleave', () => {
-                element.style.transform = 'scale(1)';
-                element.style.backgroundColor = 'transparent';
             });
         }
     });
 
-    // ربط زر البرلمان
+    // ربط الفوتر السفلي (Bottom Nav) بشكل حتمي وآمن
+    const navButtons = [
+        { id: 'nav-btn-main', page: 'main' },
+        { id: 'nav-btn-work', page: 'work' },
+        { id: 'nav-btn-wars', page: 'wars' },
+        { id: 'nav-btn-profile', page: 'profile' }
+    ];
+
+    navButtons.forEach(btn => {
+        const element = document.getElementById(btn.id);
+        if (element) {
+            element.addEventListener('click', (e) => {
+                e.preventDefault();
+                navigateTo(btn.page);
+            });
+        }
+    });
+
+    // ربط زر البرلمان للدولة
     const parliamentBtn = document.getElementById('btn-parliament');
     if (parliamentBtn) {
         parliamentBtn.addEventListener('click', () => {
-            alert('سيتم فتح بوابة برلمان الدولة قريباً!');
+            alert('سيتم فتح بوابة برلمان الدولة والتصويت قريباً!');
         });
     }
 }
 
 // ==========================================
-// 📥 تهيئة البيانات والتحميل المبدئي
+// 📥 تحميل واستدعاء البيانات الحية
 // ==========================================
 function fetchInitialGameData() {
+    // محاكاة الاتصال وتنزيل الاسم المستعار
     setTimeout(() => {
         const userNameSpan = document.getElementById('user-name');
         if (userNameSpan) {
-            userNameSpan.textContent = 'Bidro Fingers';
+            userNameSpan.textContent = 'adil tabia';
         }
-    }, 500);
+    }, 400);
 }
 
-// تشغيل الأكواد فور استقرار الواجهة
+// ==========================================
+// 🏁 تشغيل كود التهيئة بمجرد اكتمال الـ DOM بشكل مستقر
+// ==========================================
 document.addEventListener('DOMContentLoaded', () => {
+    console.log("تم تحميل مستند اللعبة بالكامل بنجاح.");
+    
+    // تشغيل الأنظمة المستقلة تباعاً
     fetchInitialGameData();
-    setupSliderLogic();          // تشغيل محول السلايدر في البلوك الأول
-    setupInteractiveElements();  // ربط الأزرار بالصفحات
+    setupSliderSystem();
+    setupChatSystem();
+    setupInteractiveElements();
 });
