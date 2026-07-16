@@ -166,14 +166,14 @@
             font-size: 12px;
             color: #8b949e;
             margin-bottom: 6px;
-            pointer-events: none; /* لمنع تداخل الضغط مع النص */
+            pointer-events: none;
         }
 
         .stat-value {
             font-size: 14px;
             font-weight: bold;
             color: #ffffff;
-            pointer-events: none; /* لمنع تداخل الضغط مع النص */
+            pointer-events: none;
         }
 
         /* 🔘 زر البرلمان */
@@ -189,6 +189,7 @@
             cursor: pointer;
             text-align: center;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            margin-bottom: 5px;
         }
 
         /* 💬 غرفة الشات */
@@ -302,6 +303,31 @@
         .nav-link.active {
             color: #c5a059;
         }
+
+        /* 📑 ستايل الصفحات الجديدة المتغيرة بالوسط */
+        .game-view {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .page-inner-card {
+            background-color: #1a2332;
+            border: 1.5px solid #30363d;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .page-title-banner {
+            font-size: 18px;
+            font-weight: bold;
+            color: #c5a059;
+            margin-bottom: 10px;
+            border-bottom: 1px dashed #30363d;
+            padding-bottom: 8px;
+        }
     </style>
 </head>
 <body>
@@ -316,100 +342,81 @@
 
         <div id="main-game-blocks" style="display: none; flex-direction: column; gap: 12px;">
             
-            <div class="block-card" id="continent-card" onclick="toggleContinentSlider()">
-                <div class="side-img-box">
-                    <img src="https://img.icons8.com/ios-filled/100/ffffff/africa.png" class="clickable-asset" id="continent-map-btn" alt="Africa">
-                </div>
-                
-                <div class="slider-wrapper" id="slider-wrapper-zone">
-                    <div class="slider-container" id="slider-core">
-                        <div class="slider-page">
-                            <div class="stat-item">
-                                <span class="stat-label">أحزاب</span>
-                                <span class="stat-value" id="cont-parties">0</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-label">دول</span>
-                                <span class="stat-value" id="cont-countries">50</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-label">متصل</span>
-                                <span class="stat-value" id="cont-online">0</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-label">سكان</span>
-                                <span class="stat-value" id="cont-pop">0</span>
-                            </div>
+            <div id="view-main" class="game-view">
+                <div class="block-card" id="continent-card" onclick="toggleContinentSlider()">
+                    <div class="side-img-box">
+                        <img src="https://img.icons8.com/ios-filled/100/ffffff/africa.png" class="clickable-asset" id="continent-map-btn" alt="Africa">
+                    </div>
+                    
+                    <div class="slider-wrapper" id="slider-wrapper-zone">
                         </div>
-                        <div class="slider-page">
-                            <div class="stat-item">
-                                <span class="stat-label">مصانع</span>
-                                <span class="stat-value" id="cont-factories">0</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-label">مستقل</span>
-                                <span class="stat-value" id="cont-independent">0</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-label">التحالف</span>
-                                <span class="stat-value" id="cont-alliances">0</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-label">-</span>
-                                <span class="stat-value">-</span>
-                            </div>
+                </div>
+
+                <div class="block-card" id="country-card">
+                    <div class="side-img-box">
+                        <img id="country-flag" src="https://flagcdn.com/w320/ma.png" class="clickable-asset" alt="علم الدولة">
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-item" id="btn-country-factories">
+                            <span class="stat-label">مصانع</span>
+                            <span class="stat-value" id="count-factories">0</span>
+                        </div>
+                        <div class="stat-item" id="btn-country-parties">
+                            <span class="stat-label">أحزاب</span>
+                            <span class="stat-value" id="count-parties">0</span>
+                        </div>
+                        <div class="stat-item" id="btn-country-online">
+                            <span class="stat-label">متصل</span>
+                            <span class="stat-value" id="count-online">0</span>
+                        </div>
+                        <div class="stat-item" id="btn-country-pop">
+                            <span class="stat-label">سكان</span>
+                            <span class="stat-value" id="count-pop">0</span>
                         </div>
                     </div>
-                    <div class="slider-dots">
-                        <div class="dot active" id="dot0"></div>
-                        <div class="dot" id="dot1"></div>
+                </div>
+
+                <button class="parliament-btn" id="parliament-main-btn" onclick="alert('الانتقال للبرلمان قريباً')">برلمان الدولة</button>
+
+                <div class="chat-block">
+                    <div class="chat-header">غرفة الدردشة</div>
+                    <div class="chat-messages" id="chat-messages-container"></div>
+                    <div class="chat-input-area">
+                        <input type="text" class="chat-input" id="chat-input-field" placeholder="اكتب رسالة برقية هنا...">
+                        <button class="chat-send-btn" id="send-chat-trigger">◀</button>
                     </div>
                 </div>
             </div>
 
-            <div class="block-card" id="country-card">
-                <div class="side-img-box">
-                    <img id="country-flag" src="https://flagcdn.com/w320/ma.png" class="clickable-asset" alt="علم الدولة">
-                </div>
-                <div class="stats-grid">
-                    <div class="stat-item" id="btn-country-factories">
-                        <span class="stat-label">مصانع</span>
-                        <span class="stat-value" id="count-factories">0</span>
-                    </div>
-                    <div class="stat-item" id="btn-country-parties">
-                        <span class="stat-label">أحزاب</span>
-                        <span class="stat-value" id="count-parties">0</span>
-                    </div>
-                    <div class="stat-item" id="btn-country-online">
-                        <span class="stat-label">متصل</span>
-                        <span class="stat-value" id="count-online">0</span>
-                    </div>
-                    <div class="stat-item" id="btn-country-pop">
-                        <span class="stat-label">سكان</span>
-                        <span class="stat-value" id="count-pop">0</span>
-                    </div>
+            <div id="view-work" class="game-view" style="display: none;">
+                <div class="page-inner-card">
+                    <div class="page-title-banner">🏭 إدارة المصانع والعمل</div>
+                    <p style="color: #8b949e; font-size: 14px; line-height: 1.6;">هنا يمكنك إدارة منشآتك الصناعية ومصانعك لإنتاج المواد الخام وزيادة نفوذك الاقتصادي.</p>
                 </div>
             </div>
 
-            <button class="parliament-btn" id="parliament-main-btn" onclick="alert('الانتقال للبرلمان قريباً')">برلمان الدولة</button>
-
-            <div class="chat-block">
-                <div class="chat-header">غرفة الدردشة</div>
-                <div class="chat-messages" id="chat-messages-container"></div>
-                <div class="chat-input-area">
-                    <input type="text" class="chat-input" id="chat-input-field" placeholder="اكتب رسالة برقية هنا...">
-                    <button class="chat-send-btn" id="send-chat-trigger">◀</button>
+            <div id="view-wars" class="game-view" style="display: none;">
+                <div class="page-inner-card">
+                    <div class="page-title-banner">⚔️ المعارك والحروب القارية</div>
+                    <p style="color: #8b949e; font-size: 14px; line-height: 1.6;">تابع الصراعات القائمة والنزاعات العسكرية النشطة، وقم بحشد قواتك للدفاع أو الهجوم.</p>
                 </div>
             </div>
-            
+
+            <div id="view-profile" class="game-view" style="display: none;">
+                <div class="page-inner-card">
+                    <div class="page-title-banner">👤 ملف القائد الشخصي</div>
+                    <p style="color: #8b949e; font-size: 14px; line-height: 1.6;">استعرض إحصائياتك العسكرية والسياسية، مستوى الطاقة والخبرة والتحكم بحسابك الشخصي.</p>
+                </div>
+            </div>
+
         </div>
     </div>
 
     <div class="bottom-nav">
-        <a href="#" class="nav-link">الحساب</a>
-        <a href="#" class="nav-link">الحروب</a>
-        <a href="#" class="nav-link">العمل</a>
-        <a href="#" class="nav-link active">الرئيسية</a>
+        <a href="#" class="nav-link" id="nav-btn-profile">الحساب</a>
+        <a href="#" class="nav-link" id="nav-btn-wars">الحروب</a>
+        <a href="#" class="nav-link" id="nav-btn-work">العمل</a>
+        <a href="#" class="nav-link active" id="nav-btn-main">الرئيسية</a>
     </div>
 
     <script>

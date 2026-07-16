@@ -352,9 +352,44 @@ function sendChatMessage() {
     });
 }
 
+// ====================================================================
+// 🌐 دالة التوجيه والتبديل الداخلي بوسط الصفحة بدون تحميل (SPA Navigation)
+// ====================================================================
 function navigateTo(targetPage, extraParams = {}) {
-    console.log(`تم استدعاء الصفحة الديناميكية: ${targetPage}`, extraParams);
-    alert(`سيتم فتح قسـم: ${targetPage} (مجهز للربط بملفات الـ JS الخاصة بك)`);
+    console.log(`تم استدعاء الانتقال لـ: ${targetPage}`, extraParams);
+
+    // 1. إخفاء جميع الحاويات الوسطى للعبة
+    const allViews = document.querySelectorAll('.game-view');
+    allViews.forEach(view => {
+        view.style.display = 'none';
+    });
+
+    // 2. إظهار الحاوية المطلوبة بناءً على الهدف
+    let viewId = 'view-main'; // الافتراضي هو الرئيسية
+    if (targetPage === 'work') viewId = 'view-work';
+    else if (targetPage === 'wars') viewId = 'view-wars';
+    else if (targetPage === 'profile') viewId = 'view-profile';
+    else if (targetPage === 'main') viewId = 'view-main';
+
+    const activeView = document.getElementById(viewId);
+    if (activeView) {
+        activeView.style.display = 'flex'; // نعيد عرضها كـ flex للحفاظ على تناسق التصميم
+    }
+
+    // 3. تحديث مظهر زر التنقل النشط في الفوتر السفلي
+    const allLinks = document.querySelectorAll('.bottom-nav .nav-link');
+    allLinks.forEach(link => link.classList.remove('active'));
+
+    let activeBtnId = 'nav-btn-main';
+    if (targetPage === 'work') activeBtnId = 'nav-btn-work';
+    else if (targetPage === 'wars') activeBtnId = 'nav-btn-wars';
+    else if (targetPage === 'profile') activeBtnId = 'nav-btn-profile';
+    else if (targetPage === 'main') activeBtnId = 'nav-btn-main';
+
+    const activeBtn = document.getElementById(activeBtnId);
+    if (activeBtn) {
+        activeBtn.classList.add('active');
+    }
 }
 
 function setupClickListeners() {
@@ -374,21 +409,21 @@ function setupClickListeners() {
         };
     }
 
-    // ربط الضغطات بكروت الدولة الإحصائية الجديدة
+    // ربط الضغطات بكروت الدولة الإحصائية الجديدة للتحويل الديناميكي
     const interactiveStats = [
         { id: 'cont-pop-wrapper', page: 'all-players' },
         { id: 'cont-online-wrapper', page: 'online-players' },
         { id: 'cont-parties-wrapper', page: 'parties' },
-        { id: 'cont-factories-wrapper', page: 'factories' },
+        { id: 'cont-factories-wrapper', page: 'work' }, // تم توجيهه لصفحة العمل الجديدة
         { id: 'cont-countries-wrapper', page: 'all-countries' },
         { id: 'cont-alliances-wrapper', page: 'alliances' },
         { id: 'cont-independent-wrapper', page: 'independent' },
         
-        // إحصائيات البلوك الثاني (كارت الدولة في HTML الجديد)
+        // إحصائيات كارت الدولة للتحويل الديناميكي
         { id: 'btn-country-pop', page: 'country-players' },
         { id: 'btn-country-online', page: 'country-online' },
         { id: 'btn-country-parties', page: 'parties' },
-        { id: 'btn-country-factories', page: 'factories' }
+        { id: 'btn-country-factories', page: 'work' } // تم توجيهه لصفحة العمل الجديدة
     ];
 
     interactiveStats.forEach(item => {
@@ -405,25 +440,20 @@ function setupClickListeners() {
         }
     });
 
-    const navItems = [
-        { text: 'الرئيسية', page: 'main' },
-        { text: 'العمل', page: 'work' },
-        { text: 'الحروب', page: 'wars' },
-        { text: 'الحساب', page: 'profile' }
+    // ربط مستمعات الضغط المباشر على أزرار الفوتر عبر الـ IDs الفريدة التي تم إنشاؤها
+    const navButtons = [
+        { id: 'nav-btn-main', page: 'main' },
+        { id: 'nav-btn-work', page: 'work' },
+        { id: 'nav-btn-wars', page: 'wars' },
+        { id: 'nav-btn-profile', page: 'profile' }
     ];
 
-    const bottomNav = document.querySelector('.bottom-nav') || document.body;
-    
-    navItems.forEach(nav => {
-        const xpath = `//span[text()='${nav.text}'] | //div[text()='${nav.text}'] | //a[text()='${nav.text}']`;
-        const result = document.evaluate(xpath, bottomNav, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
-        const element = result.singleNodeValue;
-        
-        if (element) {
-            const clickableArea = element.parentElement || element;
-            clickableArea.style.cursor = 'pointer';
-            clickableArea.onclick = () => {
-                navigateTo(nav.page);
+    navButtons.forEach(btn => {
+        const el = document.getElementById(btn.id);
+        if (el) {
+            el.onclick = (e) => {
+                e.preventDefault();
+                navigateTo(btn.page);
             };
         }
     });
