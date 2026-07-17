@@ -404,6 +404,14 @@
             background-color: #58a6ff;
             transform: scale(1.2);
         }
+        
+        /* كلاس التحكم في فتح القوائم المنزلقة بشكل انسيابي */
+.stat-dropdown.open {
+    max-height: 120px !important; /* يسمح للقائمة بالتمدد لأسفل */
+    border-top: 1px dashed #2d3748;
+    margin-bottom: 5px;
+}
+        
     </style>
 </head>
 <body>
@@ -530,6 +538,124 @@
             </div>
 
         </div>
+
+
+<!-- حاوية صفحة الحساب الشخصي (Profile View) -->
+<div id="view-profile" class="game-view" style="display: none; flex-direction: column; gap: 15px; padding: 15px;">
+    
+    <!-- مؤقت التطوير العالمي (يظهر فقط عند وجود ترقية جارية) -->
+    <div id="training-global-timer" style="display: none; background-color: #f39c12; color: #fff; padding: 10px; text-align: center; border-radius: 8px; font-weight: bold; font-size: 14px;">
+        جاري التطوير...
+    </div>
+
+    <!-- بلوك معلومات اللاعب العلوي -->
+    <div class="profile-card" style="background: #1a1f26; border-radius: 12px; padding: 20px; text-align: center; border: 1px solid #2d3748;">
+        <!-- صورة اللاعب المجلوبة من جوجل -->
+        <img id="profile-avatar" src="" alt="Avatar" style="width: 90px; height: 90px; border-radius: 50%; border: 3px solid #3182ce; object-fit: cover; margin-bottom: 10px;">
+        
+        <!-- اسم اللاعب مع زر الإعدادات لتغييره -->
+        <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+            <h2 id="profile-name-display" style="color: #fff; margin: 0; font-size: 20px;">جاري التحميل...</h2>
+            <button onclick="triggerNameChange()" style="background: none; border: none; color: #a0aec0; cursor: pointer; font-size: 16px;">⚙️</button>
+        </div>
+
+        <!-- شريط المستوى والـ XP التباطئي -->
+        <div style="margin-top: 15px; text-align: right;">
+            <div style="display: flex; justify-content: space-between; color: #cbd5e0; font-size: 14px; margin-bottom: 5px;">
+                <span id="profile-level-number" style="font-weight: bold; color: #3182ce;">المستوى 1</span>
+                <span id="profile-xp-text">0 / 100 XP</span>
+            </div>
+            <!-- خلفية الشريط -->
+            <div style="width: 100%; height: 12px; background: #2d3748; border-radius: 6px; overflow: hidden;">
+                <!-- الجزء الممتلئ ديناميكياً -->
+                <div id="profile-xp-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #3182ce, #63b3ed); transition: width 0.5s ease;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- بلوك المنطقة والجنسية التفاعلي -->
+    <div class="info-block" style="background: #1a1f26; border-radius: 12px; padding: 15px; display: flex; flex-direction: column; gap: 12px; border: 1px solid #2d3748;">
+        <div style="display: flex; justify-content: space-between; color: #fff; border-bottom: 1px solid #2d3748; padding-bottom: 8px;">
+            <span style="color: #a0aec0;">📍 المنطقة المفتوحة حالياً</span>
+            <span id="profile-region" style="font-weight: bold;">المغرب</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; color: #fff; padding-top: 4px;">
+            <span style="color: #a0aec0;">🇲🇦 الجنسية الأصلية</span>
+            <span id="profile-nationality" style="font-weight: bold;">المغرب</span>
+        </div>
+    </div>
+
+    <!-- بلوك العناصر الثلاثة والقوائم المنزلقة للتطوير -->
+    <div class="stats-upgrade-container" style="display: flex; flex-direction: column; gap: 10px;">
+        
+        <!-- 1. عنصر القوة -->
+        <div class="stat-box" style="background: #1a1f26; border-radius: 12px; border: 1px solid #2d3748; overflow: hidden;">
+            <div id="stat-power-header" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #fff;">
+                <span>💪 القوة القتالية</span>
+                <span style="font-weight: bold; color: #e53e3e; font-size: 18px;" id="stat-power-val">0</span>
+            </div>
+            <!-- القائمة المنزلقة -->
+            <div id="stat-power-dropdown" class="stat-dropdown" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease; background: #151920; padding: 0 15px;">
+                <div style="padding: 15px 0; display: flex; flex-direction: column; gap: 10px;">
+                    <p id="time-power" style="color: #a0aec0; margin: 0; font-size: 13px;">الوقت المستغرق: --</p>
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="startStatUpgrade('power', 'money')" style="flex: 1; background: #2b6cb0; color: #fff; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-power-money">0 مال</button>
+                        <button onclick="startStatUpgrade('power', 'gold')" style="flex: 1; background: #d69e2e; color: #fff; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-power-gold">0 ذهب</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. عنصر التعليم -->
+        <div class="stat-box" style="background: #1a1f26; border-radius: 12px; border: 1px solid #2d3748; overflow: hidden;">
+            <div id="stat-education-header" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #fff;">
+                <span>📚 مستوي التعليم</span>
+                <span style="font-weight: bold; color: #3182ce; font-size: 18px;" id="stat-education-val">0</span>
+            </div>
+            <!-- القائمة المنزلقة -->
+            <div id="stat-education-dropdown" class="stat-dropdown" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease; background: #151920; padding: 0 15px;">
+                <div style="padding: 15px 0; display: flex; flex-direction: column; gap: 10px;">
+                    <p id="time-education" style="color: #a0aec0; margin: 0; font-size: 13px;">الوقت المستغرق: --</p>
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="startStatUpgrade('education', 'money')" style="flex: 1; background: #2b6cb0; color: #fff; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-education-money">0 مال</button>
+                        <button onclick="startStatUpgrade('education', 'gold')" style="flex: 1; background: #d69e2e; color: #fff; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-education-gold">0 ذهب</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. عنصر الخبرة -->
+        <div class="stat-box" style="background: #1a1f26; border-radius: 12px; border: 1px solid #2d3748; overflow: hidden;">
+            <div id="stat-experience-header" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #fff;">
+                <span>⚡ نقاط الخبرة المكتسبة</span>
+                <span style="font-weight: bold; color: #38a169; font-size: 18px;" id="stat-experience-val">0</span>
+            </div>
+            <!-- القائمة المنزلقة -->
+            <div id="stat-experience-dropdown" class="stat-dropdown" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease; background: #151920; padding: 0 15px;">
+                <div style="padding: 15px 0; display: flex; flex-direction: column; gap: 10px;">
+                    <p id="time-experience" style="color: #a0aec0; margin: 0; font-size: 13px;">الوقت المستغرق: --</p>
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="startStatUpgrade('experience', 'money')" style="flex: 1; background: #2b6cb0; color: #fff; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-experience-money">0 مال</button>
+                        <button onclick="startStatUpgrade('experience', 'gold')" style="flex: 1; background: #d69e2e; color: #fff; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-experience-gold">0 ذهب</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- دالة مساعدة سريعة لفتح نافذة إدخال الاسم الجديد -->
+<script>
+function triggerNameChange() {
+    const newName = prompt("أدخل اسم الشهرة الجديد الخاص بك:");
+    if (newName && typeof changePlayerName === 'function') {
+        changePlayerName(newName);
+    }
+}
+</script>
+
+
 
         <!-- البوابات والواجهات الداخلية الأخرى للعبة -->
         <div id="view-work" class="game-view" style="display: none;">
@@ -667,5 +793,7 @@
 
     <!-- استدعاء ملف الـ JS في نهاية الصفحة لضمان تحميل الواجهة أولاً -->
     <script src="js/main_game.js"></script>
+    <script src="js/profile.js"></script>
+    
 </body>
 </html>
