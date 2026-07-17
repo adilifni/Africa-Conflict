@@ -34,6 +34,13 @@ function initProfileSystem() {
         // 2. تحديث شريط المستوى (XP)
         updateXPProgressBar(data.xp || 0);
 
+// تحديث أرقام الذهب والمال الحية من Firestore بدون كلمات إضافية
+const goldDisplay = document.getElementById('profile-gold-display');
+const moneyDisplay = document.getElementById('profile-money-display');
+
+if (goldDisplay) goldDisplay.textContent = data.gold !== undefined ? data.gold : 0;
+if (moneyDisplay) moneyDisplay.textContent = data.money !== undefined ? data.money : 0;
+
         // 3. تحديث بلوك المنطقة والجنسية
         const regionText = document.getElementById('profile-region');
         if (regionText) {
@@ -241,6 +248,57 @@ function changePlayerName(newName) {
 }
 
 // تشغيل نظام الحساب تلقائياً عند تحميل الصفحة
+// فتح نافذة الإعدادات وتعبئة الحقول بالقيم الحالية للاعب
+function openSettingsModal() {
+    const modal = document.getElementById('settings-modal');
+    const nameInput = document.getElementById('settings-name-input');
+    const avatarInput = document.getElementById('settings-avatar-input');
+
+    if (modal && localPlayerData) {
+        if (nameInput) nameInput.value = localPlayerData.name || "";
+        if (avatarInput) avatarInput.value = localPlayerData.avatarUrl || "";
+        modal.style.display = 'flex';
+    }
+}
+
+// إغلاق نافذة الإعدادات
+function closeSettingsModal() {
+    const modal = document.getElementById('settings-modal');
+    if (modal) modal.style.display = 'none';
+}
+
+// حفظ الاسم وصورة البروفايل معاً في قاعدة بيانات Firestore
+function savePlayerSettings() {
+    const user = firebase.auth().currentUser;
+    if (!user) return;
+
+    const newName = document.getElementById('settings-name-input').value.trim();
+    const newAvatarUrl = document.getElementById('settings-avatar-input').value.trim();
+
+    if (newName === "") {
+        alert("⚠️ لا يمكن أن يكون اسم القائد فارغاً!");
+        return;
+    }
+
+    // تجهيز كائن التحديث لقاعدة البيانات
+    const updatedData = {
+        name: newName,
+        avatarUrl: newAvatarUrl
+    };
+
+    firebase.firestore().collection('players').doc(user.uid).update(updatedData)
+        .then(() => {
+            alert("🎉 تم تحديث وحفظ بيانات الملف الشخصي بنجاح!");
+            closeSettingsModal();
+        })
+        .catch((error) => {
+            console.error("خطأ أثناء تحديث الإعدادات:", error);
+            alert("🔴 حدث خطأ أثناء الحفظ، يرجى المحاولة مجدداً.");
+        });
+}
+
+
+
 document.addEventListener('DOMContentLoaded', () => {
     // ننتظر ثانية واحدة حتى يتأكد المتصفح من وجود حساب الجيميل النشط
     setTimeout(initProfileSystem, 1000);
