@@ -1,9 +1,6 @@
-// ===================================================
-// 👤 نظام إدارة حساب اللاعب، التنقل، والعدادات المصلحة
-// ===================================================
-
 let localPlayerData = null;
 let trainingInterval = null; 
+let slideIndex = 0; // لتعقب السلايدر النشط بالرئيسية
 
 const africanCountries = {
     "morocco": { name: "المغرب" },
@@ -13,13 +10,30 @@ const africanCountries = {
     "libya": { name: "ليبيا" }
 };
 
-// دالة تشغيل البروفايل وتفعيل مراقبة Firestore الحية
+// 1. إدارة وتنقل نظام السلايدر (Slideshow) في الصفحة الرئيسية
+function showSlides(n) {
+    let slides = document.getElementsByClassName("slide");
+    if (!slides || slides.length === 0) return;
+    
+    if (n >= slides.length) { slideIndex = 0; }
+    if (n < 0) { slideIndex = slides.length - 1; }
+    
+    for (let i = 0; i < slides.length; i++) {
+        slides[i].classList.remove("active");
+    }
+    slides[slideIndex].classList.add("active");
+}
+
+function plusSlides(n) {
+    showSlides(slideIndex += n);
+}
+
+// 2. نظام تهيئة البيانات والمزامنة الحية من الـ Firestore
 function initProfileSystem() {
     const user = firebase.auth().currentUser;
     if (!user) return;
 
     const db = firebase.firestore();
-
     db.collection('players').doc(user.uid).onSnapshot((doc) => {
         if (!doc.exists) {
             createNewPlayerProfile(user);
@@ -29,35 +43,33 @@ function initProfileSystem() {
         const data = doc.data();
         localPlayerData = data;
 
-        // تحديث البيانات الأساسية بالـ Header والواجهة
+        // تحديث الاسم والوجوه التعبيرية
         if (document.getElementById('profile-avatar')) document.getElementById('profile-avatar').src = data.avatarUrl || 'https://via.placeholder.com/150';
         if (document.getElementById('profile-name-display')) document.getElementById('profile-name-display').textContent = data.name || "قائد مجهول";
         if (document.getElementById('user-name')) document.getElementById('user-name').textContent = data.name || "قائد مجهول";
 
-        // تحديث الثروة
+        // الثروة والموارد
         if (document.getElementById('profile-money-display')) document.getElementById('profile-money-display').textContent = (data.money !== undefined ? data.money : 0) + " 💵";
         if (document.getElementById('profile-gold-display')) document.getElementById('profile-gold-display').textContent = (data.gold !== undefined ? data.gold : 0) + " 🪙";
 
-        // تحديث شريط الـ XP
+        // الـ XP والمستوى
         updateXPProgressBar(data.xp || 0);
 
-        // تحديث المناطق والدول
+        // الجغرافيا والجنسيات
         const currentLoc = data.current_location || "morocco";
         const nation = data.nationality || "morocco";
         if (document.getElementById('profile-region')) document.getElementById('profile-region').textContent = africanCountries[currentLoc]?.name || "المغرب";
         if (document.getElementById('profile-nationality')) document.getElementById('profile-nationality').textContent = africanCountries[nation]?.name || "المغرب";
 
-        // تحديث قيم عناصر التطوير
+        // إحصائيات التطوير الداخلي
         if (document.getElementById('stat-power-val')) document.getElementById('stat-power-val').textContent = data.power || 0;
         if (document.getElementById('stat-education-val')) document.getElementById('stat-education-val').textContent = data.education || 0;
 
-        // فحص وإدارة العداد التنازلي للتطوير النشط
         checkActiveTraining(data);
-    }, error => {
-        console.error("Firestore Error:", error);
     });
 
     setupStatDropdowns();
+    showSlides(slideIndex); // تشغيل السلايد الأول بالرئيسية فوراً
 }
 
 function createNewPlayerProfile(user) {
@@ -93,7 +105,6 @@ function setupStatDropdowns() {
                     const currentStatLevel = localPlayerData[stat] || 0;
                     const moneyCost = (currentStatLevel + 1) * 1000;
                     const timeInSeconds = (currentStatLevel + 1) * 30;
-                    
                     const timeEl = document.getElementById(`time-${stat}`);
                     if (timeEl) timeEl.textContent = `الوقت: ${timeInSeconds} ثانية | التكلفة: ${moneyCost} مال`;
                 }
@@ -106,7 +117,7 @@ function setupStatDropdowns() {
 function startStatUpgrade(statName, currencyType) {
     if (!localPlayerData) return;
     if (localPlayerData.activeTraining) {
-        alert("⚠️ هناك عملية تطوير جارية بالفعل! انتظر حتى تنتهي.");
+        alert("⚠️ هناك عملية تطوير جارية بالفعل!");
         return;
     }
 
@@ -128,10 +139,7 @@ function startStatUpgrade(statName, currencyType) {
         timeInSeconds = Math.floor(timeInSeconds / 2);
     }
 
-    updates['activeTraining'] = {
-        stat: statName,
-        finishAt: Date.now() + (timeInSeconds * 1000)
-    };
+    updates['activeTraining'] = { stat: statName, finishAt: Date.now() + (timeInSeconds * 1000) };
 
     db.collection('players').doc(user.uid).update(updates).then(() => {
         document.getElementById(`stat-${statName}-dropdown`)?.classList.remove('open');
@@ -141,18 +149,12 @@ function startStatUpgrade(statName, currencyType) {
 function checkActiveTraining(data) {
     const timerDisplay = document.getElementById('training-global-timer');
     if (!timerDisplay) return;
-
     if (trainingInterval) clearInterval(trainingInterval);
-
-    if (!data.activeTraining) {
-        timerDisplay.style.display = 'none';
-        return;
-    }
+    if (!data.activeTraining) { timerDisplay.style.display = 'none'; return; }
 
     trainingInterval = setInterval(() => {
         const now = Date.now();
         const timeLeft = data.activeTraining.finishAt - now;
-
         if (timeLeft <= 0) {
             clearInterval(trainingInterval);
             timerDisplay.style.display = 'none';
@@ -167,7 +169,6 @@ function checkActiveTraining(data) {
 function completeUpgrade(statName) {
     const user = firebase.auth().currentUser;
     if (!user) return;
-
     firebase.firestore().collection('players').doc(user.uid).update({
         [statName]: firebase.firestore.FieldValue.increment(1),
         xp: firebase.firestore.FieldValue.increment(25),
@@ -175,19 +176,14 @@ function completeUpgrade(statName) {
     });
 }
 
-// 🌐 دالة التنقل والتبديل الكامل والذكي بين الصفحات الأربعة لضمان بقاء الزر نشطاً
+// 🌐 التبديل المستقر بين الشاشات الأربعة مع الإبقاء على الفوتر ثابتاً
 function switchView(viewId) {
-    // إخفاء جميع الشاشات أولاً
     document.querySelectorAll('.game-view').forEach(v => v.style.display = 'none');
-    
-    // إزالة الصف النشط من أزرار الهيدر السفلي
     document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
     
-    // إظهار الشاشة المحددة فقط
     const targetView = document.getElementById('view-' + viewId);
     if (targetView) targetView.style.display = 'flex';
     
-    // تحديد الزر الذي تم ضغطه وإعطاؤه اللون الأزرق النشط
     const targetNav = document.getElementById('nav-' + viewId);
     if (targetNav) targetNav.classList.add('active');
 }
@@ -199,21 +195,13 @@ function openSettingsModal() {
     document.getElementById('settings-modal').style.display = 'flex';
 }
 
-function closeSettingsModal() {
-    document.getElementById('settings-modal').style.display = 'none';
-}
+function closeSettingsModal() { document.getElementById('settings-modal').style.display = 'none'; }
 
 function savePlayerSettings() {
     const name = document.getElementById('settings-name-input').value.trim();
     const url = document.getElementById('settings-avatar-url-input').value.trim();
     if (!name) return alert("الاسم فارغ!");
-
-    firebase.firestore().collection('players').doc(firebase.auth().currentUser.uid).update({
-        name: name,
-        avatarUrl: url
-    }).then(() => closeSettingsModal());
+    firebase.firestore().collection('players').doc(firebase.auth().currentUser.uid).update({ name: name, avatarUrl: url }).then(() => closeSettingsModal());
 }
 
-firebase.auth().onAuthStateChanged(user => { 
-    if (user) initProfileSystem(); 
-});
+firebase.auth().onAuthStateChanged(user => { if (user) initProfileSystem(); });

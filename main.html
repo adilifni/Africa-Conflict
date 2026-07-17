@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Africa Conflict</title>
-    
-    <!-- CSS المظهر العام للعبة والبروفايل -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -17,21 +15,34 @@
         header { background-color: #161b22; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #30363d; position: sticky; top: 0; z-index: 100; }
         .user-welcome { font-size: 14px; color: #58a6ff; }
         .game-logo { font-size: 20px; font-weight: bold; color: #f0f6fc; display: flex; align-items: center; gap: 8px; }
+        
         main { flex: 1; padding: 15px; padding-bottom: 85px; display: flex; flex-direction: column; gap: 15px; max-width: 600px; margin: 0 auto; width: 100%; }
         .game-view { display: flex; flex-direction: column; gap: 15px; width: 100%; }
         .card { background-color: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 15px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); display: flex; flex-direction: column; gap: 12px; }
         
-        /* شريط التنقل السفلي الكامل */
+        /* شريط التنقل السفلي الثابت */
         .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background-color: #161b22; border-top: 1px solid #30363d; display: flex; justify-content: space-around; padding: 8px 0; z-index: 100; }
         .nav-link { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #8b949e; text-decoration: none; font-size: 11px; cursor: pointer; background: none; border: none; flex: 1; }
         .nav-link.active { color: #58a6ff; }
         .nav-link i { font-size: 18px; }
+
+        /* ستايل الخريطة والسلايدر الخاص بالصفحة الرئيسية */
+        .map-container { width: 100%; text-align: center; padding: 10px 0; }
+        .map-container img { max-width: 100%; height: auto; border-radius: 8px; }
         
-        /* تصميم القوائم المنسدلة للتطوير */
+        .slideshow-container { position: relative; width: 100%; background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 20px; overflow: hidden; min-height: 160px; display: flex; align-items: center; justify-content: center; }
+        .slide { display: none; text-align: center; width: 100%; }
+        .slide.active { display: block; }
+        .slide h3 { color: #58a6ff; margin-bottom: 10px; }
+        .slide p { color: #8b949e; font-size: 14px; }
+        
+        .prev, .next { cursor: pointer; position: absolute; top: 50%; width: auto; padding: 16px; margin-top: -22px; color: #58a6ff; font-weight: bold; font-size: 18px; transition: 0.6s ease; border-radius: 0 3px 3px 0; user-select: none; border: none; background: none; }
+        .next { left: 0; border-radius: 3px 0 0 3px; }
+        .prev { right: 0; border-radius: 3px 0 0 3px; }
+
+        /* ستايل البروفايل والقوائم المنسدلة */
         .stat-dropdown { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; background: #151920; }
         .stat-dropdown.open { max-height: 150px !important; border-top: 1px dashed #2d3748; }
-        
-        /* Modal نافذة الإعدادات */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; padding: 20px; }
         .modal-content { background: #1a1f26; width: 100%; max-width: 360px; border-radius: 12px; padding: 20px; border: 1px solid #2d3748; display: flex; flex-direction: column; gap: 15px; }
     </style>
@@ -40,7 +51,6 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-
     <script>
       const firebaseConfig = {
         apiKey: "AIzaSyCdHlC-kvNWRrYO8-ujA4CjkJsVdFLDTf8",
@@ -62,15 +72,38 @@
     </header>
 
     <main>
-        <!-- 1. واجهة شاشة الرئيسية -->
-        <div id="view-main" class="game-view" style="display: none;">
-            <div class="card">
-                <h3 style="color: #fff;">🏠 القائمة الرئيسية</h3>
-                <p>مرحباً بك في القائمة الرئيسية لـ Africa Conflict.</p>
+        <!-- 1️⃣ واجهة شاشة الرئيسية (تفتح أولاً وتحتوي على الحاويات الأصلية الخريطة والسلايدر) -->
+        <div id="view-main" class="game-view">
+            <!-- حاوية الخريطة الثابتة لقارة إفريقيا -->
+            <div class="card map-container">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Africa_%28orthographic_projection%29.svg/550px-Africa_%28orthographic_projection%29.svg.png" alt="Africa Map">
+            </div>
+
+            <!-- حاوية السلايدر القابل للتنقل للأقسام -->
+            <div class="slideshow-container">
+                <div class="slide active">
+                    <h3>👥 السكان</h3>
+                    <p>إحصائيات الكثافة السكانية ومعدلات النمو في القارة والدول.</p>
+                </div>
+                <div class="slide">
+                    <h3>🏢 الأحزاب السياسيّة</h3>
+                    <p>إدارة النفوذ السياسي، الانتخابات، والسيطرة البرلمانية.</p>
+                </div>
+                <div class="slide">
+                    <h3>🏭 المصانع والمنشآت</h3>
+                    <p>مستوى الإنتاج الاقتصادي، الموارد، وتطوير البنية التحتية.</p>
+                </div>
+                <div class="slide">
+                    <h3>🤝 التحالفات الدولية</h3>
+                    <p>المعاهدات العسكرية، الاتفاقيات التجارية، والتكتلات القارية.</p>
+                </div>
+
+                <button class="prev" onclick="plusSlides(-1)">&#10094;</button>
+                <button class="next" onclick="plusSlides(1)">&#10095;</button>
             </div>
         </div>
 
-        <!-- 2. واجهة شاشة الحروب -->
+        <!-- 2️⃣ واجهة شاشة الحروب -->
         <div id="view-wars" class="game-view" style="display: none;">
             <div class="card">
                 <h3 style="color: #fff;">🛡️ ساحة المعارك والحروب</h3>
@@ -78,7 +111,7 @@
             </div>
         </div>
 
-        <!-- 3. واجهة شاشة العمل -->
+        <!-- 3️⃣ واجهة شاشة العمل -->
         <div id="view-work" class="game-view" style="display: none;">
             <div class="card">
                 <h3 style="color: #fff;">💼 سوق العمل والوظائف</h3>
@@ -86,23 +119,19 @@
             </div>
         </div>
 
-        <!-- 4. واجهة شاشة البروفايل الشخصي (الافتراضية) -->
-        <div id="view-profile" class="game-view">
-            <!-- بنر العداد التنازلي للتطوير النشط -->
+        <!-- 4️⃣ واجهة شاشة البروفايل الشخصي -->
+        <div id="view-profile" class="game-view" style="display: none;">
             <div id="training-global-timer" style="display: none; background-color: #d69e2e; color: #fff; padding: 12px; text-align: center; border-radius: 8px; font-weight: bold; font-size: 14px; margin-bottom: 5px;"></div>
 
-            <!-- كارت الحساب الأساسي -->
             <div class="card" style="background: #1a1f26; text-align: center; padding: 20px;">
                 <div style="display: flex; justify-content: center; margin-bottom: 10px;">
                     <img id="profile-avatar" src="https://via.placeholder.com/90" alt="Avatar" style="width: 90px; height: 90px; border-radius: 50%; border: 3px solid #3182ce; object-fit: cover;">
                 </div>
-                
                 <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
                     <h2 id="profile-name-display" style="color: #fff; margin: 0; font-size: 20px;">تحميل الاسم...</h2>
                     <button onclick="openSettingsModal()" style="background: none; border: none; color: #a0aec0; cursor: pointer; font-size: 18px;">⚙️</button>
                 </div>
 
-                <!-- شريط الـ XP -->
                 <div style="margin-top: 15px; text-align: right;">
                     <div style="display: flex; justify-content: space-between; color: #cbd5e0; font-size: 14px; margin-bottom: 5px;">
                         <span id="profile-level-number" style="font-weight: bold; color: #3182ce;">المستوى --</span>
@@ -113,14 +142,12 @@
                     </div>
                 </div>
 
-                <!-- الثروة والذهب -->
                 <div style="display: flex; justify-content: space-between; margin-top: 15px; font-size: 18px; font-weight: bold;">
                     <span id="profile-money-display" style="color: #ffffff;">0 💵</span>
                     <span id="profile-gold-display" style="color: #f6ad55;">0 🪙</span>
                 </div>
             </div>
 
-            <!-- كارت المنطقة والجنسية -->
             <div class="card" style="background: #1a1f26; padding: 15px;">
                 <div style="display: flex; justify-content: space-between; color: #fff; border-bottom: 1px solid #2d3748; padding-bottom: 8px; margin-bottom: 8px;">
                     <span style="color: #a0aec0;">📍 المنطقة الحالية</span>
@@ -132,9 +159,7 @@
                 </div>
             </div>
 
-            <!-- عناصر التطوير الأساسية -->
             <div style="display: flex; flex-direction: column; gap: 10px;">
-                <!-- القوة القتالية -->
                 <div class="card" style="background: #1a1f26; padding: 0; overflow: hidden; gap: 0;">
                     <div id="stat-power-header" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #fff;">
                         <span>💪 القوة القتالية</span>
@@ -151,7 +176,6 @@
                     </div>
                 </div>
 
-                <!-- مستوى التعليم -->
                 <div class="card" style="background: #1a1f26; padding: 0; overflow: hidden; gap: 0;">
                     <div id="stat-education-header" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #fff;">
                         <span>📚 مستوى التعليم</span>
@@ -171,28 +195,27 @@
         </div>
     </main>
 
-    <!-- 🧭 شريط التنقل السفلي الكامل بجميع الأزرار والوظائف النشطة -->
+    <!-- 🧭 شريط التنقل السفلي الكامل الثابت (الرئيسية نشطة افتراضياً) -->
     <nav class="bottom-nav">
-        <button class="nav-link" id="nav-main" onclick="switchView('main')"><i class="fa-solid fa-house"></i><span>الرئيسية</span></button>
+        <button class="nav-link active" id="nav-main" onclick="switchView('main')"><i class="fa-solid fa-house"></i><span>الرئيسية</span></button>
         <button class="nav-link" id="nav-wars" onclick="switchView('wars')"><i class="fa-solid fa-shield-halved"></i><span>الحروب</span></button>
         <button class="nav-link" id="nav-work" onclick="switchView('work')"><i class="fa-solid fa-briefcase"></i><span>العمل</span></button>
-        <button class="nav-link active" id="nav-profile" onclick="switchView('profile')"><i class="fa-solid fa-user"></i><span>البروفايل</span></button>
+        <button class="nav-link" id="nav-profile" onclick="switchView('profile')"><i class="fa-solid fa-user"></i><span>البروفايل</span></button>
     </nav>
 
-    <!-- نافذة الإعدادات الطائرة (Modal) -->
+    <!-- نافذة الإعدادات -->
     <div id="settings-modal" class="modal">
         <div class="modal-content">
             <h3 style="color: #fff; text-align: right;">⚙️ إعدادات الحساب</h3>
             <input type="text" id="settings-name-input" placeholder="الاسم الجديد للقائد" style="background: #2d3748; border: 1px solid #4a5568; color: #fff; padding: 10px; border-radius: 6px; text-align: right;">
             <input type="text" id="settings-avatar-url-input" placeholder="رابط صورة URL مباشر" style="background: #2d3748; border: 1px solid #4a5568; color: #fff; padding: 10px; border-radius: 6px; text-align: left;" dir="ltr">
             <div style="display: flex; gap: 10px;">
-                <button onclick="savePlayerSettings()" id="save-settings-btn" style="flex: 1; background: #38a169; color: #fff; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer;">حفظ التغييرات</button>
+                <button onclick="savePlayerSettings()" style="flex: 1; background: #38a169; color: #fff; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer;">حفظ التغييرات</button>
                 <button onclick="closeSettingsModal()" style="background: #e53e3e; color: #fff; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer;">إلغاء</button>
             </div>
         </div>
     </div>
 
-    <!-- استدعاء ملف المعالجة الخارجي للبروفايل -->
     <script src="js/profile.js"></script>
 </body>
 </html>
