@@ -247,16 +247,18 @@ function changePlayerName(newName) {
     }).then(() => alert("تم تحديث الاسم بنجاح"));
 }
 
-// تشغيل نظام الحساب تلقائياً عند تحميل الصفحة
-// فتح نافذة الإعدادات وتعبئة الحقول بالقيم الحالية للاعب
+
+// فتح نافذة الإعدادات وتعبئة الحقول بالاسم الحالي للاعب
 function openSettingsModal() {
     const modal = document.getElementById('settings-modal');
     const nameInput = document.getElementById('settings-name-input');
-    const avatarInput = document.getElementById('settings-avatar-input');
+    const fileInput = document.getElementById('settings-file-input');
+    const statusText = document.getElementById('upload-status');
 
     if (modal && localPlayerData) {
         if (nameInput) nameInput.value = localPlayerData.name || "";
-        if (avatarInput) avatarInput.value = localPlayerData.avatarUrl || "";
+        if (fileInput) fileInput.value = ""; // إعادة تصغير خانة الملفات
+        if (statusText) statusText.style.display = 'none';
         modal.style.display = 'flex';
     }
 }
@@ -267,18 +269,79 @@ function closeSettingsModal() {
     if (modal) modal.style.display = 'none';
 }
 
-// حفظ الاسم وصورة البروفايل معاً في قاعدة بيانات Firestore
-function savePlayerSettings() {
+// حفظ الاسم وصورة البروفايل (سواء المرفوعة حديثاً أو القديمة)
+async function savePlayerSettings() {
     const user = firebase.auth().currentUser;
     if (!user) return;
 
     const newName = document.getElementById('settings-name-input').value.trim();
-    const newAvatarUrl = document.getElementById('settings-avatar-input').value.trim();
+    const fileInput = document.getElementById('settings-file-input');
+    const statusText = document.getElementById('upload-status');
+    const saveBtn = document.getElementById('save-settings-btn');
 
     if (newName === "") {
         alert("⚠️ لا يمكن أن يكون اسم القائد فارغاً!");
         return;
     }
+
+    // تجهيز كائن البيانات المحدثة الأساسي
+    const updatedData = {
+        name: newName
+    };
+
+    // التحقق مما إذا كان اللاعب قد اختار صورة جديدة لتحميلها
+    if (fileInput && fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        
+        // حماية حجم الملف (مثلاً أقصى حجم 2 ميجابايت)
+        if (file.size > 2 * 1024 * 1024) {
+            alert("❌ حجم الصورة كبير جداً! يرجى اختيار صورة أقل من 2 ميجابايت.");
+            return;
+        }
+
+        // إظهار حالة الرفع وقفل زر الحفظ أثناء العملية
+        if (statusText) {
+            statusText.style.display = 'block';
+            statusText.style.color = '#f6ad55';
+            statusText.textContent = "⏳ جاري رفع الصورة إلى السيرفر...";
+        }
+        if (saveBtn) saveBtn.disabled = true;
+
+        try {
+            // إنشاء مسار فريد للملف داخل Firebase Storage
+            const storageRef = firebase.storage().ref().child(`avatars/${user.uid}_${Date.now()}`);
+            
+            // رفع الملف
+            const snapshot = await storageRef.put(file);
+            
+            // جلب رابط الصورة المباشر بعد انتهاء الرفع
+            const downloadURL = await snapshot.ref.getDownloadURL();
+            
+            // إضافة رابط الصورة الجديد للبيانات المحدثة
+            updatedData.avatarUrl = downloadURL;
+
+        } catch (error) {
+            console.error("خطأ أثناء رفع الملف:", error);
+            alert("🔴 فشل رفع الصورة، سيتم حفظ الاسم فقط.");
+            if (saveBtn) saveBtn.disabled = false;
+        }
+    }
+
+    // حفظ التحديثات النهائية في Firestore (الاسم ورابط الصورة إن وُجد)
+    firebase.firestore().collection('players').doc(user.uid).update(updatedData)
+        .then(() => {
+            alert("🎉 تم تحديث وحفظ بيانات ملفك الشخصي بنجاح!");
+            if (saveBtn) saveBtn.disabled = false;
+            closeSettingsModal();
+        })
+        .catch((error) => {
+            console.error("خطأ أثناء تحديث الإعدادات:", error);
+            alert("🔴 حدث خطأ أثناء الحفظ.");
+            if (saveBtn) saveBtn.disabled = false;
+        });
+}
+
+
 
     // تجهيز كائن التحديث لقاعدة البيانات
     const updatedData = {
