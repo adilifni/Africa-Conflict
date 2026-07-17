@@ -1,3 +1,4 @@
+
 // ==========================================
 // 👤 نظام إدارة حساب اللاعب، المستويات، والتطوير
 // ==========================================
@@ -5,6 +6,15 @@
 // المتغير العالمي لتخزين بيانات اللاعب الحالية محلياً لتسهيل الحسابات
 let localPlayerData = null;
 let trainingTimeout = null;
+
+// مصفوفة افتراضية لترجمة أسماء الدول لتجنب أخطاء الـ Undefined عند جلب البيانات
+const africanCountries = {
+    "morocco": { name: "المغرب" },
+    "egypt": { name: "مصر" },
+    "algeria": { name: "الجزائر" },
+    "tunisia": { name: "تونس" },
+    "libya": { name: "ليبيا" }
+};
 
 // دالة تشغيل نظام الحساب (يتم استدعاؤها عند فتح واجهة الحساب)
 function initProfileSystem() {
@@ -24,22 +34,25 @@ function initProfileSystem() {
         const data = doc.data();
         localPlayerData = data;
 
-        // 1. تحديث الصورة والاسم
+        // 1. تحديث الصورة والاسم في واجهة البروفايل وكذلك في الـ Header الرئيسي
         const profileImg = document.getElementById('profile-avatar');
         if (profileImg) profileImg.src = data.avatarUrl || user.photoURL || 'https://via.placeholder.com/150';
         
         const profileName = document.getElementById('profile-name-display');
         if (profileName) profileName.textContent = data.name || user.displayName || "قائد مجهول";
 
+        const headerName = document.getElementById('user-name');
+        if (headerName) headerName.textContent = data.name || user.displayName || "قائد مجهول";
+
         // 2. تحديث شريط المستوى (XP)
         updateXPProgressBar(data.xp || 0);
 
-// تحديث أرقام الذهب والمال الحية من Firestore بدون كلمات إضافية
-const goldDisplay = document.getElementById('profile-gold-display');
-const moneyDisplay = document.getElementById('profile-money-display');
+        // تحديث أرقام الذهب والمال الحية من Firestore بدون كلمات إضافية
+        const goldDisplay = document.getElementById('profile-gold-display');
+        const moneyDisplay = document.getElementById('profile-money-display');
 
-if (goldDisplay) goldDisplay.textContent = data.gold !== undefined ? data.gold : 0;
-if (moneyDisplay) moneyDisplay.textContent = data.money !== undefined ? data.money : 0;
+        if (goldDisplay) goldDisplay.textContent = (data.gold !== undefined ? data.gold : 0) + " 🪙";
+        if (moneyDisplay) moneyDisplay.textContent = (data.money !== undefined ? data.money : 0) + " 💵";
 
         // 3. تحديث بلوك المنطقة والجنسية
         const regionText = document.getElementById('profile-region');
@@ -54,10 +67,14 @@ if (moneyDisplay) moneyDisplay.textContent = data.money !== undefined ? data.mon
             nationalityText.textContent = africanCountries[nation]?.name || "لم تحدد";
         }
 
-        // 4. تحديث الأرقام الأساسية (القوة، التعليم، الخبرة)
-        document.getElementById('stat-power-val').textContent = data.power || 0;
-        document.getElementById('stat-education-val').textContent = data.education || 0;
-        document.getElementById('stat-experience-val').textContent = data.experience || 0;
+        // 4. تحديث الأرقام الأساسية (العناصر الثلاثة للتطوير)
+        const powerVal = document.getElementById('stat-power-val');
+        const educationVal = document.getElementById('stat-education-val');
+        const expVal = document.getElementById('stat-experience-val');
+
+        if (powerVal) powerVal.textContent = data.power || 0;
+        if (educationVal) educationVal.textContent = data.education || 0;
+        if (expVal) expVal.textContent = data.experience || 0;
 
         // 5. مراقبة التطوير الحالي (إذا كان هناك تطوير قيد الانتظار)
         checkActiveTraining(data);
@@ -89,8 +106,7 @@ function createNewPlayerProfile(user) {
 // 📈 معادلة المستوى وشريط الـ XP التباطئي
 // ==========================================
 function updateXPProgressBar(totalXP) {
-    // معادلة المستوى التباطئية: كل مستوى يحتاج XP أكثر من الذي قبله
-    // المستوى = الجذر التربعي لـ (XP / 100) + 1
+    // معادلة المستوى التباطئية
     const currentLevel = Math.floor(Math.sqrt(totalXP / 100)) + 1;
     
     // حساب الـ XP المطلوب للمستوى الحالي والمستوى التالي
@@ -124,30 +140,50 @@ function setupStatDropdowns() {
         const dropdown = document.getElementById(`stat-${stat}-dropdown`);
         
         if (header && dropdown) {
-            header.addEventListener('click', () => {
-                // إغلاق باقي القوائم المفتوحة أولاً
-                stats.forEach(s => {
-                    if (s !== stat) document.getElementById(`stat-${s}-dropdown`)?.classList.remove('open');
-                });
-                // تبديل حالة القائمة الحالية
-                dropdown.classList.toggle('open');
-                
-                // تحديث الأسعار والوقت بناءً على المستوى الحالي للعنصر
-                if (dropdown.classList.contains('open') && localPlayerData) {
-                    const currentStatLevel = localPlayerData[stat] || 0;
+            // نتحقق من عدم تكرار إضافة الـ EventListeners لضمان عدم حدوث وميض في القوائم
+            if (!header.dataset.listenerAdded) {
+                header.addEventListener('click', () => {
+                    // إغلاق باقي القوائم المفتوحة أولاً
+                    stats.forEach(s => {
+                        if (s !== stat) document.getElementById(`stat-${s}-dropdown`)?.classList.remove('open');
+                    });
                     
-                    // حساب التكلفة (تزداد تصاعدياً مع كل مستوى)
-                    const moneyCost = (currentStatLevel + 1) * 1000;
-                    const goldCost = (currentStatLevel + 1) * 5;
-                    const timeInSeconds = (currentStatLevel + 1) * 30; // 30 ثانية لكل مستوى كمثال
-
-                    document.getElementById(`cost-${stat}-money`).textContent = `${moneyCost} مال`;
-                    document.getElementById(`cost-${stat}-gold`).textContent = `${goldCost} ذهب`;
-                    document.getElementById(`time-${stat}`).textContent = `الوقت: ${timeInSeconds} ثانية`;
-                }
-            });
+                    // تبديل حالة القائمة الحالية
+                    dropdown.classList.toggle('open');
+                    
+                    // تحديث الأسعار والوقت بناءً على المستوى الحالي للعنصر
+                    if (dropdown.classList.contains('open') && localPlayerData) {
+                        updateDropdownPrices(stat);
+                    }
+                });
+                header.dataset.listenerAdded = true;
+            }
         }
     });
+}
+
+// تحديث نصوص الأسعار والأوقات داخل صندوق التطوير المفتوح
+function updateDropdownPrices(stat) {
+    const currentStatLevel = localPlayerData[stat] || 0;
+    
+    // حساب التكلفة (تزداد تصاعدياً مع كل مستوى)
+    const moneyCost = (currentStatLevel + 1) * 1000;
+    const goldCost = (currentStatLevel + 1) * 5;
+    const timeInSeconds = (currentStatLevel + 1) * 30;
+
+    const moneyBtn = document.getElementById(`cost-${stat}-money`);
+    const goldBtn = document.getElementById(`cost-${stat}-gold`);
+    const timeTxt = document.getElementById(`time-${stat}`);
+
+    if (moneyBtn) moneyBtn.textContent = `${moneyCost} مال`;
+    if (goldBtn) goldBtn.textContent = `${goldCost} ذهب`;
+    if (timeTxt) {
+        if (localPlayerData.activeTraining && localPlayerData.activeTraining.stat === stat) {
+            timeTxt.textContent = `جاري ترقيتها الآن...`;
+        } else {
+            timeTxt.textContent = `الوقت: ${timeInSeconds} ثانية`;
+        }
+    }
 }
 
 // ==========================================
@@ -188,11 +224,14 @@ function startStatUpgrade(statName, currencyType) {
     };
 
     db.collection('players').doc(user.uid).update(updates)
-        .then(() => alert(`⏳ بدأ تطوير ${statName} الآن...`))
+        .then(() => {
+            // إغلاق القائمة بعد بدء التطوير مباشرة لتجميل مظهر الواجهة
+            document.getElementById(`stat-${statName}-dropdown`)?.classList.remove('open');
+        })
         .catch(err => console.error(err));
 }
 
-// فحص وإدارة العداد التنازلي للتطوير
+// فحص وإدارة العداد التنازلي للتطوير النشط
 function checkActiveTraining(data) {
     const timerDisplay = document.getElementById('training-global-timer');
     if (!timerDisplay) return;
@@ -206,21 +245,28 @@ function checkActiveTraining(data) {
     const now = Date.now();
     const timeLeft = data.activeTraining.finishAt - now;
 
+    // تحديد الاسم المترجم للعنصر الجاري تطويره لعرضه باللغة العربية
+    let arabicStatName = "عنصر";
+    if (data.activeTraining.stat === 'power') arabicStatName = "القوة القتالية";
+    if (data.activeTraining.stat === 'education') arabicStatName = "مستوى التعليم";
+    if (data.activeTraining.stat === 'experience') arabicStatName = "نقاط الخبرة";
+
     if (timeLeft <= 0) {
-        // انتهى الوقت! نقوم بترقية العنصر وتصفير مؤقت التدريب بقاعدة البيانات
+        // انتهى الوقت تماماً! نقوم بترقية العنصر وتصفير مؤقت التدريب بقاعدة البيانات
         timerDisplay.style.display = 'none';
+        if (trainingTimeout) clearTimeout(trainingTimeout);
         completeUpgrade(data.activeTraining.stat);
     } else {
-        // تحديث العداد التنازلي على الشاشة
+        // تحديث العداد التنازلي المطور على شاشة اللاعب
         timerDisplay.style.display = 'block';
-        timerDisplay.textContent = `جاري تطوير ${data.activeTraining.stat}: ${Math.ceil(timeLeft / 1000)} ثانية متبقية`;
+        timerDisplay.textContent = `⏳ جاري تطوير [${arabicStatName}]: متبقي ${Math.ceil(timeLeft / 1000)} ثانية`;
         
         if (trainingTimeout) clearTimeout(trainingTimeout);
         trainingTimeout = setTimeout(() => checkActiveTraining(data), 1000);
     }
 }
 
-// إنهاء الترقية وإضافة النقطة للاعب
+// إنهاء الترقية، وإضافة النقطة للاعب، وإعطائه XP مكافأة على التطوير
 function completeUpgrade(statName) {
     const user = firebase.auth().currentUser;
     if (!user) return;
@@ -228,37 +274,26 @@ function completeUpgrade(statName) {
     const db = firebase.firestore();
     db.collection('players').doc(user.uid).update({
         [statName]: firebase.firestore.FieldValue.increment(1),
-        activeTraining: null // تفريغ الخانة للسماح بتطوير جديد
+        xp: firebase.firestore.FieldValue.increment(25), // منحه 25 XP مكافأة الترقية
+        activeTraining: null // تفريغ خانة التطوير النشط
     }).then(() => {
-        alert(`🎉 تهانينا! تم ترقية ${statName} بنجاح.`);
-    });
+        alert(`🎉 تهانينا القائد! تم ترقية العنصر بنجاح وحصلت على +25 XP.`);
+    }).catch(err => console.error("خطأ أثناء إغلاق الترقية:", err));
 }
 
-// تغيير اسم اللاعب من الإعدادات
-function changePlayerName(newName) {
-    const trimmedName = newName.trim();
-    if (trimmedName === "") return alert("الاسم لا يمكن أن يكون فارغاً");
+// ==========================================
+// ⚙️ معالجة نافذة الإعدادات وحفظ البيانات
+// ==========================================
 
-    const user = firebase.auth().currentUser;
-    if (!user) return;
-
-    firebase.firestore().collection('players').doc(user.uid).update({
-        name: trimmedName
-    }).then(() => alert("تم تحديث الاسم بنجاح"));
-}
-
-
-// فتح نافذة الإعدادات وتعبئة الحقول بالاسم الحالي للاعب
+// فتح نافذة الإعدادات وتعبئة الحقول بالقيم الحالية
 function openSettingsModal() {
     const modal = document.getElementById('settings-modal');
     const nameInput = document.getElementById('settings-name-input');
-    const fileInput = document.getElementById('settings-file-input');
-    const statusText = document.getElementById('upload-status');
+    const avatarUrlInput = document.getElementById('settings-avatar-url-input');
 
     if (modal && localPlayerData) {
         if (nameInput) nameInput.value = localPlayerData.name || "";
-        if (fileInput) fileInput.value = ""; // إعادة تصغير خانة الملفات
-        if (statusText) statusText.style.display = 'none';
+        if (avatarUrlInput) avatarUrlInput.value = localPlayerData.avatarUrl || "";
         modal.style.display = 'flex';
     }
 }
@@ -269,14 +304,13 @@ function closeSettingsModal() {
     if (modal) modal.style.display = 'none';
 }
 
-// حفظ الاسم وصورة البروفايل (سواء المرفوعة حديثاً أو القديمة)
-async function savePlayerSettings() {
+// حفظ الاسم وصورة البروفايل عبر رابط الـ URL المباشر
+function savePlayerSettings() {
     const user = firebase.auth().currentUser;
     if (!user) return;
 
     const newName = document.getElementById('settings-name-input').value.trim();
-    const fileInput = document.getElementById('settings-file-input');
-    const statusText = document.getElementById('upload-status');
+    const newAvatarUrl = document.getElementById('settings-avatar-url-input').value.trim();
     const saveBtn = document.getElementById('save-settings-btn');
 
     if (newName === "") {
@@ -284,50 +318,14 @@ async function savePlayerSettings() {
         return;
     }
 
-    // تجهيز كائن البيانات المحدثة الأساسي
+    if (saveBtn) saveBtn.disabled = true;
+
+    // تجهيز كائن التحديث لقاعدة البيانات بالاسم والرابط الجديد
     const updatedData = {
-        name: newName
+        name: newName,
+        avatarUrl: newAvatarUrl
     };
 
-    // التحقق مما إذا كان اللاعب قد اختار صورة جديدة لتحميلها
-    if (fileInput && fileInput.files.length > 0) {
-        const file = fileInput.files[0];
-        
-        // حماية حجم الملف (مثلاً أقصى حجم 2 ميجابايت)
-        if (file.size > 2 * 1024 * 1024) {
-            alert("❌ حجم الصورة كبير جداً! يرجى اختيار صورة أقل من 2 ميجابايت.");
-            return;
-        }
-
-        // إظهار حالة الرفع وقفل زر الحفظ أثناء العملية
-        if (statusText) {
-            statusText.style.display = 'block';
-            statusText.style.color = '#f6ad55';
-            statusText.textContent = "⏳ جاري رفع الصورة إلى السيرفر...";
-        }
-        if (saveBtn) saveBtn.disabled = true;
-
-        try {
-            // إنشاء مسار فريد للملف داخل Firebase Storage
-            const storageRef = firebase.storage().ref().child(`avatars/${user.uid}_${Date.now()}`);
-            
-            // رفع الملف
-            const snapshot = await storageRef.put(file);
-            
-            // جلب رابط الصورة المباشر بعد انتهاء الرفع
-            const downloadURL = await snapshot.ref.getDownloadURL();
-            
-            // إضافة رابط الصورة الجديد للبيانات المحدثة
-            updatedData.avatarUrl = downloadURL;
-
-        } catch (error) {
-            console.error("خطأ أثناء رفع الملف:", error);
-            alert("🔴 فشل رفع الصورة، سيتم حفظ الاسم فقط.");
-            if (saveBtn) saveBtn.disabled = false;
-        }
-    }
-
-    // حفظ التحديثات النهائية في Firestore (الاسم ورابط الصورة إن وُجد)
     firebase.firestore().collection('players').doc(user.uid).update(updatedData)
         .then(() => {
             alert("🎉 تم تحديث وحفظ بيانات ملفك الشخصي بنجاح!");
@@ -336,33 +334,19 @@ async function savePlayerSettings() {
         })
         .catch((error) => {
             console.error("خطأ أثناء تحديث الإعدادات:", error);
-            alert("🔴 حدث خطأ أثناء الحفظ.");
+            alert("🔴 حدث خطأ أثناء الحفظ، يرجى المحاولة مجدداً.");
             if (saveBtn) saveBtn.disabled = false;
         });
 }
 
-
-
-    // تجهيز كائن التحديث لقاعدة البيانات
-    const updatedData = {
-        name: newName,
-        avatarUrl: newAvatarUrl
-    };
-
-    firebase.firestore().collection('players').doc(user.uid).update(updatedData)
-        .then(() => {
-            alert("🎉 تم تحديث وحفظ بيانات الملف الشخصي بنجاح!");
-            closeSettingsModal();
-        })
-        .catch((error) => {
-            console.error("خطأ أثناء تحديث الإعدادات:", error);
-            alert("🔴 حدث خطأ أثناء الحفظ، يرجى المحاولة مجدداً.");
-        });
-}
-
-
-
+// الاستماع لـ Auth عند جهوزية الـ DOM لتشغيل النظام بشكل آمن تلقائياً
 document.addEventListener('DOMContentLoaded', () => {
-    // ننتظر ثانية واحدة حتى يتأكد المتصفح من وجود حساب الجيميل النشط
-    setTimeout(initProfileSystem, 1000);
+    firebase.auth().onAuthStateChanged((user) => {
+        if (user) {
+            // تشغيل النظام بمجرد التحقق من وجود مستخدم مسجل الدخول بنجاح
+            initProfileSystem();
+        } else {
+            console.log("المستخدم غير مسجل الدخول حالياً.");
+        }
+    });
 });
