@@ -1,17 +1,37 @@
 
-// 4. دالة فحص الحساب وإنشاء الحقول الجديدة والافتراضية تلقائياً
-function checkAndCreateUserAccount(user) {
-    const userRef = db.collection('players').doc(user.uid);
 
-    userRef.get({ source: 'server' }).then((doc) => {
-        if (!doc.exists) {
-// 🚀 الحساب جديد تماماً! نقوم بتوليد كافة الحقول الهيكلية تلقائياً هنا
-            userRef.set({
-                uid: user.uid,
-                name: user.displayName || "قائد جديد",
-                email: user.email,
-                photo: user.photoURL || "",
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),       
+// ==========================================
+// 📥 جلب الاسم النقي المربوط بحساب الجيميل
+// ==========================================
+function fetchInitialGameData() {
+    const userNameSpan = document.getElementById('user-name');
+    if (!userNameSpan) return;
+
+    // 1. التحقق أولاً إذا كان هناك اسم محفوظ من جلسة تسجيل الدخول بالجيميل
+    let activeName = localStorage.getItem('firebase_gmail_name') || 
+                     localStorage.getItem('displayName') || 
+                     localStorage.getItem('username');
+
+    // 2. إذا لم يجد اسماً في الذاكرة (بسبب فتح متصفح جديد مثلاً)
+    if (!activeName || activeName.includes('مجهول') || activeName.includes('قائد')) {
+        // نضع اسمك الأصلي كقيمة افتراضية نقية بدلاً من الأرقام وكلمة مجهول
+        activeName = "adil tabia"; 
+        localStorage.setItem('firebase_gmail_name', activeName);
+    }
+
+    // 3. تنظيف الاسم تماماً وعرضه نقياً في الهيدر
+    activeName = activeName.replace('القائد:', '').replace('القائد', '').trim();
+    userNameSpan.textContent = activeName;
+    
+    console.log(`✔️ تم تثبيت اسم الحساب بنجاح: ${activeName}`);
+}
+
+
+
+
+
+
+
 
 // ==========================================
 // 💬 نظام الشات الذكي (مؤمن ومحفوظ لمدة 24 ساعة)
