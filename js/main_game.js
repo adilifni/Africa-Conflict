@@ -1,26 +1,30 @@
-// ==========================================
-// ==========================================
-// 📥 تحميل واستدعاء البيانات الحية
-// ==========================================
-function fetchInitialGameData() {
-    // محاكاة الاتصال وتنزيل الاسم المستعار
-    setTimeout(() => {
-        const userNameSpan = document.getElementById('user-name');
-        if (userNameSpan) {
-            userNameSpan.textContent = 'adil tabia'; // تم التحديث بناءً على اسم القائد من صورك الأخيرة
-        }
-    }, 400);
-}
-
-// دالة المساعدة لقراءة النسخة الاحتياطية
-function loadBackupOrText(element, defaultText) {
-    const backupName = localStorage.getItem('firebase_gmail_name');
-    if (backupName) {
-        element.textContent = backupName;
-    } else {
-        element.textContent = defaultText;
+// 3. مراقبة حالة اللاعب التلقائية عند فتح الصفحة
+auth.onAuthStateChanged((user) => {
+    if (user) {
+        checkAndCreateUserAccount(user);
     }
-}
+});
+// 4. دالة فحص الحساب وإنشاء الحقول الجديدة والافتراضية تلقائياً
+function checkAndCreateUserAccount(user) {
+    const userRef = db.collection('players').doc(user.uid);
+
+    userRef.get({ source: 'server' }).then((doc) => {
+        if (!doc.exists) {
+// 🚀 الحساب جديد تماماً! نقوم بتوليد كافة الحقول الهيكلية تلقائياً هنا
+            userRef.set({
+                uid: user.uid,
+                name: user.displayName || "قائد جديد",
+                email: user.email,
+                photo: user.photoURL || "",
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),       
+// الموارد الابتدائية للاعب الجديد
+                level: 1,
+                energy: 100,
+                money: 5000,
+                gold: 5,
+                oil: 20,
+                wheat: 50,         
+
 
 // ==========================================
 // 💬 نظام الشات الذكي (مؤمن ومحفوظ لمدة 24 ساعة)
