@@ -60,31 +60,56 @@ function navigateTo(targetPage) {
 }
 
 // ==========================================
-// 🔁 نظام السلايدشو الذاتي واليدوي المحمي
+// 🔁 نظام السلايدشو المطور والمؤمن ضد مشاكل الاتجاهات (RTL)
 // ==========================================
 function setupSliderSystem() {
-    const slidesContainer = document.getElementById('slides-container');
+    // جلب الشرائح بشكل منفصل داخل الحاوية
+    const slides = document.querySelectorAll('#slides-container .slide');
     const dot1 = document.getElementById('dot-1');
     const dot2 = document.getElementById('dot-2');
+    const slidesContainer = document.getElementById('slides-container');
 
-    if (slidesContainer && dot1 && dot2) {
-        dot1.addEventListener('click', (e) => {
+    if (slides.length >= 2 && dot1 && dot2) {
+        // تهيئة التنسيق الأساسي للحاوية لتعمل بنظام مرن ومستقر دون إزاحة عشوائية
+        if (slidesContainer) {
+            slidesContainer.style.width = '100%';
+            slidesContainer.style.transform = 'none'; // إلغاء التحويل القديم المسبب للمشكلة
+        }
+
+        // دالة مخصصة للانتقال السلس بين الشرائح
+        const showSlide = (activeIndex) => {
+            slides.forEach((slide, index) => {
+                if (index === activeIndex) {
+                    slide.style.display = 'block'; // إظهار الشريحة النشطة
+                    slide.style.width = '100%';
+                } else {
+                    slide.style.display = 'none'; // إخفاء الشريحة الأخرى تماماً لمنع الفراغ
+                }
+            });
+        };
+
+        // الشريحة الأولى نشطة افتراضياً عند التحميل
+        showSlide(0);
+
+        // عند الضغط على النقطة الأولى
+        dot1.addEventListener('click', function(e) {
             e.stopPropagation();
-            slidesContainer.style.transform = 'translateX(0%)';
+            showSlide(0);
             dot1.classList.add('active');
             dot2.classList.remove('active');
         });
 
-        dot2.addEventListener('click', (e) => {
+        // عند الضغط على النقطة الثانية (ستظهر إحصائيات الدول والمستقلة فوراً دون فراغات!)
+        dot2.addEventListener('click', function(e) {
             e.stopPropagation();
-            slidesContainer.style.transform = 'translateX(-50%)';
+            showSlide(1);
             dot2.classList.add('active');
             dot1.classList.remove('active');
         });
-        
-        console.log("✔️ تم تفعيل نظام السلايدشو بنجاح.");
+
+        console.log("✔️ تم تفعيل نظام التبديل الآمن للشرائح.");
     } else {
-        console.warn("⚠️ عناصر السلايدشو غير متواجدة بالصفحة الحالية.");
+        console.warn("⚠️ لم يتم العثور على شرائح السلايدر المطلوبة.");
     }
 }
 
