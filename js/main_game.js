@@ -1,7 +1,17 @@
-
+// قاعدة بيانات الدول الإفريقية المدعومة حالياً في اللعبة لتبديل البلوك تلقائياً
+const africanCountries = {
+    morocco: { name: "المغرب", flag: "🇲🇦" },
+    algeria: { name: "الجزائر", flag: "🇩🇿" },
+    egypt: { name: "مصر", flag: "🇪🇬" },
+    tunisia: { name: "تونس", flag: "🇹🇳" },
+    libya: { name: "ليبيا", flag: "🇱🇾" },
+    south_africa: { name: "جنوب إفريقيا", flag: "🇿🇦" },
+    nigeria: { name: "نيجيريا", flag: "🇳🇬" },
+    senegal: { name: "السنغال", flag: "🇸🇳" }
+};
 
 // ==========================================
-// 📥 جلب اسم حساب الجيميل النشط من فيربيس (انتظار ذكي)
+// 📥 جلب اسم حساب الجيميل النشط وتحديث إحصائيات المتصلين والسكان من Firestore (بث مباشر)
 // ==========================================
 function fetchInitialGameData() {
     const userNameSpan = document.getElementById('user-name');
@@ -9,24 +19,72 @@ function fetchInitialGameData() {
 
     // دالة فحص متكررة تنتظر حتى يتم تحميل مكتبة الفيربيس بالكامل في المتصفح
     function waitForFirebase() {
-        if (typeof firebase !== 'undefined' && firebase.auth) {
+        if (typeof firebase !== 'undefined' && firebase.auth && firebase.firestore) {
             
+            const db = firebase.firestore();
+
             // بمجرد أن يصبح الفيربيس جاهزاً، نستمع لحالة الحساب النشط حالياً
             firebase.auth().onAuthStateChanged((user) => {
                 if (user) {
-                    // جلب الاسم الحقيقي من الجيميل أو جزء من البريد الإلكتروني
-                    let gmailName = user.displayName || user.email.split('@')[0];
-                    
-                    // تنظيف الاسم تماماً من أي زيادات
-                    gmailName = gmailName.replace('قائد', '').replace('مجهول', '').trim();
-                    
-                    // عرض الاسم النقي مباشرة في أعلى اللعبة
-                    userNameSpan.textContent = gmailName;
-                    console.log(`✔️ تم التعرف على حساب الجيميل النشط بنجاح: ${gmailName}`);
+                    const userUid = user.uid;
+
+                    // 1. الاستماع المباشر (Real-time) لبيانات اللاعب وموقعه الحالي من Firestore
+                    db.collection('players').doc(userUid).onSnapshot((doc) => {
+                        if (doc.exists) {
+                            const data = doc.data();
+                            
+                            // عرض وتحديث اسم اللاعب النقي
+                            let playerName = data.name || user.displayName || user.email.split('@')[0];
+                            playerName = playerName.replace('قائد', '').replace('مجهول', '').trim();
+                            userNameSpan.textContent = playerName;
+
+                            // تحديث بلوك الدولة بناءً على موقع اللاعب الحالي (current_location)
+                            const playerLoc = data.current_location || "morocco";
+                            updateCountryBlockOnScreen(playerLoc);
+                        }
+                    }, (error) => {
+                        console.error("خطأ في الاستماع لبيانات اللاعب:", error);
+                    });
+
+                    // 2. تحديث حالة الاتصال بالمتصفح الحالي إلى متصل (Online) في Firestore
+                    db.collection('players').doc(userUid).update({
+                        isOnline: true,
+                        lastActive: firebase.firestore.FieldValue.serverTimestamp()
+                    }).catch(err => console.error("Error setting online status:", err));
+
+                    // قطع الاتصال تلقائياً عند إغلاق اللاعب للمتصفح أو الصفحة
+                    window.addEventListener('beforeunload', () => {
+                        db.collection('players').doc(userUid).update({
+                            isOnline: false
+                        });
+                    });
+
                 } else {
                     // إذا لم يسجل أي حساب دخوله بعد
                     userNameSpan.textContent = "زائر";
                 }
+            });
+
+            // 3. الاستماع الحي والتحديث الفوري لإحصائيات السكان والمتصلين من قاعدة البيانات
+            db.collection('players').onSnapshot((snapshot) => {
+                const totalPlayers = snapshot.size; // إجمالي الحسابات المسجلة في اللعبة
+                let onlinePlayers = 0;
+
+                snapshot.forEach((doc) => {
+                    if (doc.data().isOnline === true) {
+                        onlinePlayers++;
+                    }
+                });
+
+                // تأمين ظهور متصل واحد على الأقل (المستخدم النشط حالياً)
+                if (onlinePlayers === 0 && firebase.auth().currentUser) {
+                    onlinePlayers = 1;
+                }
+
+                // تحديث الأرقام على الشاشة فوراً
+                updateStatsOnScreen(totalPlayers, onlinePlayers);
+            }, (error) => {
+                console.error("خطأ أثناء جلب إحصائيات اللاعبين:", error);
             });
 
         } else {
@@ -37,6 +95,67 @@ function fetchInitialGameData() {
 
     // بدء عملية الانتظار والربط
     waitForFirebase();
+}
+
+// دالة مساعدة لتحديث الأرقام مباشرة في واجهة المستخدم عبر الكلاسات المحددة
+function updateStatsOnScreen(totalPlayers, onlinePlayers) {
+    // 1. تحديث إحصائيات القارة (البلوك العلوي)
+    const globalPopElements = document.querySelectorAll('.global-population');
+    const globalOnlineElements = document.querySelectorAll('.global-online');
+
+    globalPopElements.forEach(el => el.textContent = totalPlayers);
+    globalOnlineElements.forEach(el => el.textContent = onlinePlayers);
+
+    // 2. تحديث إحصائيات الدولة الحالية (البلوك السفلي)
+    const countryPopElements = document.querySelectorAll('.country-population');
+    const countryOnlineElements = document.querySelectorAll('.country-online');
+
+    countryPopElements.forEach(el => el.textContent = totalPlayers);
+    countryOnlineElements.forEach(el => el.textContent = onlinePlayers);
+}
+
+// دالة لتحديث واجهة بلوك الدولة (العلم والاسم) ديناميكياً
+function updateCountryBlockOnScreen(countryKey) {
+    const flagElement = document.getElementById('country-flag');
+    const nameElement = document.getElementById('country-name-text');
+    
+    if (africanCountries[countryKey]) {
+        const countryData = africanCountries[countryKey];
+        if (flagElement) flagElement.textContent = countryData.flag;
+        if (nameElement) nameElement.textContent = countryData.name;
+    } else {
+        if (flagElement) flagElement.textContent = "🌍";
+        if (nameElement) nameElement.textContent = "أفريقيا";
+    }
+}
+
+// ==========================================
+// ✈️ دالة السفر والتنقل بين الدول الإفريقية
+// ==========================================
+function travelToCountry(targetCountryKey) {
+    if (!africanCountries[targetCountryKey]) {
+        console.error("هذه الدولة غير مدعومة حالياً!");
+        return;
+    }
+
+    const user = firebase.auth().currentUser;
+    if (!user) {
+        alert("يجب عليك تسجيل الدخول أولاً لتتمكن من السفر!");
+        return;
+    }
+
+    const db = firebase.firestore();
+    
+    // تحديث مكان اللاعب الحالي في قاعدة البيانات
+    db.collection('players').doc(user.uid).update({
+        current_location: targetCountryKey
+    })
+    .then(() => {
+        alert(`✈️ تم السفر بنجاح إلى ${africanCountries[targetCountryKey].name}!`);
+    })
+    .catch((error) => {
+        console.error("خطأ أثناء محاولة السفر:", error);
+    });
 }
 
 // ==========================================
