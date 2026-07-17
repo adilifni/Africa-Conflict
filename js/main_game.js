@@ -54,47 +54,48 @@ function fetchInitialGameData() {
                         isOnline: true,
                         lastActive: firebase.firestore.FieldValue.serverTimestamp()
                     }).catch(err => console.error("Error setting online status:", err));
+// 3. نظام مراقبة الخمول (Inactivity System) المطور والمحمي من تداخل التبويبات
+const resetInactivityTimer = () => {
+    // إذا كان التبويب مخفياً في الخلفية، لا تجعله متصلاً أبداً عند حركة المستخدم
+    if (document.hidden) return;
 
-                    // 3. تفعيل نظام مراقبة الخمول (Inactivity System) للاعب الحالي
-                    const resetInactivityTimer = () => {
-                        clearTimeout(inactivityTimer);
-                        
-                        // إذا عاد اللاعب للتحرك، نعيد حالته إلى متصل في قاعدة البيانات
-                        db.collection('players').doc(userUid).update({
-                            isOnline: true,
-                            lastActive: firebase.firestore.FieldValue.serverTimestamp()
-                        }).catch(err => {});
+    clearTimeout(inactivityTimer);
+    
+    db.collection('players').doc(userUid).update({
+        isOnline: true,
+        lastActive: firebase.firestore.FieldValue.serverTimestamp()
+    }).catch(err => {});
 
-                        // تعيين مهلة الخمول: 5 دقائق (300000 مللي ثانية) بدون أي حركة
-                        inactivityTimer = setTimeout(() => {
-                            console.log("تم تحويل حالة اللاعب إلى خامل بسبب عدم النشاط.");
-                            db.collection('players').doc(userUid).update({
-                                isOnline: false
-                            }).catch(err => {});
-                        }, 300000); 
-                    };
+    // مهلة الخمول المعتادة (5 دقائق)
+    inactivityTimer = setTimeout(() => {
+        console.log("تم تحويل حالة اللاعب إلى خامل بسبب عدم النشاط.");
+        db.collection('players').doc(userUid).update({
+            isOnline: false
+        }).catch(err => {});
+    }, 300000); 
+};
 
-                    // الاستماع لحركات اللاعب المتنوعة لإعادة ضبط عداد الخمول
-                    ['click', 'touchstart', 'mousemove', 'keypress', 'scroll'].forEach(eventType => {
-                        window.addEventListener(eventType, resetInactivityTimer);
-                    });
+// استماع حقيقي لتغيير التبويب (عند الخروج من الصفحة أو قفل الهاتف)
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        // إذا انتقل اللاعب لتبويب آخر أو أغلق المتصفح جزئياً، يقطع الاتصال فوراً
+        clearTimeout(inactivityTimer);
+        db.collection('players').doc(userUid).update({
+            isOnline: false
+        }).catch(err => {});
+    } else {
+        // إذا عاد اللاعب فتح التبويب مجدداً، يعود متصلاً
+        resetInactivityTimer();
+    }
+});
 
-                    // تشغيل المؤقت لأول مرة عند الدخول
-                    resetInactivityTimer();
+// الاستماع لحركات اللاعب المتنوعة (تتأثر فقط إذا كان التبويب مرئياً)
+['click', 'touchstart', 'mousemove', 'keypress', 'scroll'].forEach(eventType => {
+    window.addEventListener(eventType, resetInactivityTimer);
+});
 
-                    // قطع الاتصال تلقائياً عند إغلاق اللاعب للمتصفح أو الصفحة فجأة
-                    window.addEventListener('beforeunload', () => {
-                        db.collection('players').doc(userUid).update({
-                            isOnline: false
-                        });
-                    });
-
-                } else {
-                    // إذا لم يسجل أي حساب دخوله بعد
-                    userNameSpan.textContent = "زائر";
-                    clearTimeout(inactivityTimer);
-                }
-            });
+// تشغيل المؤقت لأول مرة عند الدخول
+resetInactivityTimer();
 
             // 4. الاستماع الحي والتحديث الفوري لإحصائيات السكان والمتصلين من قاعدة البيانات
             db.collection('players').onSnapshot((snapshot) => {
