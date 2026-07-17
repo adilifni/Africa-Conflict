@@ -3,13 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Africa Conflict</title>
     
+    <!-- CSS المظهر العام للعبة والبروفايل -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            box-sizing: border-box; margin: 0; padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body { background-color: #0d1117; color: #c9d1d9; display: flex; flex-direction: column; min-height: 100vh; overflow-x: hidden; }
+        header { background-color: #161b22; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #30363d; position: sticky; top: 0; z-index: 100; }
+        .user-welcome { font-size: 14px; color: #58a6ff; }
+        .game-logo { font-size: 20px; font-weight: bold; color: #f0f6fc; display: flex; align-items: center; gap: 8px; }
+        main { flex: 1; padding: 15px; padding-bottom: 85px; display: flex; flex-direction: column; gap: 15px; max-width: 600px; margin: 0 auto; width: 100%; }
+        .game-view { display: flex; flex-direction: column; gap: 15px; width: 100%; }
+        .card { background-color: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 15px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); display: flex; flex-direction: column; gap: 12px; }
+        
+        /* شريط التنقل السفلي الكامل */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background-color: #161b22; border-top: 1px solid #30363d; display: flex; justify-content: space-around; padding: 8px 0; z-index: 100; }
+        .nav-link { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #8b949e; text-decoration: none; font-size: 11px; cursor: pointer; background: none; border: none; flex: 1; }
+        .nav-link.active { color: #58a6ff; }
+        .nav-link i { font-size: 18px; }
+        
+        /* تصميم القوائم المنسدلة للتطوير */
+        .stat-dropdown { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; background: #151920; }
+        .stat-dropdown.open { max-height: 150px !important; border-top: 1px dashed #2d3748; }
+        
+        /* Modal نافذة الإعدادات */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; padding: 20px; }
+        .modal-content { background: #1a1f26; width: 100%; max-width: 360px; border-radius: 12px; padding: 20px; border: 1px solid #2d3748; display: flex; flex-direction: column; gap: 15px; }
+    </style>
+
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
-    <!-- كود التهيئة الخاص بك -->
     <script>
       const firebaseConfig = {
         apiKey: "AIzaSyCdHlC-kvNWRrYO8-ujA4CjkJsVdFLDTf8",
@@ -22,303 +53,88 @@
       };
       if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
     </script>
-    
-    <title>Africa Conflict</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        body {
-            background-color: #0d1117;
-            color: #c9d1d9;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-
-        header {
-            background-color: #161b22;
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #30363d;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .user-welcome {
-            font-size: 14px;
-            color: #58a6ff;
-        }
-
-        .game-logo {
-            font-size: 20px;
-            font-weight: bold;
-            color: #f0f6fc;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        main {
-            flex: 1;
-            padding: 15px;
-            padding-bottom: 85px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            max-width: 600px;
-            margin: 0 auto;
-            width: 100%;
-        }
-
-        .game-view {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            width: 100%;
-        }
-
-        .card {
-            background-color: #161b22;
-            border: 1px solid #30363d;
-            border-radius: 12px;
-            padding: 15px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .slider-wrapper {
-            position: relative;
-            width: 100%;
-            overflow: hidden;
-        }
-
-        .slides-container {
-            display: flex;
-            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-            width: 200%;
-        }
-
-        .slide {
-            width: 50%;
-            flex-shrink: 0;
-        }
-
-        .card-header-stats {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-            text-align: center;
-            align-items: center;
-        }
-
-        .stat-box {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-            padding: 10px 4px;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-
-        .stat-label {
-            font-size: 11px;
-            color: #8b949e;
-        }
-
-        .stat-value {
-            font-size: 16px;
-            font-weight: bold;
-            color: #f0f6fc;
-        }
-
-        .continent-img-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            background-color: #21262d;
-            padding: 4px;
-        }
-
-        .continent-img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
-
-        .flag-img-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 5px;
-        }
-
-        .country-title-block {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            color: #f0f6fc;
-        }
-
-        .country-flag-emoji {
-            font-size: 22px;
-        }
-
-        .parliament-btn {
-            background-color: #38bdf8;
-            color: #0f172a;
-            border: none;
-            padding: 14px;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background-color: #161b22;
-            border-top: 1px solid #30363d;
-            display: flex;
-            justify-content: space-around;
-            padding: 8px 0;
-            z-index: 100;
-        }
-
-        .nav-link {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            color: #8b949e;
-            text-decoration: none;
-            font-size: 11px;
-            cursor: pointer;
-            background: none;
-            border: none;
-            flex: 1;
-        }
-
-        .nav-link.active {
-            color: #58a6ff;
-        }
-
-        .nav-link i {
-            font-size: 18px;
-        }
-
-        .page-inner-card {
-            background-color: #161b22;
-            border: 1px solid #30363d;
-            border-radius: 12px;
-            padding: 20px;
-            width: 100%;
-        }
-
-        .page-title-banner {
-            background: linear-gradient(135deg, #1f6feb, #38bdf8);
-            color: #ffffff;
-            padding: 12px;
-            border-radius: 8px;
-            font-weight: bold;
-            text-align: center;
-        }
-
-        .stat-dropdown {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease;
-            background: #151920;
-        }
-
-        .stat-dropdown.open {
-            max-height: 150px !important;
-            border-top: 1px dashed #2d3748;
-        }
-    </style>
 </head>
 <body>
 
     <header>
         <div class="user-welcome">القائد: <span id="user-name">جاري الاتصال...</span></div>
-        <div class="game-logo">
-            <span>Africa Conflict</span>
-            <span>🌍</span>
-        </div>
+        <div class="game-logo"><span>Africa Conflict</span> <span>🌍</span></div>
     </header>
 
     <main>
-        <!-- 1. الرئيسية -->
+        <!-- 1. واجهة شاشة الرئيسية -->
         <div id="view-main" class="game-view" style="display: none;">
             <div class="card">
-                <p style="text-align: center; padding: 20px;">مرحباً بك في القائمة الرئيسية لـ Africa Conflict.</p>
+                <h3 style="color: #fff;">🏠 القائمة الرئيسية</h3>
+                <p>مرحباً بك في القائمة الرئيسية لـ Africa Conflict.</p>
             </div>
         </div>
 
-        <!-- 2. البروفايل (الافتراضي للعرض بناءً على صورتك) -->
-        <div id="view-profile" class="game-view">
-            <div id="training-global-timer" style="display: none; background-color: #f39c12; color: #fff; padding: 10px; text-align: center; border-radius: 8px; font-weight: bold; font-size: 14px; margin-bottom: 5px;"></div>
+        <!-- 2. واجهة شاشة الحروب -->
+        <div id="view-wars" class="game-view" style="display: none;">
+            <div class="card">
+                <h3 style="color: #fff;">🛡️ ساحة المعارك والحروب</h3>
+                <p>قسم الحروب والنزاعات العسكرية قيد التطوير...</p>
+            </div>
+        </div>
 
+        <!-- 3. واجهة شاشة العمل -->
+        <div id="view-work" class="game-view" style="display: none;">
+            <div class="card">
+                <h3 style="color: #fff;">💼 سوق العمل والوظائف</h3>
+                <p>قسم العمل وجني الأموال قيد التطوير...</p>
+            </div>
+        </div>
+
+        <!-- 4. واجهة شاشة البروفايل الشخصي (الافتراضية) -->
+        <div id="view-profile" class="game-view">
+            <!-- بنر العداد التنازلي للتطوير النشط -->
+            <div id="training-global-timer" style="display: none; background-color: #d69e2e; color: #fff; padding: 12px; text-align: center; border-radius: 8px; font-weight: bold; font-size: 14px; margin-bottom: 5px;"></div>
+
+            <!-- كارت الحساب الأساسي -->
             <div class="card" style="background: #1a1f26; text-align: center; padding: 20px;">
                 <div style="display: flex; justify-content: center; margin-bottom: 10px;">
                     <img id="profile-avatar" src="https://via.placeholder.com/90" alt="Avatar" style="width: 90px; height: 90px; border-radius: 50%; border: 3px solid #3182ce; object-fit: cover;">
                 </div>
                 
                 <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
-                    <h2 id="profile-name-display" style="color: #fff; margin: 0; font-size: 20px;">جاري سحب البيانات...</h2>
+                    <h2 id="profile-name-display" style="color: #fff; margin: 0; font-size: 20px;">تحميل الاسم...</h2>
                     <button onclick="openSettingsModal()" style="background: none; border: none; color: #a0aec0; cursor: pointer; font-size: 18px;">⚙️</button>
                 </div>
 
+                <!-- شريط الـ XP -->
                 <div style="margin-top: 15px; text-align: right;">
                     <div style="display: flex; justify-content: space-between; color: #cbd5e0; font-size: 14px; margin-bottom: 5px;">
-                        <span id="profile-level-number" style="font-weight: bold; color: #3182ce;">المستوى 1</span>
-                        <span id="profile-xp-text">0 / 100 XP</span>
+                        <span id="profile-level-number" style="font-weight: bold; color: #3182ce;">المستوى --</span>
+                        <span id="profile-xp-text">-- / -- XP</span>
                     </div>
                     <div style="width: 100%; height: 12px; background: #2d3748; border-radius: 6px; overflow: hidden;">
-                        <div id="profile-xp-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #3182ce, #63b3ed); transition: width 0.5s ease;"></div>
+                        <div id="profile-xp-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #3182ce, #63b3ed); transition: width 0.4s ease;"></div>
                     </div>
                 </div>
 
-                <div style="display: flex; justify-content: space-between; margin-top: 15px; padding: 5px 2px; font-size: 18px; font-weight: bold;">
-                    <span id="profile-gold-display" style="color: #f6ad55;">0 🪙</span>
+                <!-- الثروة والذهب -->
+                <div style="display: flex; justify-content: space-between; margin-top: 15px; font-size: 18px; font-weight: bold;">
                     <span id="profile-money-display" style="color: #ffffff;">0 💵</span>
+                    <span id="profile-gold-display" style="color: #f6ad55;">0 🪙</span>
                 </div>
             </div>
 
+            <!-- كارت المنطقة والجنسية -->
             <div class="card" style="background: #1a1f26; padding: 15px;">
                 <div style="display: flex; justify-content: space-between; color: #fff; border-bottom: 1px solid #2d3748; padding-bottom: 8px; margin-bottom: 8px;">
                     <span style="color: #a0aec0;">📍 المنطقة الحالية</span>
-                    <span id="profile-region" style="font-weight: bold;">المغرب</span>
+                    <span id="profile-region" style="font-weight: bold;">--</span>
                 </div>
                 <div style="display: flex; justify-content: space-between; color: #fff;">
                     <span style="color: #a0aec0;">🇲🇦 الجنسية الأصلية</span>
-                    <span id="profile-nationality" style="font-weight: bold;">المغرب</span>
+                    <span id="profile-nationality" style="font-weight: bold;">--</span>
                 </div>
             </div>
 
-            <!-- عناصر التطوير -->
+            <!-- عناصر التطوير الأساسية -->
             <div style="display: flex; flex-direction: column; gap: 10px;">
-                <!-- القوة -->
+                <!-- القوة القتالية -->
                 <div class="card" style="background: #1a1f26; padding: 0; overflow: hidden; gap: 0;">
                     <div id="stat-power-header" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #fff;">
                         <span>💪 القوة القتالية</span>
@@ -335,7 +151,7 @@
                     </div>
                 </div>
 
-                <!-- التعليم -->
+                <!-- مستوى التعليم -->
                 <div class="card" style="background: #1a1f26; padding: 0; overflow: hidden; gap: 0;">
                     <div id="stat-education-header" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #fff;">
                         <span>📚 مستوى التعليم</span>
@@ -355,162 +171,28 @@
         </div>
     </main>
 
+    <!-- 🧭 شريط التنقل السفلي الكامل بجميع الأزرار والوظائف النشطة -->
     <nav class="bottom-nav">
-        <button class="nav-link" onclick="switchView('main')"><i class="fa-solid fa-house"></i><span>الرئيسية</span></button>
-        <button class="nav-link active" onclick="switchView('profile')"><i class="fa-solid fa-user"></i><span>البروفايل</span></button>
+        <button class="nav-link" id="nav-main" onclick="switchView('main')"><i class="fa-solid fa-house"></i><span>الرئيسية</span></button>
+        <button class="nav-link" id="nav-wars" onclick="switchView('wars')"><i class="fa-solid fa-shield-halved"></i><span>الحروب</span></button>
+        <button class="nav-link" id="nav-work" onclick="switchView('work')"><i class="fa-solid fa-briefcase"></i><span>العمل</span></button>
+        <button class="nav-link active" id="nav-profile" onclick="switchView('profile')"><i class="fa-solid fa-user"></i><span>البروفايل</span></button>
     </nav>
 
-    <!-- Modal الإعدادات -->
-    <div id="settings-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
-        <div style="background: #1a1f26; width: 100%; max-width: 360px; border-radius: 12px; padding: 20px; border: 1px solid #2d3748; display: flex; flex-direction: column; gap: 15px;">
+    <!-- نافذة الإعدادات الطائرة (Modal) -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
             <h3 style="color: #fff; text-align: right;">⚙️ إعدادات الحساب</h3>
-            <input type="text" id="settings-name-input" placeholder="الاسم الجديد" style="background: #2d3748; border: 1px solid #4a5568; color: #fff; padding: 8px; border-radius: 6px; text-align: right;">
-            <input type="text" id="settings-avatar-url-input" placeholder="رابط الصورة المباشر" style="background: #2d3748; border: 1px solid #4a5568; color: #fff; padding: 8px; border-radius: 6px; text-align: left;" dir="ltr">
+            <input type="text" id="settings-name-input" placeholder="الاسم الجديد للقائد" style="background: #2d3748; border: 1px solid #4a5568; color: #fff; padding: 10px; border-radius: 6px; text-align: right;">
+            <input type="text" id="settings-avatar-url-input" placeholder="رابط صورة URL مباشر" style="background: #2d3748; border: 1px solid #4a5568; color: #fff; padding: 10px; border-radius: 6px; text-align: left;" dir="ltr">
             <div style="display: flex; gap: 10px;">
-                <button onclick="savePlayerSettings()" id="save-settings-btn" style="flex: 1; background: #38a169; color: #fff; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer;">حفظ</button>
+                <button onclick="savePlayerSettings()" id="save-settings-btn" style="flex: 1; background: #38a169; color: #fff; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer;">حفظ التغييرات</button>
                 <button onclick="closeSettingsModal()" style="background: #e53e3e; color: #fff; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer;">إلغاء</button>
             </div>
         </div>
     </div>
 
-    <!-- كود الجافا سكريبت المصلح والمدمج بالكامل لمنع مشاكل التحميل الصامت -->
-    <script>
-        let localPlayerData = null;
-        let trainingTimeout = null;
-        const africanCountries = { "morocco": { name: "المغرب" } };
-
-        function initProfileSystem() {
-            const user = firebase.auth().currentUser;
-            if (!user) return;
-
-            const db = firebase.firestore();
-            db.collection('players').doc(user.uid).onSnapshot((doc) => {
-                if (!doc.exists) {
-                    db.collection('players').doc(user.uid).set({
-                        name: user.displayName || "قائد جديد",
-                        avatarUrl: user.photoURL || '',
-                        xp: 0, current_location: "morocco", nationality: "morocco",
-                        power: 0, education: 0, experience: 0, money: 5000, gold: 50, activeTraining: null
-                    }, { merge: true });
-                    return;
-                }
-
-                const data = doc.data();
-                localPlayerData = data;
-
-                document.getElementById('profile-avatar').src = data.avatarUrl || 'https://via.placeholder.com/90';
-                document.getElementById('profile-name-display').textContent = data.name || "قائد مجهول";
-                document.getElementById('user-name').textContent = data.name || "قائد مجهول";
-
-                // تحديث الذهب والمال بالقيمة الرمزية الصحيحة
-                document.getElementById('profile-gold-display').textContent = (data.gold ?? 0) + " 🪙";
-                document.getElementById('profile-money-display').textContent = (data.money ?? 0) + " 💵";
-
-                // تحديث المستوى والـ XP
-                const currentLevel = Math.floor(Math.sqrt((data.xp || 0) / 100)) + 1;
-                const xpForCurrentLevel = Math.pow(currentLevel - 1, 2) * 100;
-                const xpForNextLevel = Math.pow(currentLevel, 2) * 100;
-                const xpInCurrentLevel = (data.xp || 0) - xpForCurrentLevel;
-                const xpNeededForNext = xpForNextLevel - xpForCurrentLevel;
-                
-                document.getElementById('profile-level-number').textContent = `المستوى ${currentLevel}`;
-                document.getElementById('profile-xp-bar').style.width = `${(xpInCurrentLevel / xpNeededForNext) * 100}%`;
-                document.getElementById('profile-xp-text').textContent = `${Math.floor(xpInCurrentLevel)} / ${xpNeededForNext} XP`;
-
-                document.getElementById('stat-power-val').textContent = data.power || 0;
-                document.getElementById('stat-education-val').textContent = data.education || 0;
-
-                checkActiveTraining(data);
-            }, error => {
-                console.error("Firestore Error:", error);
-            });
-
-            setupStatDropdowns();
-        }
-
-        function setupStatDropdowns() {
-            ['power', 'education'].forEach(stat => {
-                const header = document.getElementById(`stat-${stat}-header`);
-                const dropdown = document.getElementById(`stat-${stat}-dropdown`);
-                if (header && dropdown && !header.dataset.listener) {
-                    header.addEventListener('click', () => {
-                        dropdown.classList.toggle('open');
-                        if(dropdown.classList.contains('open') && localPlayerData) {
-                            const lvl = localPlayerData[stat] || 0;
-                            document.getElementById(`time-${stat}`).textContent = `الوقت المطلـوب: ${(lvl + 1) * 30} ثانية | التكلفة: ${(lvl + 1) * 1000} مال`;
-                        }
-                    });
-                    header.dataset.listener = "true";
-                }
-            });
-        }
-
-        function startStatUpgrade(statName, currencyType) {
-            if (!localPlayerData || localPlayerData.activeTraining) return alert("⚠️ هناك تطوير جارٍ بالفعل!");
-            const currentStatLevel = localPlayerData[statName] || 0;
-            const moneyCost = (currentStatLevel + 1) * 1000;
-            const goldCost = (currentStatLevel + 1) * 5;
-            let timeInSeconds = (currentStatLevel + 1) * 30;
-
-            const updates = {};
-            if (currencyType === 'money') {
-                if ((localPlayerData.money || 0) < moneyCost) return alert("🔴 لا تملك المال الكافي!");
-                updates['money'] = firebase.firestore.FieldValue.increment(-moneyCost);
-            } else {
-                if ((localPlayerData.gold || 0) < goldCost) return alert("🔴 لا تملك الذهب الكافي!");
-                updates['gold'] = firebase.firestore.FieldValue.increment(-goldCost);
-                timeInSeconds = Math.floor(timeInSeconds / 2);
-            }
-
-            updates['activeTraining'] = { stat: statName, finishAt: Date.now() + (timeInSeconds * 1000) };
-            firebase.firestore().collection('players').doc(firebase.auth().currentUser.uid).update(updates);
-        }
-
-        function checkActiveTraining(data) {
-            const timer = document.getElementById('training-global-timer');
-            if (!data.activeTraining) { timer.style.display = 'none'; return; }
-            
-            const timeLeft = data.activeTraining.finishAt - Date.now();
-            if (timeLeft <= 0) {
-                timer.style.display = 'none';
-                const uid = firebase.auth().currentUser.uid;
-                firebase.firestore().collection('players').doc(uid).update({
-                    [data.activeTraining.stat]: firebase.firestore.FieldValue.increment(1),
-                    xp: firebase.firestore.FieldValue.increment(25),
-                    activeTraining: null
-                });
-            } else {
-                timer.style.display = 'block';
-                timer.textContent = `⏳ متبقي للتطوير: ${Math.ceil(timeLeft / 1000)} ثانية`;
-                setTimeout(() => initProfileSystem(), 1000);
-            }
-        }
-
-        function openSettingsModal() {
-            if(!localPlayerData) return;
-            document.getElementById('settings-name-input').value = localPlayerData.name || "";
-            document.getElementById('settings-avatar-url-input').value = localPlayerData.avatarUrl || "";
-            document.getElementById('settings-modal').style.display = 'flex';
-        }
-        function closeSettingsModal() { document.getElementById('settings-modal').style.display = 'none'; }
-        
-        function savePlayerSettings() {
-            const name = document.getElementById('settings-name-input').value.trim();
-            const url = document.getElementById('settings-avatar-url-input').value.trim();
-            if(!name) return alert("الاسم فارغ!");
-            
-            firebase.firestore().collection('players').doc(firebase.auth().currentUser.uid).update({ name: name, avatarUrl: url })
-            .then(() => closeSettingsModal());
-        }
-
-        function switchView(viewId) {
-            document.querySelectorAll('.game-view').forEach(v => v.style.display = 'none');
-            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-            document.getElementById('view-' + viewId).style.display = 'flex';
-            event.currentTarget.classList.add('active');
-        }
-
-        firebase.auth().onAuthStateChanged(user => { if (user) initProfileSystem(); });
-    </script>
+    <!-- استدعاء ملف المعالجة الخارجي للبروفايل -->
+    <script src="js/profile.js"></script>
 </body>
 </html>
