@@ -585,31 +585,7 @@
     <!-- (باقي كود البلوكات السابقة يظل كما هو دون تغيير...) -->
 
 </div>
-
-<!-- 🔴 نافذة الإعدادات المنبثقة الجديدة (Modal Popup) -->
-<div id="settings-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
-    <div style="background: #1a1f26; width: 100%; max-width: 360px; border-radius: 12px; padding: 20px; border: 1px solid #2d3748; display: flex; flex-direction: column; gap: 15px; text-align: right;">
-        <h3 style="color: #fff; margin: 0 0 10px 0; border-bottom: 1px solid #2d3748; padding-bottom: 8px;">⚙️ إعدادات الحساب</h3>
-        
-        <!-- تعديل الاسم -->
-        <div style="display: flex; flex-direction: column; gap: 5px;">
-            <label style="color: #a0aec0; font-size: 14px;">اسم القائد الجديد:</label>
-            <input type="text" id="settings-name-input" style="background: #2d3748; border: 1px solid #4a5568; color: #fff; padding: 8px; border-radius: 6px; font-size: 16px; text-align: right;">
-        </div>
-
-        <!-- تعديل الصورة برابط خارجي مباشر -->
-        <div style="display: flex; flex-direction: column; gap: 5px;">
-            <label style="color: #a0aec0; font-size: 14px;">رابط صورة البروفايل (URL):</label>
-            <input type="text" id="settings-avatar-input" placeholder="https://..." style="background: #2d3748; border: 1px solid #4a5568; color: #fff; padding: 8px; border-radius: 6px; font-size: 14px; text-align: left;">
-        </div>
-
-        <!-- أزرار التحكم -->
-        <div style="display: flex; gap: 10px; margin-top: 10px;">
-            <button onclick="savePlayerSettings()" style="flex: 1; background: #38a169; color: #fff; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer;">حفظ التغييرات</button>
-            <button onclick="closeSettingsModal()" style="background: #e53e3e; color: #fff; border: none; padding: 10px 15px; border-radius: 6px; font-weight: bold; cursor: pointer;">إلغاء</button>
-        </div>
-    </div>
-</div>
+ة (settings-modal
     
     <!-- مؤقت التطوير العالمي (يظهر فقط عند وجود ترقية جارية) -->
     <div id="training-global-timer" style="display: none; background-color: #f39c12; color: #fff; padding: 10px; text-align: center; border-radius: 8px; font-weight: bold; font-size: 14px;">
