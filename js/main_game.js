@@ -1,39 +1,52 @@
 // ==========================================
-// 📥 نظام إدارة جلب وحفظ اسم اللاعب ديناميكياً
+// 📥 جلب اسم اللاعب الحقيقي من حساب الجيميل (Firebase)
 // ==========================================
 function fetchInitialGameData() {
     const userNameSpan = document.getElementById('user-name');
     if (!userNameSpan) return;
 
-    // 1. محاولة جلب الاسم من نظام التحقق بفيربيس إذا كان متاحاً ونشطاً
+    // إظهار حالة تحميل بسيطة حتى يستجيب الفيربيس
+    userNameSpan.textContent = '...'; 
+
+    // التأكد من أن مكتبة الفيربيس مهيأة بالكامل
     if (typeof firebase !== 'undefined' && firebase.auth) {
+        
+        // مستمع أحداث الفيربيس الحقيقي لبيانات التسجيل
         firebase.auth().onAuthStateChanged((user) => {
             if (user) {
-                const displayName = user.displayName || user.email.split('@')[0];
-                userNameSpan.textContent = displayName;
-                // تخزين الاسم محلياً لضمان عدم ظهوره كمجهول عند بطء الشبكة
-                localStorage.setItem('cached_player_name', displayName);
-                console.log(`✔️ اسم اللاعب المسجل في فيربيس: ${displayName}`);
+                // 1. محاولة جلب الاسم الفعلي الكامل من حساب الجيميل
+                // 2. إذا لم يكن متوفراً، نأخذ الجزء الأول من البريد الإلكتروني قبل علامة @
+                let gmailName = user.displayName || user.email.split('@')[0];
+                
+                // تنظيف الاسم تماماً من أي كلمات زائدة مثل "قائد" أو "مجهول"
+                gmailName = gmailName.replace('قائد', '').replace('مجهول', '').trim();
+                
+                // عرض الاسم النقي مباشرة
+                userNameSpan.textContent = gmailName;
+                
+                // حفظه في الكاش المحلي كنسخة احتياطية سريعة للتحميل المستقبلي
+                localStorage.setItem('firebase_gmail_name', gmailName);
+                console.log(`✔️ تم تحميل اسم الجيميل بنجاح: ${gmailName}`);
             } else {
-                useFallbackName(userNameSpan);
+                // إذا لم يكن هناك مستخدم مسجل دخول أصلاً في الفيربيس
+                loadBackupOrText(userNameSpan, 'زائر');
             }
         });
+        
     } else {
-        useFallbackName(userNameSpan);
+        // في حال تعذر الاتصال بالفيربيس مؤقتاً، نقرأ آخر اسم جيميل تم حفظه بنجاح
+        loadBackupOrText(userNameSpan, 'تأكد من الفيربيس');
     }
 }
 
-// دالة احتياطية ذكية تجلب الاسم بناءً على الحساب النشط بالمتصفح
-function useFallbackName(element) {
-    // حاول قراءة الاسم المخزن محلياً لهذا المتصفح/الحساب
-    let localName = localStorage.getItem('cached_player_name');
-    
-    if (!localName) {
-        // إذا لم يجد اسماً، ننشئ اسماً فرعياً مؤقتاً لتجنب كلمة "مجهول" بالكامل
-        localName = "القائد_" + Math.floor(1000 + Math.random() * 9000);
-        localStorage.setItem('cached_player_name', localName);
+// دالة المساعدة لقراءة النسخة الاحتياطية
+function loadBackupOrText(element, defaultText) {
+    const backupName = localStorage.getItem('firebase_gmail_name');
+    if (backupName) {
+        element.textContent = backupName;
+    } else {
+        element.textContent = defaultText;
     }
-    element.textContent = localName;
 }
 
 // ==========================================
