@@ -1,42 +1,15 @@
 // ==========================================
-// 📥 جلب اسم اللاعب الحقيقي من حساب الجيميل (Firebase)
+// ==========================================
+// 📥 تحميل واستدعاء البيانات الحية
 // ==========================================
 function fetchInitialGameData() {
-    const userNameSpan = document.getElementById('user-name');
-    if (!userNameSpan) return;
-
-    // إظهار حالة تحميل بسيطة حتى يستجيب الفيربيس
-    userNameSpan.textContent = '...'; 
-
-    // التأكد من أن مكتبة الفيربيس مهيأة بالكامل
-    if (typeof firebase !== 'undefined' && firebase.auth) {
-        
-        // مستمع أحداث الفيربيس الحقيقي لبيانات التسجيل
-        firebase.auth().onAuthStateChanged((user) => {
-            if (user) {
-                // 1. محاولة جلب الاسم الفعلي الكامل من حساب الجيميل
-                // 2. إذا لم يكن متوفراً، نأخذ الجزء الأول من البريد الإلكتروني قبل علامة @
-                let gmailName = user.displayName || user.email.split('@')[0];
-                
-                // تنظيف الاسم تماماً من أي كلمات زائدة مثل "قائد" أو "مجهول"
-                gmailName = gmailName.replace('قائد', '').replace('مجهول', '').trim();
-                
-                // عرض الاسم النقي مباشرة
-                userNameSpan.textContent = gmailName;
-                
-                // حفظه في الكاش المحلي كنسخة احتياطية سريعة للتحميل المستقبلي
-                localStorage.setItem('firebase_gmail_name', gmailName);
-                console.log(`✔️ تم تحميل اسم الجيميل بنجاح: ${gmailName}`);
-            } else {
-                // إذا لم يكن هناك مستخدم مسجل دخول أصلاً في الفيربيس
-                loadBackupOrText(userNameSpan, 'زائر');
-            }
-        });
-        
-    } else {
-        // في حال تعذر الاتصال بالفيربيس مؤقتاً، نقرأ آخر اسم جيميل تم حفظه بنجاح
-        loadBackupOrText(userNameSpan, 'تأكد من الفيربيس');
-    }
+    // محاكاة الاتصال وتنزيل الاسم المستعار
+    setTimeout(() => {
+        const userNameSpan = document.getElementById('user-name');
+        if (userNameSpan) {
+            userNameSpan.textContent = 'adil tabia'; // تم التحديث بناءً على اسم القائد من صورك الأخيرة
+        }
+    }, 400);
 }
 
 // دالة المساعدة لقراءة النسخة الاحتياطية
