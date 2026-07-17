@@ -239,3 +239,9 @@ function changePlayerName(newName) {
         name: trimmedName
     }).then(() => alert("تم تحديث الاسم بنجاح"));
 }
+
+// تشغيل نظام الحساب تلقائياً عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', () => {
+    // ننتظر ثانية واحدة حتى يتأكد المتصفح من وجود حساب الجيميل النشط
+    setTimeout(initProfileSystem, 1000);
+});
