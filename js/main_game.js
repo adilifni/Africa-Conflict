@@ -1,56 +1,42 @@
 
 
 // ==========================================
-// 📥 جلب وتحديث اسم اللاعب النشط تلقائياً من جلسة المتصفح
+// 📥 جلب اسم حساب الجيميل النشط من فيربيس (انتظار ذكي)
 // ==========================================
 function fetchInitialGameData() {
     const userNameSpan = document.getElementById('user-name');
     if (!userNameSpan) return;
 
-    // دالة فحص ذكية ومستمرة للتأكد من الحساب النشط حالياً في المتصفح
-    const checkAuthSession = () => {
-        // 1. إذا كانت مكتبة الفيربيس متاحة في المتصفح
-        if (typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser) {
-            const user = firebase.auth().currentUser;
-            let gmailName = user.displayName || user.email.split('@')[0];
-            gmailName = gmailName.replace('قائد', '').replace('مجهول', '').trim();
-            userNameSpan.textContent = gmailName;
-            return;
-        }
-
-        // 2. الحل العبقري: البحث في جلسة الفيربيس المخزنة داخل IndexedDB/LocalStorage تلقائياً بواسطة المتصفح
-        let foundName = "";
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            // الفيربيس يخزن بيانات الحساب النشط تحت مفاتيح تحتوي على "firebase:authUser"
-            if (key && key.includes('firebase:authUser')) {
-                try {
-                    const authData = JSON.parse(localStorage.getItem(key));
-                    if (authData && (authData.displayName || authData.email)) {
-                        foundName = authData.displayName || authData.email.split('@')[0];
-                        break;
-                    }
-                } catch (e) {
-                    console.error("خطأ في قراءة جلسة الفيربيس", e);
+    // دالة فحص متكررة تنتظر حتى يتم تحميل مكتبة الفيربيس بالكامل في المتصفح
+    function waitForFirebase() {
+        if (typeof firebase !== 'undefined' && firebase.auth) {
+            
+            // بمجرد أن يصبح الفيربيس جاهزاً، نستمع لحالة الحساب النشط حالياً
+            firebase.auth().onAuthStateChanged((user) => {
+                if (user) {
+                    // جلب الاسم الحقيقي من الجيميل أو جزء من البريد الإلكتروني
+                    let gmailName = user.displayName || user.email.split('@')[0];
+                    
+                    // تنظيف الاسم تماماً من أي زيادات
+                    gmailName = gmailName.replace('قائد', '').replace('مجهول', '').trim();
+                    
+                    // عرض الاسم النقي مباشرة في أعلى اللعبة
+                    userNameSpan.textContent = gmailName;
+                    console.log(`✔️ تم التعرف على حساب الجيميل النشط بنجاح: ${gmailName}`);
+                } else {
+                    // إذا لم يسجل أي حساب دخوله بعد
+                    userNameSpan.textContent = "زائر";
                 }
-            }
-        }
+            });
 
-        // تنظيف الاسم وعرضه فوراً بناءً على الحساب المفتوح حالياً
-        if (foundName) {
-            foundName = foundName.replace('قائد', '').replace('مجهول', '').trim();
-            userNameSpan.textContent = foundName;
         } else {
-            // إذا لم يجد أي حساب مفتوح (حالة التحميل الافتراضية)
-            userNameSpan.textContent = "adil tabia"; 
+            // إذا لم تجهز المكتبة بعد، انتظر 100 مللي ثانية وحاول مجدداً
+            setTimeout(waitForFirebase, 100);
         }
-    };
+    }
 
-    // تشغيل الفحص فوراً عند فتح الصفحة
-    checkAuthSession();
-    
-    // إعادة الفحص كل ثانية للتأكد أنه إذا قام المستخدم بتغيير الحساب في نفس المتصفح، يتغير الاسم فوراً!
-    setInterval(checkAuthSession, 1000);
+    // بدء عملية الانتظار والربط
+    waitForFirebase();
 }
 
 // ==========================================
