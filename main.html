@@ -9,7 +9,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
-    <!-- كود التهيئة الخاص بك config -->
+    <!-- كود التهيئة الخاص بك -->
     <script>
       const firebaseConfig = {
         apiKey: "AIzaSyCdHlC-kvNWRrYO8-ujA4CjkJsVdFLDTf8",
@@ -99,7 +99,6 @@
             gap: 12px;
         }
 
-        /* حاوية السلايدشو */
         .slider-wrapper {
             position: relative;
             width: 100%;
@@ -109,7 +108,7 @@
         .slides-container {
             display: flex;
             transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-            width: 200%; /* شريحتين */
+            width: 200%;
         }
 
         .slide {
@@ -131,14 +130,7 @@
             gap: 5px;
             padding: 10px 4px;
             border-radius: 8px;
-            background-color: transparent;
-            transition: background-color 0.15s, transform 0.1s;
             cursor: pointer;
-        }
-
-        .stat-box:active {
-            background-color: rgba(255, 255, 255, 0.08);
-            transform: scale(0.95);
         }
 
         .stat-label {
@@ -161,12 +153,6 @@
             border-radius: 50%;
             background-color: #21262d;
             padding: 4px;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-
-        .continent-img-container:active {
-            transform: scale(0.9);
         }
 
         .continent-img {
@@ -204,115 +190,8 @@
             font-size: 16px;
             font-weight: bold;
             cursor: pointer;
-            text-align: center;
-            transition: background-color 0.2s, transform 0.1s;
         }
 
-        .parliament-btn:active {
-            background-color: #0ea5e9;
-            transform: scale(0.98);
-        }
-
-        /* حاوية صندوق الشات والدردشة */
-        .chat-container {
-            height: 320px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .chat-title {
-            font-size: 14px;
-            font-weight: bold;
-            color: #f0f6fc;
-            text-align: center;
-            margin-bottom: 5px;
-        }
-
-        .chat-messages {
-            flex: 1;
-            overflow-y: auto;
-            background-color: #0d1117;
-            border: 1px solid #30363d;
-            border-radius: 8px;
-            padding: 12px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-
-        .chat-message {
-            padding: 8px 12px;
-            border-radius: 12px;
-            max-width: 85%;
-            font-size: 13px;
-            line-height: 1.4;
-            word-wrap: break-word;
-        }
-
-        .chat-message.me {
-            align-self: flex-start;
-            background-color: #1f6feb;
-            color: #ffffff;
-            border-bottom-right-radius: 2px;
-        }
-
-        .chat-message.others {
-            align-self: flex-end;
-            background-color: #21262d;
-            color: #f0f6fc;
-            border: 1px solid #30363d;
-            border-bottom-left-radius: 2px;
-        }
-
-        .msg-header {
-            display: flex;
-            justify-content: space-between;
-            font-size: 10px;
-            color: #8b949e;
-            margin-bottom: 4px;
-            gap: 15px;
-        }
-
-        .chat-input-area {
-            display: flex;
-            gap: 8px;
-        }
-
-        .chat-input {
-            flex: 1;
-            background-color: #21262d;
-            border: 1px solid #30363d;
-            border-radius: 8px;
-            padding: 10px 12px;
-            color: #f0f6fc;
-            font-size: 13px;
-            outline: none;
-        }
-
-        .chat-input:focus {
-            border-color: #58a6ff;
-        }
-
-        .chat-send-btn {
-            background-color: #238636;
-            color: white;
-            border: none;
-            width: 42px;
-            height: 40px;
-            border-radius: 8px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background-color 0.2s;
-        }
-
-        .chat-send-btn:active {
-            background-color: #2ea043;
-        }
-
-        /* شريط التنقل السفلي الاحترافي */
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -338,7 +217,6 @@
             background: none;
             border: none;
             flex: 1;
-            outline: none;
         }
 
         .nav-link.active {
@@ -349,14 +227,12 @@
             font-size: 18px;
         }
 
-        /* الصفحات الداخلية وتصميماتها */
         .page-inner-card {
             background-color: #161b22;
             border: 1px solid #30363d;
             border-radius: 12px;
             padding: 20px;
             width: 100%;
-            min-height: 200px;
         }
 
         .page-title-banner {
@@ -365,51 +241,26 @@
             padding: 12px;
             border-radius: 8px;
             font-weight: bold;
-            font-size: 16px;
             text-align: center;
-            margin-bottom: 15px;
         }
 
-        .slider-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-top: 1px solid #21262d;
-            padding-top: 10px;
-            margin-top: 5px;
+        .stat-dropdown {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            background: #151920;
         }
 
-        .slider-dots {
-            display: flex;
-            gap: 12px;
-            padding: 5px;
-        }
-
-        .dot {
-            width: 12px;
-            height: 12px;
-            background-color: #30363d;
-            border-radius: 50%;
-            cursor: pointer;
-            transition: background-color 0.2s, transform 0.1s;
-        }
-
-        .dot.active {
-            background-color: #58a6ff;
-            transform: scale(1.2);
-        }
-        
         .stat-dropdown.open {
-            max-height: 120px !important;
+            max-height: 150px !important;
             border-top: 1px dashed #2d3748;
-            margin-bottom: 5px;
         }
     </style>
 </head>
 <body>
 
     <header>
-        <div class="user-welcome">القائد: <span id="user-name">جاري التحميل...</span></div>
+        <div class="user-welcome">القائد: <span id="user-name">جاري الاتصال...</span></div>
         <div class="game-logo">
             <span>Africa Conflict</span>
             <span>🌍</span>
@@ -417,130 +268,27 @@
     </header>
 
     <main>
-        <!-- 1. الصفحة الرئيسية والدردشة -->
-        <div id="view-main" class="game-view">
-            <!-- البلوك الأول (إحصائيات القارة) -->
+        <!-- 1. الرئيسية -->
+        <div id="view-main" class="game-view" style="display: none;">
             <div class="card">
-                <div class="slider-wrapper">
-                    <div class="slides-container" id="slides-container">
-                        <div class="slide">
-                            <div class="card-header-stats">
-                                <div class="stat-box" id="btn-continent-pop">
-                                    <span class="stat-label">سكان</span>
-                                    <span class="stat-value global-population">..</span>
-                                </div>
-                                <div class="stat-box" id="btn-continent-online">
-                                    <span class="stat-label">متصل</span>
-                                    <span class="stat-value global-online" style="color: #39d353;">..</span>
-                                </div>
-                                <div class="stat-box" id="btn-continent-parties">
-                                    <span class="stat-label">أحزاب</span>
-                                    <span class="stat-value">0</span>
-                                </div>
-                                <div class="stat-box" id="btn-continent-factories">
-                                    <span class="stat-label">مصانع</span>
-                                    <span class="stat-value">0</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="slide">
-                            <div class="card-header-stats">
-                                <div class="stat-box" id="btn-continent-countries">
-                                    <span class="stat-label">دول</span>
-                                    <span class="stat-value">50</span>
-                                </div>
-                                <div class="stat-box" id="btn-continent-alliances">
-                                    <span class="stat-label">تحالف</span>
-                                    <span class="stat-value">0</span>
-                                </div>
-                                <div class="stat-box" id="btn-continent-independent">
-                                    <span class="stat-label">مستقلة</span>
-                                    <span class="stat-value">0</span>
-                                </div>
-                                <div class="stat-box">
-                                    <span class="stat-label">-</span>
-                                    <span class="stat-value">-</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="slider-footer">
-                    <div class="slider-dots">
-                        <span class="dot active" id="dot-1"></span>
-                        <span class="dot" id="dot-2"></span>
-                    </div>
-                    <div class="continent-img-container" id="btn-continent-map">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/8/86/Africa_%28orthographic_projection%29.svg" alt="Africa" class="continent-img">
-                    </div>
-                </div>
-            </div>
-
-            <!-- البلوك الثاني (إحصائيات الدولة) -->
-            <div class="card">
-                <div class="card-header-stats">
-                    <div class="stat-box" id="btn-country-pop">
-                        <span class="stat-label">سكان</span>
-                        <span class="stat-value country-population">..</span>
-                    </div>
-                    <div class="stat-box" id="btn-country-online">
-                        <span class="stat-label">متصل</span>
-                        <span class="stat-value country-online" style="color: #39d353;">..</span>
-                    </div>
-                    <div class="stat-box" id="btn-country-parties">
-                        <span class="stat-label">أحزاب</span>
-                        <span class="stat-value">0</span>
-                    </div>
-                    <div class="stat-box" id="btn-country-factories">
-                        <span class="stat-label">مصانع</span>
-                        <span class="stat-value">0</span>
-                    </div>
-                </div>
-                <div class="flag-img-container" id="btn-country-flag">
-                    <div class="country-title-block">
-                        <span class="country-flag-emoji" id="country-flag">🇲🇦</span>
-                        <span id="country-name-text">المغرب</span>
-                    </div>
-                </div>
-            </div>
-
-            <button class="parliament-btn" id="btn-parliament">برلمان الدولة</button>
-
-            <div class="card chat-container">
-                <div class="chat-title">غرفة الدردشة العامة</div>
-                <div class="chat-messages" id="chat-messages-box"></div>
-                <div class="chat-input-area">
-                    <input type="text" class="chat-input" id="chat-input-field" placeholder="اكتب رسالة برقية هنا...">
-                    <button class="chat-send-btn" id="chat-send-btn">
-                        <i class="fa-solid fa-paper-plane"></i>
-                    </button>
-                </div>
+                <p style="text-align: center; padding: 20px;">مرحباً بك في القائمة الرئيسية لـ Africa Conflict.</p>
             </div>
         </div>
 
-        <!-- 2. واجهة الملف الشخصي النظيفة والمصلحة (Profile View) -->
-        <div id="view-profile" class="game-view" style="display: none;">
-            <!-- مؤقت التطوير العالمي -->
-            <div id="training-global-timer" style="display: none; background-color: #f39c12; color: #fff; padding: 10px; text-align: center; border-radius: 8px; font-weight: bold; font-size: 14px; margin-bottom: 5px;">
-                جاري التطوير...
-            </div>
+        <!-- 2. البروفايل (الافتراضي للعرض بناءً على صورتك) -->
+        <div id="view-profile" class="game-view">
+            <div id="training-global-timer" style="display: none; background-color: #f39c12; color: #fff; padding: 10px; text-align: center; border-radius: 8px; font-weight: bold; font-size: 14px; margin-bottom: 5px;"></div>
 
-            <!-- بلوك معلومات اللاعب العلوي -->
             <div class="card" style="background: #1a1f26; text-align: center; padding: 20px;">
-                <!-- صورة اللاعب -->
                 <div style="display: flex; justify-content: center; margin-bottom: 10px;">
                     <img id="profile-avatar" src="https://via.placeholder.com/90" alt="Avatar" style="width: 90px; height: 90px; border-radius: 50%; border: 3px solid #3182ce; object-fit: cover;">
                 </div>
                 
-                <!-- اسم اللاعب مع زر الإعدادات المطور -->
                 <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
-                    <h2 id="profile-name-display" style="color: #fff; margin: 0; font-size: 20px;">جاري التحميل...</h2>
+                    <h2 id="profile-name-display" style="color: #fff; margin: 0; font-size: 20px;">جاري سحب البيانات...</h2>
                     <button onclick="openSettingsModal()" style="background: none; border: none; color: #a0aec0; cursor: pointer; font-size: 18px;">⚙️</button>
                 </div>
 
-                <!-- شريط المستوى والـ XP -->
                 <div style="margin-top: 15px; text-align: right;">
                     <div style="display: flex; justify-content: space-between; color: #cbd5e0; font-size: 14px; margin-bottom: 5px;">
                         <span id="profile-level-number" style="font-weight: bold; color: #3182ce;">المستوى 1</span>
@@ -551,14 +299,12 @@
                     </div>
                 </div>
 
-                <!-- بلوك المال والذهب -->
                 <div style="display: flex; justify-content: space-between; margin-top: 15px; padding: 5px 2px; font-size: 18px; font-weight: bold;">
                     <span id="profile-gold-display" style="color: #f6ad55;">0 🪙</span>
                     <span id="profile-money-display" style="color: #ffffff;">0 💵</span>
                 </div>
             </div>
 
-            <!-- بلوك المنطقة والجنسية التفاعلي -->
             <div class="card" style="background: #1a1f26; padding: 15px;">
                 <div style="display: flex; justify-content: space-between; color: #fff; border-bottom: 1px solid #2d3748; padding-bottom: 8px; margin-bottom: 8px;">
                     <span style="color: #a0aec0;">📍 المنطقة الحالية</span>
@@ -570,145 +316,201 @@
                 </div>
             </div>
 
-            <!-- بلوك العناصر الثلاثة للتطوير -->
-            <div class="stats-upgrade-container" style="display: flex; flex-direction: column; gap: 10px;">
-                <!-- 1. عنصر القوة -->
+            <!-- عناصر التطوير -->
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <!-- القوة -->
                 <div class="card" style="background: #1a1f26; padding: 0; overflow: hidden; gap: 0;">
                     <div id="stat-power-header" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #fff;">
                         <span>💪 القوة القتالية</span>
                         <span style="font-weight: bold; color: #e53e3e; font-size: 18px;" id="stat-power-val">0</span>
                     </div>
-                    <div id="stat-power-dropdown" class="stat-dropdown" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease; background: #151920; padding: 0 15px;">
-                        <div style="padding: 15px 0; display: flex; flex-direction: column; gap: 10px;">
-                            <p id="time-power" style="color: #a0aec0; margin: 0; font-size: 13px;">الوقت المستغرق: --</p>
+                    <div id="stat-power-dropdown" class="stat-dropdown">
+                        <div style="padding: 15px; display: flex; flex-direction: column; gap: 10px;">
+                            <p id="time-power" style="color: #a0aec0; margin: 0; font-size: 13px;">الوقت: --</p>
                             <div style="display: flex; gap: 10px;">
-                                <button onclick="startStatUpgrade('power', 'money')" style="flex: 1; background: #2b6cb0; color: #fff; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-power-money">0 مال</button>
-                                <button onclick="startStatUpgrade('power', 'gold')" style="flex: 1; background: #d69e2e; color: #fff; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-power-gold">0 ذهب</button>
+                                <button onclick="startStatUpgrade('power', 'money')" style="flex: 1; background: #2b6cb0; color: #fff; border: none; padding: 8px; border-radius: 6px; font-weight: bold; cursor: pointer;">بالمال</button>
+                                <button onclick="startStatUpgrade('power', 'gold')" style="flex: 1; background: #d69e2e; color: #fff; border: none; padding: 8px; border-radius: 6px; font-weight: bold; cursor: pointer;">بالذهب</button>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- 2. عنصر التعليم -->
+                <!-- التعليم -->
                 <div class="card" style="background: #1a1f26; padding: 0; overflow: hidden; gap: 0;">
                     <div id="stat-education-header" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #fff;">
                         <span>📚 مستوى التعليم</span>
                         <span style="font-weight: bold; color: #3182ce; font-size: 18px;" id="stat-education-val">0</span>
                     </div>
-                    <div id="stat-education-dropdown" class="stat-dropdown" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease; background: #151920; padding: 0 15px;">
-                        <div style="padding: 15px 0; display: flex; flex-direction: column; gap: 10px;">
-                            <p id="time-education" style="color: #a0aec0; margin: 0; font-size: 13px;">الوقت المستغرق: --</p>
+                    <div id="stat-education-dropdown" class="stat-dropdown">
+                        <div style="padding: 15px; display: flex; flex-direction: column; gap: 10px;">
+                            <p id="time-education" style="color: #a0aec0; margin: 0; font-size: 13px;">الوقت: --</p>
                             <div style="display: flex; gap: 10px;">
-                                <button onclick="startStatUpgrade('education', 'money')" style="flex: 1; background: #2b6cb0; color: #fff; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-education-money">0 مال</button>
-                                <button onclick="startStatUpgrade('education', 'gold')" style="flex: 1; background: #d69e2e; color: #fff; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-education-gold">0 ذهب</button>
+                                <button onclick="startStatUpgrade('education', 'money')" style="flex: 1; background: #2b6cb0; color: #fff; border: none; padding: 8px; border-radius: 6px; font-weight: bold; cursor: pointer;">بالمال</button>
+                                <button onclick="startStatUpgrade('education', 'gold')" style="flex: 1; background: #d69e2e; color: #fff; border: none; padding: 8px; border-radius: 6px; font-weight: bold; cursor: pointer;">بالذهب</button>
                             </div>
                         </div>
                     </div>
                 </div>
-
-                <!-- 3. عنصر الخبرة -->
-                <div class="card" style="background: #1a1f26; padding: 0; overflow: hidden; gap: 0;">
-                    <div id="stat-experience-header" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #fff;">
-                        <span>⚡ نقاط الخبرة المكتسبة</span>
-                        <span style="font-weight: bold; color: #38a169; font-size: 18px;" id="stat-experience-val">0</span>
-                    </div>
-                    <div id="stat-experience-dropdown" class="stat-dropdown" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease; background: #151920; padding: 0 15px;">
-                        <div style="padding: 15px 0; display: flex; flex-direction: column; gap: 10px;">
-                            <p id="time-experience" style="color: #a0aec0; margin: 0; font-size: 13px;">الوقت المستغرق: --</p>
-                            <div style="display: flex; gap: 10px;">
-                                <button onclick="startStatUpgrade('experience', 'money')" style="flex: 1; background: #2b6cb0; color: #fff; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-experience-money">0 مال</button>
-                                <button onclick="startStatUpgrade('experience', 'gold')" style="flex: 1; background: #d69e2e; color: #fff; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-experience-gold">0 ذهب</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- باقي واجهات اللعبة المعطلة مؤقتاً للتطوير اللاحق -->
-        <div id="view-work" class="game-view" style="display: none;">
-            <div class="page-inner-card">
-                <div class="page-title-banner">💼 قطاع العمل والإنتاج المالي</div>
-                <p style="text-align: center; color: #8b949e; padding: 20px;">يمكنك هنا البحث عن وظائف، العمل لتجميع الأموال، والمساهمة في بناء بنية تحتية مستدامة للدولة.</p>
-            </div>
-        </div>
-
-        <div id="view-wars" class="game-view" style="display: none;">
-            <div class="page-inner-card">
-                <div class="page-title-banner">⚔️ الحروب والعمليات العسكرية</div>
-                <p style="text-align: center; color: #8b949e; padding: 20px;">استعرض جبهات النزاع المشتعلة، شارك في تدريبات الدفاع الشعبي، أو قد جيوشك لتحرير وتأمين قارتنا.</p>
-            </div>
-        </div>
-
-        <div id="view-continent-map" class="game-view" style="display: none;">
-            <div class="page-inner-card">
-                <div class="page-title-banner">🗺️ خريطة قارة أفريقيا السياسية</div>
-                <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">جاري معالجة وتجهيز الخارطة الاستراتيجية للنزاعات الدولية والحدودية...</p>
             </div>
         </div>
     </main>
 
-    <!-- شريط التنقل السفلي -->
     <nav class="bottom-nav">
-        <button class="nav-link active" onclick="switchView('main')">
-            <i class="fa-solid fa-house"></i>
-            <span>الرئيسية</span>
-        </button>
-        <button class="nav-link" onclick="switchView('work')">
-            <i class="fa-solid fa-briefcase"></i>
-            <span>العمل</span>
-        </button>
-        <button class="nav-link" onclick="switchView('wars')">
-            <i class="fa-solid fa-shield-halved"></i>
-            <span>الحروب</span>
-        </button>
-        <button class="nav-link" onclick="switchView('profile')">
-            <i class="fa-solid fa-user"></i>
-            <span>البروفايل</span>
-        </button>
+        <button class="nav-link" onclick="switchView('main')"><i class="fa-solid fa-house"></i><span>الرئيسية</span></button>
+        <button class="nav-link active" onclick="switchView('profile')"><i class="fa-solid fa-user"></i><span>البروفايل</span></button>
     </nav>
 
-    <!-- 📸 نافذة الإعدادات المنبثقة المحدثة لرفع الصور أو إضافتها برابط -->
-    <div id="settings-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
-        <div style="background: #1a1f26; width: 100%; max-width: 360px; border-radius: 12px; padding: 20px; border: 1px solid #2d3748; display: flex; flex-direction: column; gap: 15px; text-align: right;">
-            <h3 style="color: #fff; margin: 0 0 10px 0; border-bottom: 1px solid #2d3748; padding-bottom: 8px;">⚙️ إعدادات الحساب</h3>
-            
-            <!-- تعديل الاسم -->
-            <div style="display: flex; flex-direction: column; gap: 5px;">
-                <label style="color: #a0aec0; font-size: 14px;">اسم القائد الجديد:</label>
-                <input type="text" id="settings-name-input" style="background: #2d3748; border: 1px solid #4a5568; color: #fff; padding: 8px; border-radius: 6px; font-size: 16px; text-align: right;">
-            </div>
-
-            <!-- رابط الصورة المباشر (خيار مجاني بدون قيود Blaze Plan) -->
-            <div style="display: flex; flex-direction: column; gap: 5px;">
-                <label style="color: #a0aec0; font-size: 14px;">رابط الصورة المباشر (URL):</label>
-                <input type="text" id="settings-avatar-url-input" placeholder="https://example.com/image.jpg" style="background: #2d3748; border: 1px solid #4a5568; color: #fff; padding: 8px; border-radius: 6px; font-size: 14px; text-align: left; dir: ltr;">
-            </div>
-
-            <!-- أزرار التحكم -->
-            <div style="display: flex; gap: 10px; margin-top: 10px;">
-                <button onclick="savePlayerSettings()" id="save-settings-btn" style="flex: 1; background: #38a169; color: #fff; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer;">حفظ التغييرات</button>
-                <button onclick="closeSettingsModal()" style="background: #e53e3e; color: #fff; border: none; padding: 10px 15px; border-radius: 6px; font-weight: bold; cursor: pointer;">إلغاء</button>
+    <!-- Modal الإعدادات -->
+    <div id="settings-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
+        <div style="background: #1a1f26; width: 100%; max-width: 360px; border-radius: 12px; padding: 20px; border: 1px solid #2d3748; display: flex; flex-direction: column; gap: 15px;">
+            <h3 style="color: #fff; text-align: right;">⚙️ إعدادات الحساب</h3>
+            <input type="text" id="settings-name-input" placeholder="الاسم الجديد" style="background: #2d3748; border: 1px solid #4a5568; color: #fff; padding: 8px; border-radius: 6px; text-align: right;">
+            <input type="text" id="settings-avatar-url-input" placeholder="رابط الصورة المباشر" style="background: #2d3748; border: 1px solid #4a5568; color: #fff; padding: 8px; border-radius: 6px; text-align: left;" dir="ltr">
+            <div style="display: flex; gap: 10px;">
+                <button onclick="savePlayerSettings()" id="save-settings-btn" style="flex: 1; background: #38a169; color: #fff; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer;">حفظ</button>
+                <button onclick="closeSettingsModal()" style="background: #e53e3e; color: #fff; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer;">إلغاء</button>
             </div>
         </div>
     </div>
 
-    <!-- استدعاء ملفات الجافا سكريبت الخارجية -->
- <script src="js/main_game.js"></script>
- <script src="js/profile.js"></script>
- <script>
-        // دالة بسيطة للتنقل بين التبويبات للتأكد من عمل الأزرار السفلية
-        function switchView(viewId) {
-            document.querySelectorAll('.game-view').forEach(view => view.style.display = 'none');
-            document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
-            
-            const selectedView = document.getElementById('view-' + viewId);
-            if(selectedView) selectedView.style.display = 'flex';
-            
-            // جعل الزر المضغوط نشطاً
-            const activeBtn = Array.from(document.querySelectorAll('.nav-link')).find(btn => btn.getAttribute('onclick').includes(viewId));
-            if(activeBtn) activeBtn.classList.add('active');
+    <!-- كود الجافا سكريبت المصلح والمدمج بالكامل لمنع مشاكل التحميل الصامت -->
+    <script>
+        let localPlayerData = null;
+        let trainingTimeout = null;
+        const africanCountries = { "morocco": { name: "المغرب" } };
+
+        function initProfileSystem() {
+            const user = firebase.auth().currentUser;
+            if (!user) return;
+
+            const db = firebase.firestore();
+            db.collection('players').doc(user.uid).onSnapshot((doc) => {
+                if (!doc.exists) {
+                    db.collection('players').doc(user.uid).set({
+                        name: user.displayName || "قائد جديد",
+                        avatarUrl: user.photoURL || '',
+                        xp: 0, current_location: "morocco", nationality: "morocco",
+                        power: 0, education: 0, experience: 0, money: 5000, gold: 50, activeTraining: null
+                    }, { merge: true });
+                    return;
+                }
+
+                const data = doc.data();
+                localPlayerData = data;
+
+                document.getElementById('profile-avatar').src = data.avatarUrl || 'https://via.placeholder.com/90';
+                document.getElementById('profile-name-display').textContent = data.name || "قائد مجهول";
+                document.getElementById('user-name').textContent = data.name || "قائد مجهول";
+
+                // تحديث الذهب والمال بالقيمة الرمزية الصحيحة
+                document.getElementById('profile-gold-display').textContent = (data.gold ?? 0) + " 🪙";
+                document.getElementById('profile-money-display').textContent = (data.money ?? 0) + " 💵";
+
+                // تحديث المستوى والـ XP
+                const currentLevel = Math.floor(Math.sqrt((data.xp || 0) / 100)) + 1;
+                const xpForCurrentLevel = Math.pow(currentLevel - 1, 2) * 100;
+                const xpForNextLevel = Math.pow(currentLevel, 2) * 100;
+                const xpInCurrentLevel = (data.xp || 0) - xpForCurrentLevel;
+                const xpNeededForNext = xpForNextLevel - xpForCurrentLevel;
+                
+                document.getElementById('profile-level-number').textContent = `المستوى ${currentLevel}`;
+                document.getElementById('profile-xp-bar').style.width = `${(xpInCurrentLevel / xpNeededForNext) * 100}%`;
+                document.getElementById('profile-xp-text').textContent = `${Math.floor(xpInCurrentLevel)} / ${xpNeededForNext} XP`;
+
+                document.getElementById('stat-power-val').textContent = data.power || 0;
+                document.getElementById('stat-education-val').textContent = data.education || 0;
+
+                checkActiveTraining(data);
+            }, error => {
+                console.error("Firestore Error:", error);
+            });
+
+            setupStatDropdowns();
         }
+
+        function setupStatDropdowns() {
+            ['power', 'education'].forEach(stat => {
+                const header = document.getElementById(`stat-${stat}-header`);
+                const dropdown = document.getElementById(`stat-${stat}-dropdown`);
+                if (header && dropdown && !header.dataset.listener) {
+                    header.addEventListener('click', () => {
+                        dropdown.classList.toggle('open');
+                        if(dropdown.classList.contains('open') && localPlayerData) {
+                            const lvl = localPlayerData[stat] || 0;
+                            document.getElementById(`time-${stat}`).textContent = `الوقت المطلـوب: ${(lvl + 1) * 30} ثانية | التكلفة: ${(lvl + 1) * 1000} مال`;
+                        }
+                    });
+                    header.dataset.listener = "true";
+                }
+            });
+        }
+
+        function startStatUpgrade(statName, currencyType) {
+            if (!localPlayerData || localPlayerData.activeTraining) return alert("⚠️ هناك تطوير جارٍ بالفعل!");
+            const currentStatLevel = localPlayerData[statName] || 0;
+            const moneyCost = (currentStatLevel + 1) * 1000;
+            const goldCost = (currentStatLevel + 1) * 5;
+            let timeInSeconds = (currentStatLevel + 1) * 30;
+
+            const updates = {};
+            if (currencyType === 'money') {
+                if ((localPlayerData.money || 0) < moneyCost) return alert("🔴 لا تملك المال الكافي!");
+                updates['money'] = firebase.firestore.FieldValue.increment(-moneyCost);
+            } else {
+                if ((localPlayerData.gold || 0) < goldCost) return alert("🔴 لا تملك الذهب الكافي!");
+                updates['gold'] = firebase.firestore.FieldValue.increment(-goldCost);
+                timeInSeconds = Math.floor(timeInSeconds / 2);
+            }
+
+            updates['activeTraining'] = { stat: statName, finishAt: Date.now() + (timeInSeconds * 1000) };
+            firebase.firestore().collection('players').doc(firebase.auth().currentUser.uid).update(updates);
+        }
+
+        function checkActiveTraining(data) {
+            const timer = document.getElementById('training-global-timer');
+            if (!data.activeTraining) { timer.style.display = 'none'; return; }
+            
+            const timeLeft = data.activeTraining.finishAt - Date.now();
+            if (timeLeft <= 0) {
+                timer.style.display = 'none';
+                const uid = firebase.auth().currentUser.uid;
+                firebase.firestore().collection('players').doc(uid).update({
+                    [data.activeTraining.stat]: firebase.firestore.FieldValue.increment(1),
+                    xp: firebase.firestore.FieldValue.increment(25),
+                    activeTraining: null
+                });
+            } else {
+                timer.style.display = 'block';
+                timer.textContent = `⏳ متبقي للتطوير: ${Math.ceil(timeLeft / 1000)} ثانية`;
+                setTimeout(() => initProfileSystem(), 1000);
+            }
+        }
+
+        function openSettingsModal() {
+            if(!localPlayerData) return;
+            document.getElementById('settings-name-input').value = localPlayerData.name || "";
+            document.getElementById('settings-avatar-url-input').value = localPlayerData.avatarUrl || "";
+            document.getElementById('settings-modal').style.display = 'flex';
+        }
+        function closeSettingsModal() { document.getElementById('settings-modal').style.display = 'none'; }
+        
+        function savePlayerSettings() {
+            const name = document.getElementById('settings-name-input').value.trim();
+            const url = document.getElementById('settings-avatar-url-input').value.trim();
+            if(!name) return alert("الاسم فارغ!");
+            
+            firebase.firestore().collection('players').doc(firebase.auth().currentUser.uid).update({ name: name, avatarUrl: url })
+            .then(() => closeSettingsModal());
+        }
+
+        function switchView(viewId) {
+            document.querySelectorAll('.game-view').forEach(v => v.style.display = 'none');
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            document.getElementById('view-' + viewId).style.display = 'flex';
+            event.currentTarget.classList.add('active');
+        }
+
+        firebase.auth().onAuthStateChanged(user => { if (user) initProfileSystem(); });
     </script>
 </body>
 </html>
