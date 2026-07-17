@@ -1,9 +1,4 @@
-// 3. مراقبة حالة اللاعب التلقائية عند فتح الصفحة
-auth.onAuthStateChanged((user) => {
-    if (user) {
-        checkAndCreateUserAccount(user);
-    }
-});
+
 // 4. دالة فحص الحساب وإنشاء الحقول الجديدة والافتراضية تلقائياً
 function checkAndCreateUserAccount(user) {
     const userRef = db.collection('players').doc(user.uid);
@@ -17,14 +12,6 @@ function checkAndCreateUserAccount(user) {
                 email: user.email,
                 photo: user.photoURL || "",
                 createdAt: firebase.firestore.FieldValue.serverTimestamp(),       
-// الموارد الابتدائية للاعب الجديد
-                level: 1,
-                energy: 100,
-                money: 5000,
-                gold: 5,
-                oil: 20,
-                wheat: 50,         
-
 
 // ==========================================
 // 💬 نظام الشات الذكي (مؤمن ومحفوظ لمدة 24 ساعة)
