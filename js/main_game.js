@@ -1,40 +1,60 @@
 
 
 // ==========================================
-// 📥 جلب الاسم النقي المربوط بحساب الجيميل
+// 📥 جلب وتحديث اسم اللاعب النشط تلقائياً من جلسة المتصفح
 // ==========================================
 function fetchInitialGameData() {
     const userNameSpan = document.getElementById('user-name');
     if (!userNameSpan) return;
 
-    // 1. التحقق أولاً إذا كان هناك اسم محفوظ من جلسة تسجيل الدخول بالجيميل
-    let activeName = localStorage.getItem('firebase_gmail_name') || 
-                     localStorage.getItem('displayName') || 
-                     localStorage.getItem('username');
+    // دالة فحص ذكية ومستمرة للتأكد من الحساب النشط حالياً في المتصفح
+    const checkAuthSession = () => {
+        // 1. إذا كانت مكتبة الفيربيس متاحة في المتصفح
+        if (typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser) {
+            const user = firebase.auth().currentUser;
+            let gmailName = user.displayName || user.email.split('@')[0];
+            gmailName = gmailName.replace('قائد', '').replace('مجهول', '').trim();
+            userNameSpan.textContent = gmailName;
+            return;
+        }
 
-    // 2. إذا لم يجد اسماً في الذاكرة (بسبب فتح متصفح جديد مثلاً)
-    if (!activeName || activeName.includes('مجهول') || activeName.includes('قائد')) {
-        // نضع اسمك الأصلي كقيمة افتراضية نقية بدلاً من الأرقام وكلمة مجهول
-        activeName = "adil tabia"; 
-        localStorage.setItem('firebase_gmail_name', activeName);
-    }
+        // 2. الحل العبقري: البحث في جلسة الفيربيس المخزنة داخل IndexedDB/LocalStorage تلقائياً بواسطة المتصفح
+        let foundName = "";
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            // الفيربيس يخزن بيانات الحساب النشط تحت مفاتيح تحتوي على "firebase:authUser"
+            if (key && key.includes('firebase:authUser')) {
+                try {
+                    const authData = JSON.parse(localStorage.getItem(key));
+                    if (authData && (authData.displayName || authData.email)) {
+                        foundName = authData.displayName || authData.email.split('@')[0];
+                        break;
+                    }
+                } catch (e) {
+                    console.error("خطأ في قراءة جلسة الفيربيس", e);
+                }
+            }
+        }
 
-    // 3. تنظيف الاسم تماماً وعرضه نقياً في الهيدر
-    activeName = activeName.replace('القائد:', '').replace('القائد', '').trim();
-    userNameSpan.textContent = activeName;
+        // تنظيف الاسم وعرضه فوراً بناءً على الحساب المفتوح حالياً
+        if (foundName) {
+            foundName = foundName.replace('قائد', '').replace('مجهول', '').trim();
+            userNameSpan.textContent = foundName;
+        } else {
+            // إذا لم يجد أي حساب مفتوح (حالة التحميل الافتراضية)
+            userNameSpan.textContent = "adil tabia"; 
+        }
+    };
+
+    // تشغيل الفحص فوراً عند فتح الصفحة
+    checkAuthSession();
     
-    console.log(`✔️ تم تثبيت اسم الحساب بنجاح: ${activeName}`);
+    // إعادة الفحص كل ثانية للتأكد أنه إذا قام المستخدم بتغيير الحساب في نفس المتصفح، يتغير الاسم فوراً!
+    setInterval(checkAuthSession, 1000);
 }
 
-
-
-
-
-
-
-
 // ==========================================
-// 💬 نظام الشات الذكي (مؤمن ومحفوظ لمدة 24 ساعة)
+// 💬 نظام الشات التفاعلي المربوط بالاسم النشط (24 ساعة)
 // ==========================================
 function setupChatSystem() {
     const sendBtn = document.getElementById('chat-send-btn');
@@ -43,15 +63,16 @@ function setupChatSystem() {
 
     if (!sendBtn || !chatInput || !chatMessagesBox) return;
 
-    // تحميل الرسائل المحفوظة وعرض الصالحة منها (التي لم يمر عليها 24 ساعة)
+    // تحميل وعرض رسائل الـ 24 ساعة الماضية
     loadStoredMessages(chatMessagesBox);
 
     const handleSendMessage = () => {
         const textValue = chatInput.value.trim();
         if (textValue === '') return;
 
-        const currentUserName = document.getElementById('user-name')?.textContent || 'قائد';
-        const timestamp = Date.now(); // وقت الإرسال بالملي ثانية
+        // قراءة الاسم النشط حالياً على الشاشة (ليتغير بتغير الحساب)
+        const currentUserName = document.getElementById('user-name')?.textContent || 'adil tabia';
+        const timestamp = Date.now();
 
         const messageData = {
             sender: currentUserName,
@@ -59,10 +80,7 @@ function setupChatSystem() {
             time: timestamp
         };
 
-        // 1. حفظ الرسالة في الـ LocalStorage الخاص بالمتصفح
         saveMessageLocally(messageData);
-
-        // 2. عرض الرسالة فوراً في الشات
         renderSingleMessage(chatMessagesBox, messageData, true);
 
         chatInput.value = '';
@@ -85,31 +103,27 @@ function saveMessageLocally(msg) {
     localStorage.setItem('chat_messages_v1', JSON.stringify(storedMessages));
 }
 
-// تحميل وعرض الرسائل وتصفية القديم منها (أقدم من 24 ساعة)
+// تحميل الرسائل الصالحة
 function loadStoredMessages(container) {
     let storedMessages = JSON.parse(localStorage.getItem('chat_messages_v1')) || [];
     const currentTime = Date.now();
-    const twentyFourHours = 24 * 60 * 60 * 1000; // 24 ساعة بالملي ثانية
+    const twentyFourHours = 24 * 60 * 60 * 1000; 
 
-    // تصفية الرسائل التي عمرها أقل من 24 ساعة فقط
     const validMessages = storedMessages.filter(msg => (currentTime - msg.time) < twentyFourHours);
-    
-    // تحديث التخزين بالرسائل الصالحة فقط وحذف المنتهية
     localStorage.setItem('chat_messages_v1', JSON.stringify(validMessages));
 
-    // مسح حاوية الشات قبل العرض لتفادي التكرار (مع الإبقاء على رسالة الترحيب الافتراضية إن وجدت)
     container.innerHTML = '';
 
-    // عرض الرسائل الصالحة
     validMessages.forEach(msg => {
-        const isMe = msg.sender === (document.getElementById('user-name')?.textContent || 'قائد');
+        const currentPlayerName = document.getElementById('user-name')?.textContent || 'adil tabia';
+        const isMe = msg.sender === currentPlayerName;
         renderSingleMessage(container, msg, isMe);
     });
 
     container.scrollTop = container.scrollHeight;
 }
 
-// دالة بناء هيكل الرسالة وعرضها
+// بناء تصميم الرسالة
 function renderSingleMessage(container, msg, isMe) {
     const msgDate = new Date(msg.time);
     let hours = msgDate.getHours();
