@@ -114,7 +114,7 @@ function setupSliderSystem() {
 }
 
 // ==========================================
-// 💬 نظام الشات وإرسال الرسائل الفوري
+// 💬 نظام الشات التفاعلي بالأسماء الديناميكية
 // ==========================================
 function setupChatSystem() {
     const sendBtn = document.getElementById('chat-send-btn');
@@ -125,6 +125,9 @@ function setupChatSystem() {
         const handleSendMessage = () => {
             const textValue = chatInput.value.trim();
             if (textValue === '') return;
+
+            // جلب اسم اللاعب الحالي من الهيدر العلوي بشكل ديناميكي ومباشر
+            const currentUserName = document.getElementById('user-name')?.textContent || 'قائد';
 
             const now = new Date();
             let hours = now.getHours();
@@ -138,7 +141,7 @@ function setupChatSystem() {
             messageDiv.className = 'chat-message me';
             messageDiv.innerHTML = `
                 <div class="msg-header">
-                    <span>أنت (القائد)</span>
+                    <span>${currentUserName} (أنت)</span>
                     <span>${timeString}</span>
                 </div>
                 ${textValue}
@@ -147,19 +150,17 @@ function setupChatSystem() {
             chatMessagesBox.appendChild(messageDiv);
             chatInput.value = '';
             chatMessagesBox.scrollTop = chatMessagesBox.scrollHeight;
+            
+            // 💡 هنا يمكنك إضافة كود إرسال الرسالة لقاعدة بيانات فيربيس (Realtime Database / Firestore) لتظهر للحساب الآخر!
         };
 
         sendBtn.addEventListener('click', handleSendMessage);
-        chatInput.addEventListener('keydown', (e) => {
+        chatInput.addEventListener('keydown', function(e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
                 handleSendMessage();
             }
         });
-
-        console.log("✔️ تم تفعيل نظام محادثات الشات بنجاح.");
-    } else {
-        console.warn("⚠️ عناصر الشات غير متوفرة بالصفحة حالياً.");
     }
 }
 
@@ -227,17 +228,34 @@ function setupInteractiveElements() {
 }
 
 // ==========================================
-// 📥 محاكاة تحميل بيانات اللاعب بشكل آمن
+// 📥 جلب بيانات اللاعب الحقيقية من فيربيس (Firebase)
 // ==========================================
 function fetchInitialGameData() {
-    // محاكاة سريعة ومضمونة لإلغاء حالة الانتظار
-    setTimeout(() => {
+    // التأكد أولاً من أن مكتبة فيربيس محملة ومتاحة بالمتصفح
+    if (typeof firebase !== 'undefined' && firebase.auth) {
+        firebase.auth().onAuthStateChanged((user) => {
+            const userNameSpan = document.getElementById('user-name');
+            if (userNameSpan) {
+                if (user) {
+                    // إذا كان هناك لاعب مسجل دخول، اعرض اسمه الحقيقي من حسابه في فيربيس
+                    const displayName = user.displayName || user.email.split('@')[0];
+                    userNameSpan.textContent = displayName;
+                    console.log(`✔️ تم التعرف على القائد النشط: ${displayName}`);
+                } else {
+                    // إذا لم يكن هناك تسجيل دخول
+                    userNameSpan.textContent = 'زائر (غير مسجل)';
+                }
+            }
+        });
+    } else {
+        // في حال لم تكن مكتبة الفيربيس مهيأة بعد في هذا الملف، نقرأ من الـ LocalStorage كخيار بديل مؤقت
+        const cachedName = localStorage.getItem('player_name') || 'قائد مجهول';
         const userNameSpan = document.getElementById('user-name');
         if (userNameSpan) {
-            userNameSpan.textContent = 'adil tabia'; // حل فوري لمشكلة "جاري التحميل" المعلقة بالصورة
-            console.log("✔️ تم جلب بيانات واسم القائد بنجاح.");
+            userNameSpan.textContent = cachedName;
         }
-    }, 200);
+        console.warn("⚠️ لم يتم العثور على مكتبة Firebase Auth في هذا الملف، تم استخدام الاسم الاحتياطي.");
+    }
 }
 
 // ==========================================
