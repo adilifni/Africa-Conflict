@@ -10,6 +10,9 @@ const africanCountries = {
     senegal: { name: "السنغال", flag: "🇸🇳" }
 };
 
+// متغير عالمي لحفظ مؤقت الخمول لكي لا يتداخل عند إعادة تعيينه
+let inactivityTimer;
+
 // ==========================================
 // 📥 جلب اسم حساب الجيميل النشط وتحديث إحصائيات المتصلين والسكان من Firestore (بث مباشر)
 // ==========================================
@@ -52,7 +55,34 @@ function fetchInitialGameData() {
                         lastActive: firebase.firestore.FieldValue.serverTimestamp()
                     }).catch(err => console.error("Error setting online status:", err));
 
-                    // قطع الاتصال تلقائياً عند إغلاق اللاعب للمتصفح أو الصفحة
+                    // 3. تفعيل نظام مراقبة الخمول (Inactivity System) للاعب الحالي
+                    const resetInactivityTimer = () => {
+                        clearTimeout(inactivityTimer);
+                        
+                        // إذا عاد اللاعب للتحرك، نعيد حالته إلى متصل في قاعدة البيانات
+                        db.collection('players').doc(userUid).update({
+                            isOnline: true,
+                            lastActive: firebase.firestore.FieldValue.serverTimestamp()
+                        }).catch(err => {});
+
+                        // تعيين مهلة الخمول: 5 دقائق (300000 مللي ثانية) بدون أي حركة
+                        inactivityTimer = setTimeout(() => {
+                            console.log("تم تحويل حالة اللاعب إلى خامل بسبب عدم النشاط.");
+                            db.collection('players').doc(userUid).update({
+                                isOnline: false
+                            }).catch(err => {});
+                        }, 300000); 
+                    };
+
+                    // الاستماع لحركات اللاعب المتنوعة لإعادة ضبط عداد الخمول
+                    ['click', 'touchstart', 'mousemove', 'keypress', 'scroll'].forEach(eventType => {
+                        window.addEventListener(eventType, resetInactivityTimer);
+                    });
+
+                    // تشغيل المؤقت لأول مرة عند الدخول
+                    resetInactivityTimer();
+
+                    // قطع الاتصال تلقائياً عند إغلاق اللاعب للمتصفح أو الصفحة فجأة
                     window.addEventListener('beforeunload', () => {
                         db.collection('players').doc(userUid).update({
                             isOnline: false
@@ -62,10 +92,11 @@ function fetchInitialGameData() {
                 } else {
                     // إذا لم يسجل أي حساب دخوله بعد
                     userNameSpan.textContent = "زائر";
+                    clearTimeout(inactivityTimer);
                 }
             });
 
-            // 3. الاستماع الحي والتحديث الفوري لإحصائيات السكان والمتصلين من قاعدة البيانات
+            // 4. الاستماع الحي والتحديث الفوري لإحصائيات السكان والمتصلين من قاعدة البيانات
             db.collection('players').onSnapshot((snapshot) => {
                 const totalPlayers = snapshot.size; // إجمالي الحسابات المسجلة في اللعبة
                 let onlinePlayers = 0;
