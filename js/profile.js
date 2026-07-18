@@ -239,3 +239,10 @@ function changePlayerName(newName) {
         name: trimmedName
     }).then(() => alert("تم تحديث الاسم بنجاح"));
 }
+
+
+// تشغيل نظام الحساب تلقائياً عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', () => {
+    // ننتظر قليلاً حتى يتأكد وجود المستخدم
+    setTimeout(initProfileSystem, 1000);
+});
