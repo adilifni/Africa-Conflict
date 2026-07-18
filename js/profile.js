@@ -1,41 +1,22 @@
+// ==========================================
+// 👤 نظام إدارة حساب اللاعب، المستويات، والتطوير
+// ==========================================
+
+// المتغير العالمي لتخزين بيانات اللاعب الحالية محلياً لتسهيل الحسابات
 let localPlayerData = null;
-let trainingInterval = null; 
-let slideIndex = 0; // لتعقب السلايدر النشط بالرئيسية
+let trainingTimeout = null;
 
-const africanCountries = {
-    "morocco": { name: "المغرب" },
-    "egypt": { name: "مصر" },
-    "algeria": { name: "الجزائر" },
-    "tunisia": { name: "تونس" },
-    "libya": { name: "ليبيا" }
-};
-
-// 1. إدارة وتنقل نظام السلايدر (Slideshow) في الصفحة الرئيسية
-function showSlides(n) {
-    let slides = document.getElementsByClassName("slide");
-    if (!slides || slides.length === 0) return;
-    
-    if (n >= slides.length) { slideIndex = 0; }
-    if (n < 0) { slideIndex = slides.length - 1; }
-    
-    for (let i = 0; i < slides.length; i++) {
-        slides[i].classList.remove("active");
-    }
-    slides[slideIndex].classList.add("active");
-}
-
-function plusSlides(n) {
-    showSlides(slideIndex += n);
-}
-
-// 2. نظام تهيئة البيانات والمزامنة الحية من الـ Firestore
+// دالة تشغيل نظام الحساب (يتم استدعاؤها عند فتح واجهة الحساب)
 function initProfileSystem() {
     const user = firebase.auth().currentUser;
     if (!user) return;
 
     const db = firebase.firestore();
+
+    // الاستماع المباشر لبيانات اللاعب لتحديث الواجهة فوراً عند أي تغيير
     db.collection('players').doc(user.uid).onSnapshot((doc) => {
         if (!doc.exists) {
+            // إذا كان اللاعب جديداً تماماً، نقوم بإنشاء بياناته الافتراضية
             createNewPlayerProfile(user);
             return;
         }
@@ -43,81 +24,134 @@ function initProfileSystem() {
         const data = doc.data();
         localPlayerData = data;
 
-        // تحديث الاسم والوجوه التعبيرية
-        if (document.getElementById('profile-avatar')) document.getElementById('profile-avatar').src = data.avatarUrl || 'https://via.placeholder.com/150';
-        if (document.getElementById('profile-name-display')) document.getElementById('profile-name-display').textContent = data.name || "قائد مجهول";
-        if (document.getElementById('user-name')) document.getElementById('user-name').textContent = data.name || "قائد مجهول";
+        // 1. تحديث الصورة والاسم
+        const profileImg = document.getElementById('profile-avatar');
+        if (profileImg) profileImg.src = data.avatarUrl || user.photoURL || 'https://via.placeholder.com/150';
+        
+        const profileName = document.getElementById('profile-name-display');
+        if (profileName) profileName.textContent = data.name || user.displayName || "قائد مجهول";
 
-        // الثروة والموارد
-        if (document.getElementById('profile-money-display')) document.getElementById('profile-money-display').textContent = (data.money !== undefined ? data.money : 0) + " 💵";
-        if (document.getElementById('profile-gold-display')) document.getElementById('profile-gold-display').textContent = (data.gold !== undefined ? data.gold : 0) + " 🪙";
-
-        // الـ XP والمستوى
+        // 2. تحديث شريط المستوى (XP)
         updateXPProgressBar(data.xp || 0);
 
-        // الجغرافيا والجنسيات
-        const currentLoc = data.current_location || "morocco";
-        const nation = data.nationality || "morocco";
-        if (document.getElementById('profile-region')) document.getElementById('profile-region').textContent = africanCountries[currentLoc]?.name || "المغرب";
-        if (document.getElementById('profile-nationality')) document.getElementById('profile-nationality').textContent = africanCountries[nation]?.name || "المغرب";
+        // 3. تحديث بلوك المنطقة والجنسية
+        const regionText = document.getElementById('profile-region');
+        if (regionText) {
+            const currentLoc = data.current_location || "morocco";
+            regionText.textContent = africanCountries[currentLoc]?.name || "أفريقيا";
+        }
+        
+        const nationalityText = document.getElementById('profile-nationality');
+        if (nationalityText) {
+            const nation = data.nationality || "morocco";
+            nationalityText.textContent = africanCountries[nation]?.name || "لم تحدد";
+        }
 
-        // إحصائيات التطوير الداخلي
-        if (document.getElementById('stat-power-val')) document.getElementById('stat-power-val').textContent = data.power || 0;
-        if (document.getElementById('stat-education-val')) document.getElementById('stat-education-val').textContent = data.education || 0;
+        // 4. تحديث الأرقام الأساسية (القوة، التعليم، الخبرة)
+        document.getElementById('stat-power-val').textContent = data.power || 0;
+        document.getElementById('stat-education-val').textContent = data.education || 0;
+        document.getElementById('stat-experience-val').textContent = data.experience || 0;
 
+        // 5. مراقبة التطوير الحالي (إذا كان هناك تطوير قيد الانتظار)
         checkActiveTraining(data);
     });
 
+    // ربط أزرار القوائم المنزلقة والتطوير
     setupStatDropdowns();
-    showSlides(slideIndex); // تشغيل السلايد الأول بالرئيسية فوراً
 }
 
+// دالة إنشاء ملف لاعب جديد في Firestore لأول مرة
 function createNewPlayerProfile(user) {
-    firebase.firestore().collection('players').doc(user.uid).set({
+    const db = firebase.firestore();
+    db.collection('players').doc(user.uid).set({
         name: user.displayName || "قائد جديد",
-        avatarUrl: '', xp: 0, current_location: "morocco", nationality: "morocco",
-        power: 0, education: 0, money: 5000, gold: 50, activeTraining: null
+        avatarUrl: user.photoURL || '',
+        xp: 0,
+        current_location: "morocco",
+        nationality: "morocco",
+        power: 0,
+        education: 0,
+        experience: 0,
+        money: 5000,  // أموال افتراضية للبداية
+        gold: 50,     // ذهب افتراضي للبداية
+        activeTraining: null // لا يوجد تطوير حالي
     }, { merge: true });
 }
 
+// ==========================================
+// 📈 معادلة المستوى وشريط الـ XP التباطئي
+// ==========================================
 function updateXPProgressBar(totalXP) {
+    // معادلة المستوى التباطئية: كل مستوى يحتاج XP أكثر من الذي قبله
+    // المستوى = الجذر التربعي لـ (XP / 100) + 1
     const currentLevel = Math.floor(Math.sqrt(totalXP / 100)) + 1;
+    
+    // حساب الـ XP المطلوب للمستوى الحالي والمستوى التالي
     const xpForCurrentLevel = Math.pow(currentLevel - 1, 2) * 100;
     const xpForNextLevel = Math.pow(currentLevel, 2) * 100;
+    
     const xpInCurrentLevel = totalXP - xpForCurrentLevel;
     const xpNeededForNext = xpForNextLevel - xpForCurrentLevel;
+    
+    // حساب النسبة المئوية للامتلاء
     const progressPercent = (xpInCurrentLevel / xpNeededForNext) * 100;
 
-    if (document.getElementById('profile-level-number')) document.getElementById('profile-level-number').textContent = `المستوى ${currentLevel}`;
-    if (document.getElementById('profile-xp-bar')) document.getElementById('profile-xp-bar').style.width = `${progressPercent}%`;
-    if (document.getElementById('profile-xp-text')) document.getElementById('profile-xp-text').textContent = `${Math.floor(xpInCurrentLevel)} / ${xpNeededForNext} XP`;
+    // تحديث الواجهة
+    const levelDisplay = document.getElementById('profile-level-number');
+    const progressBar = document.getElementById('profile-xp-bar');
+    const progressText = document.getElementById('profile-xp-text');
+
+    if (levelDisplay) levelDisplay.textContent = `المستوى ${currentLevel}`;
+    if (progressBar) progressBar.style.width = `${progressPercent}%`;
+    if (progressText) progressText.textContent = `${Math.floor(xpInCurrentLevel)} / ${xpNeededForNext} XP`;
 }
 
+// ==========================================
+// 🔄 قوائم التطوير المنزلقة (Dropdowns) والأسعار
+// ==========================================
 function setupStatDropdowns() {
-    ['power', 'education'].forEach(stat => {
+    const stats = ['power', 'education', 'experience'];
+    
+    stats.forEach(stat => {
         const header = document.getElementById(`stat-${stat}-header`);
         const dropdown = document.getElementById(`stat-${stat}-dropdown`);
         
-        if (header && dropdown && !header.dataset.listenerAdded) {
+        if (header && dropdown) {
             header.addEventListener('click', () => {
+                // إغلاق باقي القوائم المفتوحة أولاً
+                stats.forEach(s => {
+                    if (s !== stat) document.getElementById(`stat-${s}-dropdown`)?.classList.remove('open');
+                });
+                // تبديل حالة القائمة الحالية
                 dropdown.classList.toggle('open');
+                
+                // تحديث الأسعار والوقت بناءً على المستوى الحالي للعنصر
                 if (dropdown.classList.contains('open') && localPlayerData) {
                     const currentStatLevel = localPlayerData[stat] || 0;
+                    
+                    // حساب التكلفة (تزداد تصاعدياً مع كل مستوى)
                     const moneyCost = (currentStatLevel + 1) * 1000;
-                    const timeInSeconds = (currentStatLevel + 1) * 30;
-                    const timeEl = document.getElementById(`time-${stat}`);
-                    if (timeEl) timeEl.textContent = `الوقت: ${timeInSeconds} ثانية | التكلفة: ${moneyCost} مال`;
+                    const goldCost = (currentStatLevel + 1) * 5;
+                    const timeInSeconds = (currentStatLevel + 1) * 30; // 30 ثانية لكل مستوى كمثال
+
+                    document.getElementById(`cost-${stat}-money`).textContent = `${moneyCost} مال`;
+                    document.getElementById(`cost-${stat}-gold`).textContent = `${goldCost} ذهب`;
+                    document.getElementById(`time-${stat}`).textContent = `الوقت: ${timeInSeconds} ثانية`;
                 }
             });
-            header.dataset.listenerAdded = "true";
         }
     });
 }
 
+// ==========================================
+// ⚙️ معالجة عمليات التطوير (بالمال أو الذهب)
+// ==========================================
 function startStatUpgrade(statName, currencyType) {
     if (!localPlayerData) return;
+
+    // شرط أساسي: التأكد من عدم وجود تطوير آخر قيد التنفيذ حالياً
     if (localPlayerData.activeTraining) {
-        alert("⚠️ هناك عملية تطوير جارية بالفعل!");
+        alert("⚠️ هناك عملية تطوير جارية بالفعل! انتظر حتى تنتهي.");
         return;
     }
 
@@ -131,77 +165,77 @@ function startStatUpgrade(statName, currencyType) {
     const updates = {};
 
     if (currencyType === 'money') {
-        if ((localPlayerData.money || 0) < moneyCost) return alert("🔴 لا تملك المال الكافي!");
+        if ((localPlayerData.money || 0) < moneyCost) { return alert("🔴 لا تملك المال الكافي!"); }
         updates['money'] = firebase.firestore.FieldValue.increment(-moneyCost);
     } else if (currencyType === 'gold') {
-        if ((localPlayerData.gold || 0) < goldCost) return alert("🔴 لا تملك الذهب الكافي!");
+        if ((localPlayerData.gold || 0) < goldCost) { return alert("🔴 لا تملك الذهب الكافي!"); }
         updates['gold'] = firebase.firestore.FieldValue.increment(-goldCost);
-        timeInSeconds = Math.floor(timeInSeconds / 2);
+        timeInSeconds = Math.floor(timeInSeconds / 2); // ميزة: التطوير بالذهب يقلل الوقت للنصف!
     }
 
-    updates['activeTraining'] = { stat: statName, finishAt: Date.now() + (timeInSeconds * 1000) };
+    // تسجيل بيانات التطوير النشط ووقت الانتهاء
+    const finishTime = Date.now() + (timeInSeconds * 1000);
+    updates['activeTraining'] = {
+        stat: statName,
+        finishAt: finishTime
+    };
 
-    db.collection('players').doc(user.uid).update(updates).then(() => {
-        document.getElementById(`stat-${statName}-dropdown`)?.classList.remove('open');
-    });
+    db.collection('players').doc(user.uid).update(updates)
+        .then(() => alert(`⏳ بدأ تطوير ${statName} الآن...`))
+        .catch(err => console.error(err));
 }
 
+// فحص وإدارة العداد التنازلي للتطوير
 function checkActiveTraining(data) {
     const timerDisplay = document.getElementById('training-global-timer');
     if (!timerDisplay) return;
-    if (trainingInterval) clearInterval(trainingInterval);
-    if (!data.activeTraining) { timerDisplay.style.display = 'none'; return; }
 
-    trainingInterval = setInterval(() => {
-        const now = Date.now();
-        const timeLeft = data.activeTraining.finishAt - now;
-        if (timeLeft <= 0) {
-            clearInterval(trainingInterval);
-            timerDisplay.style.display = 'none';
-            completeUpgrade(data.activeTraining.stat);
-        } else {
-            timerDisplay.style.display = 'block';
-            timerDisplay.textContent = `⏳ متبقي للتطوير: ${Math.ceil(timeLeft / 1000)} ثانية`;
-        }
-    }, 1000);
+    if (!data.activeTraining) {
+        timerDisplay.style.display = 'none';
+        if (trainingTimeout) clearTimeout(trainingTimeout);
+        return;
+    }
+
+    const now = Date.now();
+    const timeLeft = data.activeTraining.finishAt - now;
+
+    if (timeLeft <= 0) {
+        // انتهى الوقت! نقوم بترقية العنصر وتصفير مؤقت التدريب بقاعدة البيانات
+        timerDisplay.style.display = 'none';
+        completeUpgrade(data.activeTraining.stat);
+    } else {
+        // تحديث العداد التنازلي على الشاشة
+        timerDisplay.style.display = 'block';
+        timerDisplay.textContent = `جاري تطوير ${data.activeTraining.stat}: ${Math.ceil(timeLeft / 1000)} ثانية متبقية`;
+        
+        if (trainingTimeout) clearTimeout(trainingTimeout);
+        trainingTimeout = setTimeout(() => checkActiveTraining(data), 1000);
+    }
 }
 
+// إنهاء الترقية وإضافة النقطة للاعب
 function completeUpgrade(statName) {
     const user = firebase.auth().currentUser;
     if (!user) return;
-    firebase.firestore().collection('players').doc(user.uid).update({
+
+    const db = firebase.firestore();
+    db.collection('players').doc(user.uid).update({
         [statName]: firebase.firestore.FieldValue.increment(1),
-        xp: firebase.firestore.FieldValue.increment(25),
-        activeTraining: null
+        activeTraining: null // تفريغ الخانة للسماح بتطوير جديد
+    }).then(() => {
+        alert(`🎉 تهانينا! تم ترقية ${statName} بنجاح.`);
     });
 }
 
-// 🌐 التبديل المستقر بين الشاشات الأربعة مع الإبقاء على الفوتر ثابتاً
-function switchView(viewId) {
-    document.querySelectorAll('.game-view').forEach(v => v.style.display = 'none');
-    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-    
-    const targetView = document.getElementById('view-' + viewId);
-    if (targetView) targetView.style.display = 'flex';
-    
-    const targetNav = document.getElementById('nav-' + viewId);
-    if (targetNav) targetNav.classList.add('active');
+// تغيير اسم اللاعب من الإعدادات
+function changePlayerName(newName) {
+    const trimmedName = newName.trim();
+    if (trimmedName === "") return alert("الاسم لا يمكن أن يكون فارغاً");
+
+    const user = firebase.auth().currentUser;
+    if (!user) return;
+
+    firebase.firestore().collection('players').doc(user.uid).update({
+        name: trimmedName
+    }).then(() => alert("تم تحديث الاسم بنجاح"));
 }
-
-function openSettingsModal() {
-    if (!localPlayerData) return;
-    document.getElementById('settings-name-input').value = localPlayerData.name || "";
-    document.getElementById('settings-avatar-url-input').value = localPlayerData.avatarUrl || "";
-    document.getElementById('settings-modal').style.display = 'flex';
-}
-
-function closeSettingsModal() { document.getElementById('settings-modal').style.display = 'none'; }
-
-function savePlayerSettings() {
-    const name = document.getElementById('settings-name-input').value.trim();
-    const url = document.getElementById('settings-avatar-url-input').value.trim();
-    if (!name) return alert("الاسم فارغ!");
-    firebase.firestore().collection('players').doc(firebase.auth().currentUser.uid).update({ name: name, avatarUrl: url }).then(() => closeSettingsModal());
-}
-
-firebase.auth().onAuthStateChanged(user => { if (user) initProfileSystem(); });
