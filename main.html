@@ -26,15 +26,13 @@
     <title>Africa Conflict</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-    /* كلاس التحكم في فتح القوائم المنزلقة بشكل انسيابي */
-.stat-dropdown.open {
-    max-height: 120px !important; /* يسمح للقائمة بالتمدد لأسفل */
-    border-top: 1px dashed #2d3748;
-    margin-bottom: 5px;
-}
-    
-    
-    
+        /* كلاس التحكم في فتح القوائم المنزلقة بشكل انسيابي */
+        .stat-dropdown.open {
+            max-height: 120px !important; /* يسمح للقائمة بالتمدد لأسفل */
+            border-top: 1px dashed #2d3748;
+            margin-bottom: 5px;
+        }
+        
         * {
             box-sizing: border-box;
             margin: 0;
@@ -427,6 +425,7 @@
 
     <main>
 
+        <!-- الواجهة الرئيسية (Main View) -->
         <div id="view-main" class="game-view">
             
             <!-- البلوك الأول (إحصائيات القارة) -->
@@ -438,12 +437,10 @@
                             <div class="card-header-stats">
                                 <div class="stat-box" id="btn-continent-pop">
                                     <span class="stat-label">سكان</span>
-                                    <!-- قمنا بإضافة كلاس global-population هنا لتحديث التعداد محلياً وحياً -->
                                     <span class="stat-value global-population">..</span>
                                 </div>
                                 <div class="stat-box" id="btn-continent-online">
                                     <span class="stat-label">متصل</span>
-                                    <!-- قمنا بإضافة كلاس global-online هنا -->
                                     <span class="stat-value global-online" style="color: #39d353;">..</span>
                                 </div>
                                 <div class="stat-box" id="btn-continent-parties">
@@ -497,12 +494,10 @@
                 <div class="card-header-stats">
                     <div class="stat-box" id="btn-country-pop">
                         <span class="stat-label">سكان</span>
-                        <!-- قمنا بإضافة كلاس country-population هنا -->
                         <span class="stat-value country-population">..</span>
                     </div>
                     <div class="stat-box" id="btn-country-online">
                         <span class="stat-label">متصل</span>
-                        <!-- قمنا بإضافة كلاس country-online هنا -->
                         <span class="stat-value country-online" style="color: #39d353;">..</span>
                     </div>
                     <div class="stat-box" id="btn-country-parties">
@@ -514,7 +509,6 @@
                         <span class="stat-value">0</span>
                     </div>
                 </div>
-                <!-- عرض علم الدولة واسمها ديناميكياً لتتغير بتغير مكان اللاعب -->
                 <div class="flag-img-container" id="btn-country-flag">
                     <div class="country-title-block">
                         <span class="country-flag-emoji" id="country-flag">🇲🇦</span>
@@ -525,11 +519,10 @@
 
             <button class="parliament-btn" id="btn-parliament">برلمان الدولة</button>
 
+            <!-- الشات العام -->
             <div class="card chat-container">
                 <div class="chat-title">غرفة الدردشة العامة</div>
-                <div class="chat-messages" id="chat-messages-box">
-                    <!-- الرسائل يتم معالجتها ديناميكياً عبر الجافاسكريبت -->
-                </div>
+                <div class="chat-messages" id="chat-messages-box"></div>
                 <div class="chat-input-area">
                     <input type="text" class="chat-input" id="chat-input-field" placeholder="اكتب رسالة برقية هنا...">
                     <button class="chat-send-btn" id="chat-send-btn">
@@ -537,128 +530,103 @@
                     </button>
                 </div>
             </div>
-
         </div>
 
-        <!-- البوابات والواجهات الداخلية الأخرى للعبة -->
-       
-     <!-- حاوية صفحة الحساب الشخصي (Profile View) -->
-<div id="view-profile" class="game-view" style="display: none; flex-direction: column; gap: 15px; padding: 15px;">
-    
-    <!-- مؤقت التطوير العالمي (يظهر فقط عند وجود ترقية جارية) -->
-    <div id="training-global-timer" style="display: none; background-color: #f39c12; color: #fff; padding: 10px; text-align: center; border-radius: 8px; font-weight: bold; font-size: 14px;">
-        جاري التطوير...
-    </div>
-
-    <!-- بلوك معلومات اللاعب العلوي -->
-    <div class="profile-card" style="background: #1a1f26; border-radius: 12px; padding: 20px; text-align: center; border: 1px solid #2d3748;">
-        <!-- صورة اللاعب المجلوبة من جوجل -->
-        <img id="profile-avatar" src="" alt="Avatar" style="width: 90px; height: 90px; border-radius: 50%; border: 3px solid #3182ce; object-fit: cover; margin-bottom: 10px;">
-        
-        <!-- اسم اللاعب مع زر الإعدادات لتغييره -->
-        <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
-            <h2 id="profile-name-display" style="color: #fff; margin: 0; font-size: 20px;">جاري التحميل...</h2>
-            <button onclick="triggerNameChange()" style="background: none; border: none; color: #a0aec0; cursor: pointer; font-size: 16px;">⚙️</button>
-        </div>
-
-        <!-- شريط المستوى والـ XP التباطئي -->
-        <div style="margin-top: 15px; text-align: right;">
-            <div style="display: flex; justify-content: space-between; color: #cbd5e0; font-size: 14px; margin-bottom: 5px;">
-                <span id="profile-level-number" style="font-weight: bold; color: #3182ce;">المستوى 1</span>
-                <span id="profile-xp-text">0 / 100 XP</span>
+        <!-- حاوية صفحة الحساب الشخصي (Profile View) الفعالة -->
+        <div id="view-profile" class="game-view" style="display: none; flex-direction: column; gap: 15px;">
+            <!-- مؤقت التطوير العالمي -->
+            <div id="training-global-timer" style="display: none; background-color: #f39c12; color: #fff; padding: 10px; text-align: center; border-radius: 8px; font-weight: bold; font-size: 14px;">
+                جاري التطوير...
             </div>
-            <!-- خلفية الشريط -->
-            <div style="width: 100%; height: 12px; background: #2d3748; border-radius: 6px; overflow: hidden;">
-                <!-- الجزء الممتلئ ديناميكياً -->
-                <div id="profile-xp-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #3182ce, #63b3ed); transition: width 0.5s ease;"></div>
-            </div>
-        </div>
-    </div>
 
-    <!-- بلوك المنطقة والجنسية التفاعلي -->
-    <div class="info-block" style="background: #1a1f26; border-radius: 12px; padding: 15px; display: flex; flex-direction: column; gap: 12px; border: 1px solid #2d3748;">
-        <div style="display: flex; justify-content: space-between; color: #fff; border-bottom: 1px solid #2d3748; padding-bottom: 8px;">
-            <span style="color: #a0aec0;">📍 المنطقة المفتوحة حالياً</span>
-            <span id="profile-region" style="font-weight: bold;">المغرب</span>
-        </div>
-        <div style="display: flex; justify-content: space-between; color: #fff; padding-top: 4px;">
-            <span style="color: #a0aec0;">🇲🇦 الجنسية الأصلية</span>
-            <span id="profile-nationality" style="font-weight: bold;">المغرب</span>
-        </div>
-    </div>
+            <!-- بلوك معلومات اللاعب العلوي -->
+            <div class="profile-card" style="background: #1a1f26; border-radius: 12px; padding: 20px; text-align: center; border: 1px solid #2d3748;">
+                <img id="profile-avatar" src="" alt="Avatar" style="width: 90px; height: 90px; border-radius: 50%; border: 3px solid #3182ce; object-fit: cover; margin-bottom: 10px;">
+                <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+                    <h2 id="profile-name-display" style="color: #fff; margin: 0; font-size: 20px;">جاري التحميل...</h2>
+                    <button onclick="triggerNameChange()" style="background: none; border: none; color: #a0aec0; cursor: pointer; font-size: 16px;">⚙️</button>
+                </div>
 
-    <!-- بلوك العناصر الثلاثة والقوائم المنزلقة للتطوير -->
-    <div class="stats-upgrade-container" style="display: flex; flex-direction: column; gap: 10px;">
-        
-        <!-- 1. عنصر القوة -->
-        <div class="stat-box" style="background: #1a1f26; border-radius: 12px; border: 1px solid #2d3748; overflow: hidden;">
-            <div id="stat-power-header" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #fff;">
-                <span>💪 القوة القتالية</span>
-                <span style="font-weight: bold; color: #e53e3e; font-size: 18px;" id="stat-power-val">0</span>
+                <!-- شريط المستوى والـ XP -->
+                <div style="margin-top: 15px; text-align: right;">
+                    <div style="display: flex; justify-content: space-between; color: #cbd5e0; font-size: 14px; margin-bottom: 5px;">
+                        <span id="profile-level-number" style="font-weight: bold; color: #3182ce;">المستوى 1</span>
+                        <span id="profile-xp-text">0 / 100 XP</span>
+                    </div>
+                    <div style="width: 100%; height: 12px; background: #2d3748; border-radius: 6px; overflow: hidden;">
+                        <div id="profile-xp-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #3182ce, #63b3ed); transition: width 0.5s ease;"></div>
+                    </div>
+                </div>
             </div>
-            <!-- القائمة المنزلقة -->
-            <div id="stat-power-dropdown" class="stat-dropdown" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease; background: #151920; padding: 0 15px;">
-                <div style="padding: 15px 0; display: flex; flex-direction: column; gap: 10px;">
-                    <p id="time-power" style="color: #a0aec0; margin: 0; font-size: 13px;">الوقت المستغرق: --</p>
-                    <div style="display: flex; gap: 10px;">
-                        <button onclick="startStatUpgrade('power', 'money')" style="flex: 1; background: #2b6cb0; color: #fff; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-power-money">0 مال</button>
-                        <button onclick="startStatUpgrade('power', 'gold')" style="flex: 1; background: #d69e2e; color: #fff; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-power-gold">0 ذهب</button>
+
+            <!-- بلوك المنطقة والجنسية التفاعلي -->
+            <div class="info-block" style="background: #1a1f26; border-radius: 12px; padding: 15px; display: flex; flex-direction: column; gap: 12px; border: 1px solid #2d3748;">
+                <div style="display: flex; justify-content: space-between; color: #fff; border-bottom: 1px solid #2d3748; padding-bottom: 8px;">
+                    <span style="color: #a0aec0;">📍 المنطقة المفتوحة حالياً</span>
+                    <span id="profile-region" style="font-weight: bold;">المغرب</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; color: #fff; padding-top: 4px;">
+                    <span style="color: #a0aec0;">🇲🇦 الجنسية الأصلية</span>
+                    <span id="profile-nationality" style="font-weight: bold;">المغرب</span>
+                </div>
+            </div>
+
+            <!-- قوائم التطوير المنزلقة -->
+            <div class="stats-upgrade-container" style="display: flex; flex-direction: column; gap: 10px;">
+                <!-- 1. عنصر القوة -->
+                <div class="stat-box" style="background: #1a1f26; border-radius: 12px; border: 1px solid #2d3748; overflow: hidden;">
+                    <div id="stat-power-header" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #fff;">
+                        <span>💪 القوة القتالية</span>
+                        <span style="font-weight: bold; color: #e53e3e; font-size: 18px;" id="stat-power-val">0</span>
+                    </div>
+                    <div id="stat-power-dropdown" class="stat-dropdown" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease; background: #151920; padding: 0 15px;">
+                        <div style="padding: 15px 0; display: flex; flex-direction: column; gap: 10px;">
+                            <p id="time-power" style="color: #a0aec0; margin: 0; font-size: 13px;">الوقت المستغرق: --</p>
+                            <div style="display: flex; gap: 10px;">
+                                <button onclick="startStatUpgrade('power', 'money')" style="flex: 1; background: #2b6cb0; color: #fff; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-power-money">0 مال</button>
+                                <button onclick="startStatUpgrade('power', 'gold')" style="flex: 1; background: #d69e2e; color: #fff; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-power-gold">0 ذهب</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. عنصر التعليم -->
+                <div class="stat-box" style="background: #1a1f26; border-radius: 12px; border: 1px solid #2d3748; overflow: hidden;">
+                    <div id="stat-education-header" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #fff;">
+                        <span>📚 مستوي التعليم</span>
+                        <span style="font-weight: bold; color: #3182ce; font-size: 18px;" id="stat-education-val">0</span>
+                    </div>
+                    <div id="stat-education-dropdown" class="stat-dropdown" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease; background: #151920; padding: 0 15px;">
+                        <div style="padding: 15px 0; display: flex; flex-direction: column; gap: 10px;">
+                            <p id="time-education" style="color: #a0aec0; margin: 0; font-size: 13px;">الوقت المستغرق: --</p>
+                            <div style="display: flex; gap: 10px;">
+                                <button onclick="startStatUpgrade('education', 'money')" style="flex: 1; background: #2b6cb0; color: #fff; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-education-money">0 مال</button>
+                                <button onclick="startStatUpgrade('education', 'gold')" style="flex: 1; background: #d69e2e; color: #fff; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-education-gold">0 ذهب</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. عنصر الخبرة -->
+                <div class="stat-box" style="background: #1a1f26; border-radius: 12px; border: 1px solid #2d3748; overflow: hidden;">
+                    <div id="stat-experience-header" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #fff;">
+                        <span>⚡ نقاط الخبرة المكتسبة</span>
+                        <span style="font-weight: bold; color: #38a169; font-size: 18px;" id="stat-experience-val">0</span>
+                    </div>
+                    <div id="stat-experience-dropdown" class="stat-dropdown" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease; background: #151920; padding: 0 15px;">
+                        <div style="padding: 15px 0; display: flex; flex-direction: column; gap: 10px;">
+                            <p id="time-experience" style="color: #a0aec0; margin: 0; font-size: 13px;">الوقت المستغرق: --</p>
+                            <div style="display: flex; gap: 10px;">
+                                <button onclick="startStatUpgrade('experience', 'money')" style="flex: 1; background: #2b6cb0; color: #fff; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-experience-money">0 مال</button>
+                                <button onclick="startStatUpgrade('experience', 'gold')" style="flex: 1; background: #d69e2e; color: #fff; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-experience-gold">0 ذهب</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-
-        <!-- 2. عنصر التعليم -->
-        <div class="stat-box" style="background: #1a1f26; border-radius: 12px; border: 1px solid #2d3748; overflow: hidden;">
-            <div id="stat-education-header" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #fff;">
-                <span>📚 مستوي التعليم</span>
-                <span style="font-weight: bold; color: #3182ce; font-size: 18px;" id="stat-education-val">0</span>
-            </div>
-            <!-- القائمة المنزلقة -->
-            <div id="stat-education-dropdown" class="stat-dropdown" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease; background: #151920; padding: 0 15px;">
-                <div style="padding: 15px 0; display: flex; flex-direction: column; gap: 10px;">
-                    <p id="time-education" style="color: #a0aec0; margin: 0; font-size: 13px;">الوقت المستغرق: --</p>
-                    <div style="display: flex; gap: 10px;">
-                        <button onclick="startStatUpgrade('education', 'money')" style="flex: 1; background: #2b6cb0; color: #fff; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-education-money">0 مال</button>
-                        <button onclick="startStatUpgrade('education', 'gold')" style="flex: 1; background: #d69e2e; color: #fff; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-education-gold">0 ذهب</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 3. عنصر الخبرة -->
-        <div class="stat-box" style="background: #1a1f26; border-radius: 12px; border: 1px solid #2d3748; overflow: hidden;">
-            <div id="stat-experience-header" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #fff;">
-                <span>⚡ نقاط الخبرة المكتسبة</span>
-                <span style="font-weight: bold; color: #38a169; font-size: 18px;" id="stat-experience-val">0</span>
-            </div>
-            <!-- القائمة المنزلقة -->
-            <div id="stat-experience-dropdown" class="stat-dropdown" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease; background: #151920; padding: 0 15px;">
-                <div style="padding: 15px 0; display: flex; flex-direction: column; gap: 10px;">
-                    <p id="time-experience" style="color: #a0aec0; margin: 0; font-size: 13px;">الوقت المستغرق: --</p>
-                    <div style="display: flex; gap: 10px;">
-                        <button onclick="startStatUpgrade('experience', 'money')" style="flex: 1; background: #2b6cb0; color: #fff; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-experience-money">0 مال</button>
-                        <button onclick="startStatUpgrade('experience', 'gold')" style="flex: 1; background: #d69e2e; color: #fff; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-experience-gold">0 ذهب</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-    </div>
-</div>
-
-<!-- دالة مساعدة سريعة لفتح نافذة إدخال الاسم الجديد -->
-<script>
-function triggerNameChange() {
-    const newName = prompt("أدخل اسم الشهرة الجديد الخاص بك:");
-    if (newName && typeof changePlayerName === 'function') {
-        changePlayerName(newName);
-    }
-}
-</script>  
        
-       
-       
+        <!-- باقي بوابات العرض الداخلية للعبة المعتمدة على الـ Component Container -->
         <div id="view-work" class="game-view" style="display: none;">
             <div class="page-inner-card">
                 <div class="page-title-banner">💼 قطاع العمل والإنتاج المالي</div>
@@ -670,13 +638,6 @@ function triggerNameChange() {
             <div class="page-inner-card">
                 <div class="page-title-banner">⚔️ الحروب والعمليات العسكرية</div>
                 <p style="text-align: center; color: #8b949e; padding: 20px;">استعرض جبهات النزاع المشتعلة، شارك في تدريبات الدفاع الشعبي، أو قد جيوشك لتحرير وتأمين قارتنا.</p>
-            </div>
-        </div>
-
-        <div id="view-profile" class="game-view" style="display: none;">
-            <div class="page-inner-card">
-                <div class="page-title-banner">👤 الملف الشخصي للقائد</div>
-                <p style="text-align: center; color: #8b949e; padding: 20px;">هنا تظهر رتبتك القيادية، ممتلكاتك المالية، والعتاد العسكري ومقدار هيبتك السياسية.</p>
             </div>
         </div>
 
@@ -773,36 +734,45 @@ function triggerNameChange() {
 
     </main>
 
+    <!-- شريط التنقل السفلي الثابت والإحترافي -->
     <nav class="bottom-nav">
-        <button id="nav-btn-main" class="nav-link active">
+        <button class="nav-link active" onclick="switchView('main')">
             <i class="fa-solid fa-house"></i>
             <span>الرئيسية</span>
         </button>
-        <button id="nav-btn-work" class="nav-link">
+        <button class="nav-link" onclick="switchView('work')">
             <i class="fa-solid fa-briefcase"></i>
             <span>العمل</span>
         </button>
-        <button id="nav-btn-wars" class="nav-link">
+        <button class="nav-link" onclick="switchView('wars')">
             <i class="fa-solid fa-shield-halved"></i>
             <span>الحروب</span>
         </button>
-        <button id="nav-btn-profile"
-        <i class="nav-link"></i>
-          
-<a href="#" id="nav-btn-profile" class="nav-link">
-    <i class="icon-user"></i>
-    <span>الحساب</span>
-</a>
-            
-            
-            
+        <button class="nav-link" onclick="switchView('profile')">
+            <i class="fa-solid fa-user"></i>
             <span>الحساب</span>
         </button>
     </nav>
 
-    <!-- استدعاء ملف الـ JS في نهاية الصفحة لضمان تحميل الواجهة أولاً -->
-    <script src="js/main_game.js"></script>
- <script src="js/profile.js"></script>
+    <!-- دالة مساعدة سريعة لفتح نافذة إدخال الاسم الجديد -->
+    <script>
+    function triggerNameChange() {
+        const newName = prompt("أدخل اسم الشهرة الجديد الخاص بك:");
+        if (newName && typeof changePlayerName === 'function') {
+            changePlayerName(newName);
+        }
+    }
+    </script>
+ <script src="js/main_game.js"></script>
 
 </body>
 </html>
+   
+   
+   
+   
+   
+   
+   
+
+

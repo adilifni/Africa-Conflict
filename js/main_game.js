@@ -1,4 +1,6 @@
-// قاعدة بيانات الدول الإفريقية المدعومة حالياً في اللعبة لتبديل البلوك تلقائياً
+// ==========================================
+// 🌍 البيانات العالمية والمغيرات الأساسية للعبة
+// ==========================================
 const africanCountries = {
     morocco: { name: "المغرب", flag: "🇲🇦" },
     algeria: { name: "الجزائر", flag: "🇩🇿" },
@@ -10,156 +12,327 @@ const africanCountries = {
     senegal: { name: "السنغال", flag: "🇸🇳" }
 };
 
+let localPlayerData = null;
+let trainingInterval = null; 
+let isUpgradingNow = false;  
+
 // ==========================================
-// 📥 جلب اسم حساب الجيميل النشط وتحديث إحصائيات المتصلين والسكان من Firestore (بث مباشر)
+// 📥 نظام استماع البيانات والـ Firestore المباشر
 // ==========================================
-function fetchInitialGameData() {
+function initGameSystem() {
     const userNameSpan = document.getElementById('user-name');
     if (!userNameSpan) return;
 
-    // دالة فحص متكررة تنتظر حتى يتم تحميل مكتبة الفيربيس بالكامل في المتصفح
     function waitForFirebase() {
         if (typeof firebase !== 'undefined' && firebase.auth && firebase.firestore) {
-            
             const db = firebase.firestore();
 
-            // بمجرد أن يصبح الفيربيس جاهزاً، نستمع لحالة الحساب النشط حالياً
             firebase.auth().onAuthStateChanged((user) => {
                 if (user) {
                     const userUid = user.uid;
 
-                    // 1. الاستماع المباشر (Real-time) لبيانات اللاعب وموقعه الحالي من Firestore
+                    // 1. الاستماع المباشر لبيانات حساب اللاعب وتحديث الواجهات بناءً عليها
                     db.collection('players').doc(userUid).onSnapshot((doc) => {
-                        if (doc.exists) {
-                            const data = doc.data();
-                            
-                            // عرض وتحديث اسم اللاعب النقي
-                            let playerName = data.name || user.displayName || user.email.split('@')[0];
-                            playerName = playerName.replace('قائد', '').replace('مجهول', '').trim();
-                            userNameSpan.textContent = playerName;
-
-                            // تحديث بلوك الدولة بناءً على موقع اللاعب الحالي (current_location)
-                            const playerLoc = data.current_location || "morocco";
-                            updateCountryBlockOnScreen(playerLoc);
+                        if (!doc.exists) {
+                            createNewPlayerProfile(user);
+                            return;
                         }
-                    }, (error) => {
-                        console.error("خطأ في الاستماع لبيانات اللاعب:", error);
+
+                        const data = doc.data();
+                        localPlayerData = data;
+
+                        // تحديث الاسم والصورة العلوية وفي الحساب الشخصي
+                        let playerName = data.name || user.displayName || user.email.split('@')[0];
+                        playerName = playerName.replace(/قائد/g, '').replace(/مجهول/g, '').trim();
+                        
+                        userNameSpan.textContent = playerName || "قائد";
+                        const profileNameDisp = document.getElementById('profile-name-display');
+                        if (profileNameDisp) profileNameDisp.textContent = playerName || "قائد مجهول";
+
+                        const profileImg = document.getElementById('profile-avatar');
+                        if (profileImg) profileImg.src = data.avatarUrl || user.photoURL || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + userUid;
+
+                        // تحديث شريط المستوى والـ XP بالمعادلة الأصلية
+                        updateXPProgressBar(data.xp || 0);
+
+                        // تحديث بيانات الموقع والجنسية الحالية
+                        const currentLoc = data.current_location || "morocco";
+                        updateCountryBlockOnScreen(currentLoc);
+
+                        const nationalityText = document.getElementById('profile-nationality');
+                        if (nationalityText) {
+                            const nation = data.nationality || "morocco";
+                            nationalityText.textContent = africanCountries[nation]?.name || "لم تحدد";
+                        }
+
+                        // تحديث أرقام التطوير الثلاثة الأساسية
+                        if (document.getElementById('stat-power-val')) document.getElementById('stat-power-val').textContent = data.power || 0;
+                        if (document.getElementById('stat-education-val')) document.getElementById('stat-education-val').textContent = data.education || 0;
+                        if (document.getElementById('stat-experience-val')) document.getElementById('stat-experience-val').textContent = data.experience || 0;
+
+                        // فحص ومراقبة عداد التطوير التنازلي الحالي النشط
+                        checkActiveTraining(data);
                     });
 
-                    // 2. تحديث حالة الاتصال بالمتصفح الحالي إلى متصل (Online) في Firestore
+                    // 2. تحديث حالة اتصال اللاعب الحالي بالشبكة
                     db.collection('players').doc(userUid).update({
                         isOnline: true,
                         lastActive: firebase.firestore.FieldValue.serverTimestamp()
                     }).catch(err => console.error("Error setting online status:", err));
 
-                    // قطع الاتصال تلقائياً عند إغلاق اللاعب للمتصفح أو الصفحة
                     window.addEventListener('beforeunload', () => {
-                        db.collection('players').doc(userUid).update({
-                            isOnline: false
-                        });
+                        db.collection('players').doc(userUid).update({ isOnline: false });
                     });
 
                 } else {
-                    // إذا لم يسجل أي حساب دخوله بعد
                     userNameSpan.textContent = "زائر";
                 }
             });
 
-            // 3. الاستماع الحي والتحديث الفوري لإحصائيات السكان والمتصلين من قاعدة البيانات
+            // 3. الاستماع الحي لإحصائيات اللاعبين المتصلين والسكان الكلية للقارة
             db.collection('players').onSnapshot((snapshot) => {
-                const totalPlayers = snapshot.size; // إجمالي الحسابات المسجلة في اللعبة
+                const totalPlayers = snapshot.size; 
                 let onlinePlayers = 0;
 
                 snapshot.forEach((doc) => {
-                    if (doc.data().isOnline === true) {
-                        onlinePlayers++;
-                    }
+                    if (doc.data().isOnline === true) onlinePlayers++;
                 });
 
-                // تأمين ظهور متصل واحد على الأقل (المستخدم النشط حالياً)
-                if (onlinePlayers === 0 && firebase.auth().currentUser) {
-                    onlinePlayers = 1;
-                }
+                if (onlinePlayers === 0 && firebase.auth().currentUser) onlinePlayers = 1;
 
-                // تحديث الأرقام على الشاشة فوراً
                 updateStatsOnScreen(totalPlayers, onlinePlayers);
             }, (error) => {
                 console.error("خطأ أثناء جلب إحصائيات اللاعبين:", error);
             });
 
+            // ربط القوائم المنزلقة الخاصة بالتطوير لمرة واحدة عند التهيئة
+            setupStatDropdowns();
+
         } else {
-            // إذا لم تجهز المكتبة بعد، انتظر 100 مللي ثانية وحاول مجدداً
             setTimeout(waitForFirebase, 100);
         }
     }
-
-    // بدء عملية الانتظار والربط
     waitForFirebase();
 }
 
-// دالة مساعدة لتحديث الأرقام مباشرة في واجهة المستخدم عبر الكلاسات المحددة
-function updateStatsOnScreen(totalPlayers, onlinePlayers) {
-    // 1. تحديث إحصائيات القارة (البلوك العلوي)
-    const globalPopElements = document.querySelectorAll('.global-population');
-    const globalOnlineElements = document.querySelectorAll('.global-online');
-
-    globalPopElements.forEach(el => el.textContent = totalPlayers);
-    globalOnlineElements.forEach(el => el.textContent = onlinePlayers);
-
-    // 2. تحديث إحصائيات الدولة الحالية (البلوك السفلي)
-    const countryPopElements = document.querySelectorAll('.country-population');
-    const countryOnlineElements = document.querySelectorAll('.country-online');
-
-    countryPopElements.forEach(el => el.textContent = totalPlayers);
-    countryOnlineElements.forEach(el => el.textContent = onlinePlayers);
+// دالة إنشاء ملف لاعب جديد لأول مرة بدقة
+function createNewPlayerProfile(user) {
+    const db = firebase.firestore();
+    db.collection('players').doc(user.uid).set({
+        name: user.displayName || "قائد جديد",
+        avatarUrl: user.photoURL || '',
+        xp: 0,
+        current_location: "morocco",
+        nationality: "morocco",
+        power: 0,
+        education: 0,
+        experience: 0,
+        money: 5000, 
+        gold: 50,      
+        activeTraining: null 
+    }, { merge: true });
 }
 
-// دالة لتحديث واجهة بلوك الدولة (العلم والاسم) ديناميكياً
+// ==========================================
+// 📈 معادلة المستوى وشريط الـ XP التباطئي الأصلي
+// ==========================================
+function updateXPProgressBar(totalXP) {
+    const currentLevel = Math.floor(Math.sqrt(totalXP / 100)) + 1;
+    const xpForCurrentLevel = Math.pow(currentLevel - 1, 2) * 100;
+    const xpForNextLevel = Math.pow(currentLevel, 2) * 100;
+    
+    const xpInCurrentLevel = totalXP - xpForCurrentLevel;
+    const xpNeededForNext = xpForNextLevel - xpForCurrentLevel;
+    
+    const progressPercent = (xpInCurrentLevel / xpNeededForNext) * 100;
+
+    const levelDisplay = document.getElementById('profile-level-number');
+    const progressBar = document.getElementById('profile-xp-bar');
+    const progressText = document.getElementById('profile-xp-text');
+
+    if (levelDisplay) levelDisplay.textContent = `المستوى ${currentLevel}`;
+    if (progressBar) progressBar.style.width = `${progressPercent}%`;
+    if (progressText) progressText.textContent = `${Math.floor(xpInCurrentLevel)} / ${xpNeededForNext} XP`;
+}
+
+// ==========================================
+// 🔄 قوائم التطوير المنزلقة والأسعار الدقيقة
+// ==========================================
+function setupStatDropdowns() {
+    const stats = ['power', 'education', 'experience'];
+    
+    stats.forEach(stat => {
+        const header = document.getElementById(`stat-${stat}-header`);
+        const dropdown = document.getElementById(`stat-${stat}-dropdown`);
+        
+        if (header && dropdown) {
+            header.addEventListener('click', () => {
+                stats.forEach(s => {
+                    if (s !== stat) document.getElementById(`stat-${s}-dropdown`)?.classList.remove('open');
+                });
+                dropdown.classList.toggle('open');
+                
+                if (dropdown.classList.contains('open') && localPlayerData) {
+                    const currentStatLevel = localPlayerData[stat] || 0;
+                    
+                    const moneyCost = (currentStatLevel + 1) * 1000;
+                    const goldCost = (currentStatLevel + 1) * 5;
+                    const timeInSeconds = (currentStatLevel + 1) * 30; 
+
+                    if(document.getElementById(`cost-${stat}-money`)) document.getElementById(`cost-${stat}-money`).textContent = `${moneyCost} مال`;
+                    if(document.getElementById(`cost-${stat}-gold`)) document.getElementById(`cost-${stat}-gold`).textContent = `${goldCost} ذهب`;
+                    if(document.getElementById(`time-${stat}`)) document.getElementById(`time-${stat}`).textContent = `الوقت: ${timeInSeconds} ثانية`;
+                }
+            });
+        }
+    });
+}
+
+// ==========================================
+// ⚙️ معالجة عمليات التطوير والأوقات وإنهائها
+// ==========================================
+function startStatUpgrade(statName, currencyType) {
+    if (!localPlayerData) return;
+
+    if (localPlayerData.activeTraining) {
+        alert("⚠️ هناك عملية تطوير جارية بالفعل! انتظر حتى تنتهي.");
+        return;
+    }
+
+    const currentStatLevel = localPlayerData[statName] || 0;
+    const moneyCost = (currentStatLevel + 1) * 1000;
+    const goldCost = (currentStatLevel + 1) * 5;
+    let timeInSeconds = (currentStatLevel + 1) * 30;
+
+    const user = firebase.auth().currentUser;
+    const db = firebase.firestore();
+    const updates = {};
+
+    if (currencyType === 'money') {
+        if ((localPlayerData.money || 0) < moneyCost) { return alert("🔴 لا تملك المال الكافي!"); }
+        updates['money'] = firebase.firestore.FieldValue.increment(-moneyCost);
+    } else if (currencyType === 'gold') {
+        if ((localPlayerData.gold || 0) < goldCost) { return alert("🔴 لا تملك الذهب الكافي!"); }
+        updates['gold'] = firebase.firestore.FieldValue.increment(-goldCost);
+        timeInSeconds = Math.floor(timeInSeconds / 2); 
+    }
+
+    const finishTime = Date.now() + (timeInSeconds * 1000);
+    updates['activeTraining'] = {
+        stat: statName,
+        finishAt: finishTime
+    };
+
+    if (trainingInterval) clearInterval(trainingInterval);
+    isUpgradingNow = false; 
+
+    db.collection('players').doc(user.uid).update(updates)
+        .then(() => alert(`⏳ بدأ تطوير ${statName} الآن...`))
+        .catch(err => console.error(err));
+}
+
+function checkActiveTraining(data) {
+    const timerDisplay = document.getElementById('training-global-timer');
+    if (!timerDisplay) return;
+
+    if (!data.activeTraining) {
+        timerDisplay.style.display = 'none';
+        if (trainingInterval) clearInterval(trainingInterval);
+        isUpgradingNow = false;
+        return;
+    }
+
+    if (trainingInterval) clearInterval(trainingInterval);
+
+    trainingInterval = setInterval(() => {
+        const now = Date.now();
+        const timeLeft = data.activeTraining.finishAt - now;
+
+        if (timeLeft <= 0) {
+            clearInterval(trainingInterval);
+            timerDisplay.style.display = 'none';
+            
+            if (!isUpgradingNow) {
+                isUpgradingNow = true; 
+                completeUpgrade(data.activeTraining.stat);
+            }
+        } else {
+            timerDisplay.style.display = 'block';
+            timerDisplay.textContent = `جاري تطوير ${data.activeTraining.stat}: ${Math.ceil(timeLeft / 1000)} ثانية متبقية`;
+        }
+    }, 1000);
+}
+
+function completeUpgrade(statName) {
+    const user = firebase.auth().currentUser;
+    if (!user) return;
+
+    const db = firebase.firestore();
+    db.collection('players').doc(user.uid).update({
+        [statName]: firebase.firestore.FieldValue.increment(1),
+        activeTraining: null 
+    }).then(() => {
+        isUpgradingNow = false; 
+        alert(`🎉 تهانينا! تم ترقية ${statName} بنجاح.`);
+    }).catch(err => {
+        isUpgradingNow = false;
+        console.error("خطأ أثناء إنهاء الترقية:", err);
+    });
+}
+
+// ==========================================
+// ✈️ دوال تحديث الشاشات وإدارة السفر والتنقل
+// ==========================================
+function updateStatsOnScreen(totalPlayers, onlinePlayers, countryPop = totalPlayers, countryOnline = onlinePlayers) {
+    document.querySelectorAll('.global-population').forEach(el => el.textContent = totalPlayers);
+    document.querySelectorAll('.global-online').forEach(el => el.textContent = onlinePlayers);
+    document.querySelectorAll('.country-population').forEach(el => el.textContent = countryPop);
+    document.querySelectorAll('.country-online').forEach(el => el.textContent = countryOnline);
+}
+
 function updateCountryBlockOnScreen(countryKey) {
     const flagElement = document.getElementById('country-flag');
     const nameElement = document.getElementById('country-name-text');
+    const regionText = document.getElementById('profile-region');
     
     if (africanCountries[countryKey]) {
         const countryData = africanCountries[countryKey];
         if (flagElement) flagElement.textContent = countryData.flag;
         if (nameElement) nameElement.textContent = countryData.name;
+        if (regionText) regionText.textContent = countryData.name;
     } else {
         if (flagElement) flagElement.textContent = "🌍";
         if (nameElement) nameElement.textContent = "أفريقيا";
+        if (regionText) regionText.textContent = "أفريقيا";
     }
 }
 
-// ==========================================
-// ✈️ دالة السفر والتنقل بين الدول الإفريقية
-// ==========================================
 function travelToCountry(targetCountryKey) {
-    if (!africanCountries[targetCountryKey]) {
-        console.error("هذه الدولة غير مدعومة حالياً!");
-        return;
-    }
-
+    if (!africanCountries[targetCountryKey]) return;
     const user = firebase.auth().currentUser;
-    if (!user) {
-        alert("يجب عليك تسجيل الدخول أولاً لتتمكن من السفر!");
-        return;
-    }
+    if (!user) return alert("يجب عليك تسجيل الدخول أولاً لتتمكن من السفر!");
 
-    const db = firebase.firestore();
-    
-    // تحديث مكان اللاعب الحالي في قاعدة البيانات
-    db.collection('players').doc(user.uid).update({
+    firebase.firestore().collection('players').doc(user.uid).update({
         current_location: targetCountryKey
     })
-    .then(() => {
-        alert(`✈️ تم السفر بنجاح إلى ${africanCountries[targetCountryKey].name}!`);
-    })
-    .catch((error) => {
-        console.error("خطأ أثناء محاولة السفر:", error);
-    });
+    .then(() => alert(`✈️ تم السفر بنجاح إلى ${africanCountries[targetCountryKey].name}!`))
+    .catch(err => console.error(err));
+}
+
+function changePlayerName(newName) {
+    const trimmedName = newName.trim();
+    if (trimmedName === "") return alert("الاسم لا يمكن أن يكون فارغاً");
+
+    const user = firebase.auth().currentUser;
+    if (!user) return;
+
+    firebase.firestore().collection('players').doc(user.uid).update({
+        name: trimmedName
+    }).then(() => alert("تم تحديث الاسم بنجاح"));
 }
 
 // ==========================================
-// 💬 نظام الشات التفاعلي المربوط بالاسم النشط (24 ساعة)
+// 💬 نظام الشات النشط (تصفية تلقائية 24 ساعة)
 // ==========================================
 function setupChatSystem() {
     const sendBtn = document.getElementById('chat-send-btn');
@@ -168,22 +341,14 @@ function setupChatSystem() {
 
     if (!sendBtn || !chatInput || !chatMessagesBox) return;
 
-    // تحميل وعرض رسائل الـ 24 ساعة الماضية
     loadStoredMessages(chatMessagesBox);
 
     const handleSendMessage = () => {
         const textValue = chatInput.value.trim();
         if (textValue === '') return;
 
-        // قراءة الاسم النشط حالياً على الشاشة (ليتغير بتغير الحساب)
-        const currentUserName = document.getElementById('user-name')?.textContent || 'adil tabia';
-        const timestamp = Date.now();
-
-        const messageData = {
-            sender: currentUserName,
-            text: textValue,
-            time: timestamp
-        };
+        const currentUserName = document.getElementById('user-name')?.textContent || 'لاعب مجهول';
+        const messageData = { sender: currentUserName, text: textValue, time: Date.now() };
 
         saveMessageLocally(messageData);
         renderSingleMessage(chatMessagesBox, messageData, true);
@@ -193,22 +358,17 @@ function setupChatSystem() {
     };
 
     sendBtn.addEventListener('click', handleSendMessage);
-    chatInput.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            handleSendMessage();
-        }
+    chatInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); handleSendMessage(); }
     });
 }
 
-// حفظ الرسالة محلياً
 function saveMessageLocally(msg) {
     let storedMessages = JSON.parse(localStorage.getItem('chat_messages_v1')) || [];
     storedMessages.push(msg);
     localStorage.setItem('chat_messages_v1', JSON.stringify(storedMessages));
 }
 
-// تحميل الرسائل الصالحة
 function loadStoredMessages(container) {
     let storedMessages = JSON.parse(localStorage.getItem('chat_messages_v1')) || [];
     const currentTime = Date.now();
@@ -218,33 +378,26 @@ function loadStoredMessages(container) {
     localStorage.setItem('chat_messages_v1', JSON.stringify(validMessages));
 
     container.innerHTML = '';
-
     validMessages.forEach(msg => {
-        const currentPlayerName = document.getElementById('user-name')?.textContent || 'adil tabia';
-        const isMe = msg.sender === currentPlayerName;
-        renderSingleMessage(container, msg, isMe);
+        const currentPlayerName = document.getElementById('user-name')?.textContent || 'لاعب مجهول';
+        renderSingleMessage(container, msg, msg.sender === currentPlayerName);
     });
-
     container.scrollTop = container.scrollHeight;
 }
 
-// بناء تصميم الرسالة
 function renderSingleMessage(container, msg, isMe) {
     const msgDate = new Date(msg.time);
     let hours = msgDate.getHours();
     const minutes = String(msgDate.getMinutes()).padStart(2, '0');
     const ampm = hours >= 12 ? 'م' : 'ص';
-    hours = hours % 12;
-    hours = hours ? hours : 12;
-    const timeString = `${hours}:${minutes} ${ampm}`;
+    hours = hours % 12 || 12;
 
     const messageDiv = document.createElement('div');
     messageDiv.className = isMe ? 'chat-message me' : 'chat-message others';
-    
     messageDiv.innerHTML = `
         <div class="msg-header">
             <span>${msg.sender} ${isMe ? '(أنت)' : ''}</span>
-            <span>${timeString}</span>
+            <span>${hours}:${minutes} ${ampm}</span>
         </div>
         ${msg.text}
     `;
@@ -252,7 +405,7 @@ function renderSingleMessage(container, msg, isMe) {
 }
 
 // ==========================================
-// 🔁 نظام السلايدشو المطور (إخفاء وإظهار آمن)
+// 🔁 نظام السلايدشو التابع للواجهة
 // ==========================================
 function setupSliderSystem() {
     const slides = document.querySelectorAll('#slides-container .slide');
@@ -265,38 +418,27 @@ function setupSliderSystem() {
             slidesContainer.style.width = '100%';
             slidesContainer.style.transform = 'none'; 
         }
-
         const showSlide = (activeIndex) => {
             slides.forEach((slide, index) => {
-                if (index === activeIndex) {
-                    slide.style.display = 'block';
-                    slide.style.width = '100%';
-                } else {
-                    slide.style.display = 'none';
-                }
+                slide.style.display = (index === activeIndex) ? 'block' : 'none';
+                if (index === activeIndex) slide.style.width = '100%';
             });
         };
-
         showSlide(0);
 
-        dot1.addEventListener('click', function(e) {
-            e.stopPropagation();
-            showSlide(0);
-            dot1.classList.add('active');
-            dot2.classList.remove('active');
+        dot1.addEventListener('click', (e) => {
+            e.stopPropagation(); showSlide(0);
+            dot1.classList.add('active'); dot2.classList.remove('active');
         });
-
-        dot2.addEventListener('click', function(e) {
-            e.stopPropagation();
-            showSlide(1);
-            dot2.classList.add('active');
-            dot1.classList.remove('active');
+        dot2.addEventListener('click', (e) => {
+            e.stopPropagation(); showSlide(1);
+            dot2.classList.add('active'); dot1.classList.remove('active');
         });
     }
 }
 
 // ==========================================
-// 🎯 ربط تفاعل الخلايا والتنقل
+// 🎯 ربط التنقل الفرعي والـ Routing لشريط الأزرار
 // ==========================================
 function setupInteractiveElements() {
     const interactiveStats = [
@@ -308,7 +450,6 @@ function setupInteractiveElements() {
         { id: 'btn-continent-countries', page: 'continent-countries' },
         { id: 'btn-continent-alliances', page: 'continent-alliances' },
         { id: 'btn-continent-independent', page: 'continent-independent' },
-        
         { id: 'btn-country-flag', page: 'country-info' },
         { id: 'btn-country-pop', page: 'country-players' },
         { id: 'btn-country-online', page: 'country-online' },
@@ -319,27 +460,7 @@ function setupInteractiveElements() {
     interactiveStats.forEach(item => {
         const element = document.getElementById(item.id);
         if (element) {
-            element.addEventListener('click', function(e) {
-                e.stopPropagation();
-                navigateTo(item.page);
-            });
-        }
-    });
-
-    const navButtons = [
-        { id: 'nav-btn-main', page: 'main' },
-        { id: 'nav-btn-work', page: 'work' },
-        { id: 'nav-btn-wars', page: 'wars' },
-        { id: 'nav-btn-profile', page: 'profile' }
-    ];
-
-    navButtons.forEach(btn => {
-        const element = document.getElementById(btn.id);
-        if (element) {
-            element.addEventListener('click', function(e) {
-                e.preventDefault();
-                navigateTo(btn.page);
-            });
+            element.addEventListener('click', (e) => { e.stopPropagation(); navigateTo(item.page); });
         }
     });
 }
@@ -354,42 +475,34 @@ function navigateTo(targetPage) {
         case 'work': viewId = 'view-work'; break;
         case 'wars': viewId = 'view-wars'; break;
         case 'profile': viewId = 'view-profile'; break;
-        case 'continent-map': viewId = 'view-continent-map'; break;
-        case 'continent-players': viewId = 'view-continent-players'; break;
-        case 'continent-online': viewId = 'view-continent-online'; break;
-        case 'continent-parties': viewId = 'view-continent-parties'; break;
-        case 'continent-factories': viewId = 'view-continent-factories'; break;
-        case 'continent-countries': viewId = 'view-continent-countries'; break;
-        case 'continent-alliances': viewId = 'view-continent-alliances'; break;
-        case 'continent-independent': viewId = 'view-continent-independent'; break;
-        case 'country-info': viewId = 'view-country-info'; break;
-        case 'country-players': viewId = 'view-country-players'; break;
-        case 'country-online': viewId = 'view-country-online'; break;
-        case 'country-parties': viewId = 'view-country-parties'; break;
-        case 'country-factories': viewId = 'view-country-factories'; break;
+        default: viewId = `view-${targetPage}`;
     }
 
     const targetElement = document.getElementById(viewId);
     if (targetElement) targetElement.style.display = 'flex';
 
-    const allNavButtons = document.querySelectorAll('.bottom-nav .nav-link');
-    allNavButtons.forEach(btn => { if (btn) btn.classList.remove('active'); });
+    const allNavLinks = document.querySelectorAll('.bottom-nav .nav-link');
+    allNavLinks.forEach(link => { if (link) link.classList.remove('active'); });
 
-    let activeNavId = 'nav-btn-main';
-    if (targetPage === 'work') activeNavId = 'nav-btn-work';
-    else if (targetPage === 'wars') activeNavId = 'nav-btn-wars';
-    else if (targetPage === 'profile') activeNavId = 'nav-btn-profile';
+    allNavLinks.forEach(link => {
+        const attr = link.getAttribute('onclick');
+        if (attr && attr.includes(`'${targetPage}'`)) link.classList.add('active');
+    });
+}
 
-    const activeNavBtn = document.getElementById(activeNavId);
-    if (activeNavBtn) activeNavBtn.classList.add('active');
+function switchView(pageName) {
+    navigateTo(pageName);
 }
 
 // ==========================================
-// 🏁 تشغيل الأنظمة عند تحميل الصفحة
+// 🏁 بدء التشغيل الآمن عند اكتمال الـ DOM
 // ==========================================
-document.addEventListener('DOMContentLoaded', function() {
-    fetchInitialGameData();
-    setupSliderSystem();
-    setupChatSystem();
-    setupInteractiveElements();
+document.addEventListener('DOMContentLoaded', () => {
+    // تشغيل الأنظمة بمهلة قصيرة لضمان تحميل مكتبات Firebase
+    setTimeout(() => {
+        initGameSystem();
+        setupSliderSystem();
+        setupChatSystem();
+        setupInteractiveElements();
+    }, 1000);
 });
