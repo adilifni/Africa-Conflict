@@ -10,9 +10,6 @@ const africanCountries = {
     senegal: { name: "السنغال", flag: "🇸🇳" }
 };
 
-// متغير عالمي لحفظ مؤقت الخمول لكي لا يتداخل عند إعادة تعيينه
-let inactivityTimer;
-
 // ==========================================
 // 📥 جلب اسم حساب الجيميل النشط وتحديث إحصائيات المتصلين والسكان من Firestore (بث مباشر)
 // ==========================================
@@ -55,53 +52,20 @@ function fetchInitialGameData() {
                         lastActive: firebase.firestore.FieldValue.serverTimestamp()
                     }).catch(err => console.error("Error setting online status:", err));
 
-                    // 3. نظام مراقبة الخمول (Inactivity System) المطور والمحمي من تداخل التبويبات
-                    const resetInactivityTimer = () => {
-                        if (document.hidden) return; // تفادي تنشيط الحسابات بالخلفية عند حركة المستخدم بالحساب النشط
-
-                        clearTimeout(inactivityTimer);
-                        
+                    // قطع الاتصال تلقائياً عند إغلاق اللاعب للمتصفح أو الصفحة
+                    window.addEventListener('beforeunload', () => {
                         db.collection('players').doc(userUid).update({
-                            isOnline: true,
-                            lastActive: firebase.firestore.FieldValue.serverTimestamp()
-                        }).catch(err => {});
-
-                        // مهلة الخمول المعتادة (5 دقائق)
-                        inactivityTimer = setTimeout(() => {
-                            db.collection('players').doc(userUid).update({
-                                isOnline: false
-                            }).catch(err => {});
-                        }, 300000); 
-                    };
-
-                    // استماع حقيقي لتغيير التبويب (عند الخروج من الصفحة أو الانتقال لحساب آخر)
-                    document.addEventListener('visibilitychange', () => {
-                        if (document.hidden) {
-                            clearTimeout(inactivityTimer);
-                            db.collection('players').doc(userUid).update({
-                                isOnline: false
-                            }).catch(err => {});
-                        } else {
-                            resetInactivityTimer();
-                        }
+                            isOnline: false
+                        });
                     });
-
-                    // الاستماع لحركات اللاعب المتنوعة (تتأثر فقط إذا كان التبويب مرئياً)
-                    ['click', 'touchstart', 'mousemove', 'keypress', 'scroll'].forEach(eventType => {
-                        window.addEventListener(eventType, resetInactivityTimer);
-                    });
-
-                    // تشغيل المؤقت لأول مرة عند الدخول
-                    resetInactivityTimer();
 
                 } else {
                     // إذا لم يسجل أي حساب دخوله بعد
                     userNameSpan.textContent = "زائر";
-                    clearTimeout(inactivityTimer);
                 }
-            }); // إغلاق قوس onAuthStateChanged الصحيح هنا ✅
+            });
 
-            // 4. الاستماع الحي والتحديث الفوري لإحصائيات السكان والمتصلين من قاعدة البيانات
+            // 3. الاستماع الحي والتحديث الفوري لإحصائيات السكان والمتصلين من قاعدة البيانات
             db.collection('players').onSnapshot((snapshot) => {
                 const totalPlayers = snapshot.size; // إجمالي الحسابات المسجلة في اللعبة
                 let onlinePlayers = 0;
@@ -380,7 +344,6 @@ function setupInteractiveElements() {
     });
 }
 
-// دالة التنقل وإظهار الفيوز
 function navigateTo(targetPage) {
     const allViews = document.querySelectorAll('.game-view');
     allViews.forEach(view => { if (view) view.style.display = 'none'; });

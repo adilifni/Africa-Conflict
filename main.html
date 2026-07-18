@@ -3,54 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Africa Conflict</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        * {
-            box-sizing: border-box; margin: 0; padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            -webkit-tap-highlight-color: transparent;
-        }
-        body { background-color: #0d1117; color: #c9d1d9; display: flex; flex-direction: column; min-height: 100vh; overflow-x: hidden; }
-        header { background-color: #161b22; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #30363d; position: sticky; top: 0; z-index: 100; }
-        .user-welcome { font-size: 14px; color: #58a6ff; }
-        .game-logo { font-size: 20px; font-weight: bold; color: #f0f6fc; display: flex; align-items: center; gap: 8px; }
-        
-        main { flex: 1; padding: 15px; padding-bottom: 85px; display: flex; flex-direction: column; gap: 15px; max-width: 600px; margin: 0 auto; width: 100%; }
-        .game-view { display: flex; flex-direction: column; gap: 15px; width: 100%; }
-        .card { background-color: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 15px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); display: flex; flex-direction: column; gap: 12px; }
-        
-        /* شريط التنقل السفلي الثابت */
-        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background-color: #161b22; border-top: 1px solid #30363d; display: flex; justify-content: space-around; padding: 8px 0; z-index: 100; }
-        .nav-link { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #8b949e; text-decoration: none; font-size: 11px; cursor: pointer; background: none; border: none; flex: 1; }
-        .nav-link.active { color: #58a6ff; }
-        .nav-link i { font-size: 18px; }
-
-        /* ستايل الخريطة والسلايدر الخاص بالصفحة الرئيسية */
-        .map-container { width: 100%; text-align: center; padding: 10px 0; }
-        .map-container img { max-width: 100%; height: auto; border-radius: 8px; }
-        
-        .slideshow-container { position: relative; width: 100%; background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 20px; overflow: hidden; min-height: 160px; display: flex; align-items: center; justify-content: center; }
-        .slide { display: none; text-align: center; width: 100%; }
-        .slide.active { display: block; }
-        .slide h3 { color: #58a6ff; margin-bottom: 10px; }
-        .slide p { color: #8b949e; font-size: 14px; }
-        
-        .prev, .next { cursor: pointer; position: absolute; top: 50%; width: auto; padding: 16px; margin-top: -22px; color: #58a6ff; font-weight: bold; font-size: 18px; transition: 0.6s ease; border-radius: 0 3px 3px 0; user-select: none; border: none; background: none; }
-        .next { left: 0; border-radius: 3px 0 0 3px; }
-        .prev { right: 0; border-radius: 3px 0 0 3px; }
-
-        /* ستايل البروفايل والقوائم المنسدلة */
-        .stat-dropdown { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; background: #151920; }
-        .stat-dropdown.open { max-height: 150px !important; border-top: 1px dashed #2d3748; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; padding: 20px; }
-        .modal-content { background: #1a1f26; width: 100%; max-width: 360px; border-radius: 12px; padding: 20px; border: 1px solid #2d3748; display: flex; flex-direction: column; gap: 15px; }
-    </style>
-
+   
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <!-- كود التهيئة الخاص بك config -->
     <script>
       const firebaseConfig = {
         apiKey: "AIzaSyCdHlC-kvNWRrYO8-ujA4CjkJsVdFLDTf8",
@@ -63,159 +22,650 @@
       };
       if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
     </script>
+    
+    <title>Africa Conflict</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: #0d1117;
+            color: #c9d1d9;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        header {
+            background-color: #161b22;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #30363d;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .user-welcome {
+            font-size: 14px;
+            color: #58a6ff;
+        }
+
+        .game-logo {
+            font-size: 20px;
+            font-weight: bold;
+            color: #f0f6fc;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        main {
+            flex: 1;
+            padding: 15px;
+            padding-bottom: 85px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-width: 600px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .game-view {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 100%;
+        }
+
+        .card {
+            background-color: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* حاوية السلايدشو */
+        .slider-wrapper {
+            position: relative;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .slides-container {
+            display: flex;
+            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            width: 200%; /* شريحتين */
+        }
+
+        .slide {
+            width: 50%;
+            flex-shrink: 0;
+        }
+
+        .card-header-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            text-align: center;
+            align-items: center;
+        }
+
+        .stat-box {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            padding: 10px 4px;
+            border-radius: 8px;
+            background-color: transparent;
+            transition: background-color 0.15s, transform 0.1s;
+            cursor: pointer;
+        }
+
+        .stat-box:active {
+            background-color: rgba(255, 255, 255, 0.08);
+            transform: scale(0.95);
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #8b949e;
+        }
+
+        .stat-value {
+            font-size: 16px;
+            font-weight: bold;
+            color: #f0f6fc;
+        }
+
+        .continent-img-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background-color: #21262d;
+            padding: 4px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .continent-img-container:active {
+            transform: scale(0.9);
+        }
+
+        .continent-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .flag-img-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 5px;
+        }
+
+        .country-title-block {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #f0f6fc;
+        }
+
+        .country-flag-emoji {
+            font-size: 22px;
+        }
+
+        .flag-img-container {
+            display: flex;
+            justify-content: flex-end;
+            cursor: pointer;
+        }
+
+        .parliament-btn {
+            background-color: #38bdf8;
+            color: #0f172a;
+            border: none;
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: center;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        .parliament-btn:active {
+            background-color: #0ea5e9;
+            transform: scale(0.98);
+        }
+
+        /* حاوية صندوق الشات والدردشة */
+        .chat-container {
+            height: 320px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #f0f6fc;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            background-color: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .chat-message {
+            padding: 8px 12px;
+            border-radius: 12px;
+            max-width: 85%;
+            font-size: 13px;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+
+        .chat-message.me {
+            align-self: flex-start;
+            background-color: #1f6feb;
+            color: #ffffff;
+            border-bottom-right-radius: 2px;
+        }
+
+        .chat-message.others {
+            align-self: flex-end;
+            background-color: #21262d;
+            color: #f0f6fc;
+            border: 1px solid #30363d;
+            border-bottom-left-radius: 2px;
+        }
+
+        .msg-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: #8b949e;
+            margin-bottom: 4px;
+            gap: 15px;
+        }
+
+        .chat-input-area {
+            display: flex;
+            gap: 8px;
+        }
+
+        .chat-input {
+            flex: 1;
+            background-color: #21262d;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 10px 12px;
+            color: #f0f6fc;
+            font-size: 13px;
+            outline: none;
+        }
+
+        .chat-input:focus {
+            border-color: #58a6ff;
+        }
+
+        .chat-send-btn {
+            background-color: #238636;
+            color: white;
+            border: none;
+            width: 42px;
+            height: 40px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s;
+        }
+
+        .chat-send-btn:active {
+            background-color: #2ea043;
+        }
+
+        /* شريط التنقل السفلي الاحترافي */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: #161b22;
+            border-top: 1px solid #30363d;
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0;
+            z-index: 100;
+        }
+
+        .nav-link {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: #8b949e;
+            text-decoration: none;
+            font-size: 11px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            flex: 1;
+            outline: none;
+        }
+
+        .nav-link.active {
+            color: #58a6ff;
+        }
+
+        .nav-link i {
+            font-size: 18px;
+        }
+
+        /* الصفحات الداخلية وتصميماتها */
+        .page-inner-card {
+            background-color: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 20px;
+            width: 100%;
+            min-height: 200px;
+        }
+
+        .page-title-banner {
+            background: linear-gradient(135deg, #1f6feb, #38bdf8);
+            color: #ffffff;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 16px;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .slider-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #21262d;
+            padding-top: 10px;
+            margin-top: 5px;
+        }
+
+        .slider-dots {
+            display: flex;
+            gap: 12px;
+            padding: 5px;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            background-color: #30363d;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        .dot.active {
+            background-color: #58a6ff;
+            transform: scale(1.2);
+        }
+    </style>
 </head>
 <body>
 
     <header>
-        <div class="user-welcome">القائد: <span id="user-name">جاري الاتصال...</span></div>
-        <div class="game-logo"><span>Africa Conflict</span> <span>🌍</span></div>
+        <div class="user-welcome">القائد: <span id="user-name">جاري التحميل...</span></div>
+        <div class="game-logo">
+            <span>Africa Conflict</span>
+            <span>🌍</span>
+        </div>
     </header>
 
     <main>
-        <!-- 1️⃣ واجهة شاشة الرئيسية (تفتح أولاً وتحتوي على الحاويات الأصلية الخريطة والسلايدر) -->
+
         <div id="view-main" class="game-view">
-            <!-- حاوية الخريطة الثابتة لقارة إفريقيا -->
-            <div class="card map-container">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Africa_%28orthographic_projection%29.svg/550px-Africa_%28orthographic_projection%29.svg.png" alt="Africa Map">
-            </div>
-
-            <!-- حاوية السلايدر القابل للتنقل للأقسام -->
-            <div class="slideshow-container">
-                <div class="slide active">
-                    <h3>👥 السكان</h3>
-                    <p>إحصائيات الكثافة السكانية ومعدلات النمو في القارة والدول.</p>
-                </div>
-                <div class="slide">
-                    <h3>🏢 الأحزاب السياسيّة</h3>
-                    <p>إدارة النفوذ السياسي، الانتخابات، والسيطرة البرلمانية.</p>
-                </div>
-                <div class="slide">
-                    <h3>🏭 المصانع والمنشآت</h3>
-                    <p>مستوى الإنتاج الاقتصادي، الموارد، وتطوير البنية التحتية.</p>
-                </div>
-                <div class="slide">
-                    <h3>🤝 التحالفات الدولية</h3>
-                    <p>المعاهدات العسكرية، الاتفاقيات التجارية، والتكتلات القارية.</p>
-                </div>
-
-                <button class="prev" onclick="plusSlides(-1)">&#10094;</button>
-                <button class="next" onclick="plusSlides(1)">&#10095;</button>
-            </div>
-        </div>
-
-        <!-- 2️⃣ واجهة شاشة الحروب -->
-        <div id="view-wars" class="game-view" style="display: none;">
+            
+            <!-- البلوك الأول (إحصائيات القارة) -->
             <div class="card">
-                <h3 style="color: #fff;">🛡️ ساحة المعارك والحروب</h3>
-                <p>قسم الحروب والنزاعات العسكرية قيد التطوير...</p>
+                <div class="slider-wrapper">
+                    <div class="slides-container" id="slides-container">
+                        
+                        <div class="slide">
+                            <div class="card-header-stats">
+                                <div class="stat-box" id="btn-continent-pop">
+                                    <span class="stat-label">سكان</span>
+                                    <!-- قمنا بإضافة كلاس global-population هنا لتحديث التعداد محلياً وحياً -->
+                                    <span class="stat-value global-population">..</span>
+                                </div>
+                                <div class="stat-box" id="btn-continent-online">
+                                    <span class="stat-label">متصل</span>
+                                    <!-- قمنا بإضافة كلاس global-online هنا -->
+                                    <span class="stat-value global-online" style="color: #39d353;">..</span>
+                                </div>
+                                <div class="stat-box" id="btn-continent-parties">
+                                    <span class="stat-label">أحزاب</span>
+                                    <span class="stat-value">0</span>
+                                </div>
+                                <div class="stat-box" id="btn-continent-factories">
+                                    <span class="stat-label">مصانع</span>
+                                    <span class="stat-value">0</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="slide">
+                            <div class="card-header-stats">
+                                <div class="stat-box" id="btn-continent-countries">
+                                    <span class="stat-label">دول</span>
+                                    <span class="stat-value">50</span>
+                                </div>
+                                <div class="stat-box" id="btn-continent-alliances">
+                                    <span class="stat-label">تحالف</span>
+                                    <span class="stat-value">0</span>
+                                </div>
+                                <div class="stat-box" id="btn-continent-independent">
+                                    <span class="stat-label">مستقلة</span>
+                                    <span class="stat-value">0</span>
+                                </div>
+                                <div class="stat-box">
+                                    <span class="stat-label">-</span>
+                                    <span class="stat-value">-</span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="slider-footer">
+                    <div class="slider-dots">
+                        <span class="dot active" id="dot-1"></span>
+                        <span class="dot" id="dot-2"></span>
+                    </div>
+                    <div class="continent-img-container" id="btn-continent-map">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/8/86/Africa_%28orthographic_projection%29.svg" alt="Africa" class="continent-img">
+                    </div>
+                </div>
             </div>
+
+            <!-- البلوك الثاني (إحصائيات الدولة التي يتواجد بها اللاعب حالياً) -->
+            <div class="card">
+                <div class="card-header-stats">
+                    <div class="stat-box" id="btn-country-pop">
+                        <span class="stat-label">سكان</span>
+                        <!-- قمنا بإضافة كلاس country-population هنا -->
+                        <span class="stat-value country-population">..</span>
+                    </div>
+                    <div class="stat-box" id="btn-country-online">
+                        <span class="stat-label">متصل</span>
+                        <!-- قمنا بإضافة كلاس country-online هنا -->
+                        <span class="stat-value country-online" style="color: #39d353;">..</span>
+                    </div>
+                    <div class="stat-box" id="btn-country-parties">
+                        <span class="stat-label">أحزاب</span>
+                        <span class="stat-value">0</span>
+                    </div>
+                    <div class="stat-box" id="btn-country-factories">
+                        <span class="stat-label">مصانع</span>
+                        <span class="stat-value">0</span>
+                    </div>
+                </div>
+                <!-- عرض علم الدولة واسمها ديناميكياً لتتغير بتغير مكان اللاعب -->
+                <div class="flag-img-container" id="btn-country-flag">
+                    <div class="country-title-block">
+                        <span class="country-flag-emoji" id="country-flag">🇲🇦</span>
+                        <span id="country-name-text">المغرب</span>
+                    </div>
+                </div>
+            </div>
+
+            <button class="parliament-btn" id="btn-parliament">برلمان الدولة</button>
+
+            <div class="card chat-container">
+                <div class="chat-title">غرفة الدردشة العامة</div>
+                <div class="chat-messages" id="chat-messages-box">
+                    <!-- الرسائل يتم معالجتها ديناميكياً عبر الجافاسكريبت -->
+                </div>
+                <div class="chat-input-area">
+                    <input type="text" class="chat-input" id="chat-input-field" placeholder="اكتب رسالة برقية هنا...">
+                    <button class="chat-send-btn" id="chat-send-btn">
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+
         </div>
 
-        <!-- 3️⃣ واجهة شاشة العمل -->
+        <!-- البوابات والواجهات الداخلية الأخرى للعبة -->
         <div id="view-work" class="game-view" style="display: none;">
-            <div class="card">
-                <h3 style="color: #fff;">💼 سوق العمل والوظائف</h3>
-                <p>قسم العمل وجني الأموال قيد التطوير...</p>
+            <div class="page-inner-card">
+                <div class="page-title-banner">💼 قطاع العمل والإنتاج المالي</div>
+                <p style="text-align: center; color: #8b949e; padding: 20px;">يمكنك هنا البحث عن وظائف، العمل لتجميع الأموال، والمساهمة في بناء بنية تحتية مستدامة للدولة.</p>
             </div>
         </div>
 
-        <!-- 4️⃣ واجهة شاشة البروفايل الشخصي -->
+        <div id="view-wars" class="game-view" style="display: none;">
+            <div class="page-inner-card">
+                <div class="page-title-banner">⚔️ الحروب والعمليات العسكرية</div>
+                <p style="text-align: center; color: #8b949e; padding: 20px;">استعرض جبهات النزاع المشتعلة، شارك في تدريبات الدفاع الشعبي، أو قد جيوشك لتحرير وتأمين قارتنا.</p>
+            </div>
+        </div>
+
         <div id="view-profile" class="game-view" style="display: none;">
-            <div id="training-global-timer" style="display: none; background-color: #d69e2e; color: #fff; padding: 12px; text-align: center; border-radius: 8px; font-weight: bold; font-size: 14px; margin-bottom: 5px;"></div>
-
-            <div class="card" style="background: #1a1f26; text-align: center; padding: 20px;">
-                <div style="display: flex; justify-content: center; margin-bottom: 10px;">
-                    <img id="profile-avatar" src="https://via.placeholder.com/90" alt="Avatar" style="width: 90px; height: 90px; border-radius: 50%; border: 3px solid #3182ce; object-fit: cover;">
-                </div>
-                <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
-                    <h2 id="profile-name-display" style="color: #fff; margin: 0; font-size: 20px;">تحميل الاسم...</h2>
-                    <button onclick="openSettingsModal()" style="background: none; border: none; color: #a0aec0; cursor: pointer; font-size: 18px;">⚙️</button>
-                </div>
-
-                <div style="margin-top: 15px; text-align: right;">
-                    <div style="display: flex; justify-content: space-between; color: #cbd5e0; font-size: 14px; margin-bottom: 5px;">
-                        <span id="profile-level-number" style="font-weight: bold; color: #3182ce;">المستوى --</span>
-                        <span id="profile-xp-text">-- / -- XP</span>
-                    </div>
-                    <div style="width: 100%; height: 12px; background: #2d3748; border-radius: 6px; overflow: hidden;">
-                        <div id="profile-xp-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #3182ce, #63b3ed); transition: width 0.4s ease;"></div>
-                    </div>
-                </div>
-
-                <div style="display: flex; justify-content: space-between; margin-top: 15px; font-size: 18px; font-weight: bold;">
-                    <span id="profile-money-display" style="color: #ffffff;">0 💵</span>
-                    <span id="profile-gold-display" style="color: #f6ad55;">0 🪙</span>
-                </div>
-            </div>
-
-            <div class="card" style="background: #1a1f26; padding: 15px;">
-                <div style="display: flex; justify-content: space-between; color: #fff; border-bottom: 1px solid #2d3748; padding-bottom: 8px; margin-bottom: 8px;">
-                    <span style="color: #a0aec0;">📍 المنطقة الحالية</span>
-                    <span id="profile-region" style="font-weight: bold;">--</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; color: #fff;">
-                    <span style="color: #a0aec0;">🇲🇦 الجنسية الأصلية</span>
-                    <span id="profile-nationality" style="font-weight: bold;">--</span>
-                </div>
-            </div>
-
-            <div style="display: flex; flex-direction: column; gap: 10px;">
-                <div class="card" style="background: #1a1f26; padding: 0; overflow: hidden; gap: 0;">
-                    <div id="stat-power-header" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #fff;">
-                        <span>💪 القوة القتالية</span>
-                        <span style="font-weight: bold; color: #e53e3e; font-size: 18px;" id="stat-power-val">0</span>
-                    </div>
-                    <div id="stat-power-dropdown" class="stat-dropdown">
-                        <div style="padding: 15px; display: flex; flex-direction: column; gap: 10px;">
-                            <p id="time-power" style="color: #a0aec0; margin: 0; font-size: 13px;">الوقت: --</p>
-                            <div style="display: flex; gap: 10px;">
-                                <button onclick="startStatUpgrade('power', 'money')" style="flex: 1; background: #2b6cb0; color: #fff; border: none; padding: 8px; border-radius: 6px; font-weight: bold; cursor: pointer;">بالمال</button>
-                                <button onclick="startStatUpgrade('power', 'gold')" style="flex: 1; background: #d69e2e; color: #fff; border: none; padding: 8px; border-radius: 6px; font-weight: bold; cursor: pointer;">بالذهب</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card" style="background: #1a1f26; padding: 0; overflow: hidden; gap: 0;">
-                    <div id="stat-education-header" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #fff;">
-                        <span>📚 مستوى التعليم</span>
-                        <span style="font-weight: bold; color: #3182ce; font-size: 18px;" id="stat-education-val">0</span>
-                    </div>
-                    <div id="stat-education-dropdown" class="stat-dropdown">
-                        <div style="padding: 15px; display: flex; flex-direction: column; gap: 10px;">
-                            <p id="time-education" style="color: #a0aec0; margin: 0; font-size: 13px;">الوقت: --</p>
-                            <div style="display: flex; gap: 10px;">
-                                <button onclick="startStatUpgrade('education', 'money')" style="flex: 1; background: #2b6cb0; color: #fff; border: none; padding: 8px; border-radius: 6px; font-weight: bold; cursor: pointer;">بالمال</button>
-                                <button onclick="startStatUpgrade('education', 'gold')" style="flex: 1; background: #d69e2e; color: #fff; border: none; padding: 8px; border-radius: 6px; font-weight: bold; cursor: pointer;">بالذهب</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div class="page-inner-card">
+                <div class="page-title-banner">👤 الملف الشخصي للقائد</div>
+                <p style="text-align: center; color: #8b949e; padding: 20px;">هنا تظهر رتبتك القيادية، ممتلكاتك المالية، والعتاد العسكري ومقدار هيبتك السياسية.</p>
             </div>
         </div>
+
+        <div id="view-continent-map" class="game-view" style="display: none;">
+            <div class="page-inner-card">
+                <div class="page-title-banner">🗺️ خريطة قارة أفريقيا السياسية</div>
+                <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">جاري معالجة وتجهيز الخارطة الاستراتيجية للنزاعات الدولية والحدودية...</p>
+            </div>
+        </div>
+
+        <div id="view-continent-players" class="game-view" style="display: none;">
+            <div class="page-inner-card">
+                <div class="page-title-banner">👥 التعداد السكاني للقارة</div>
+                <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">تعداد كافة قادة وجنرالات الدول الإفريقية الحلفاء والخصوم.</p>
+            </div>
+        </div>
+
+        <div id="view-continent-online" class="game-view" style="display: none;">
+            <div class="page-inner-card">
+                <div class="page-title-banner">🟢 المتواجدون على الخط الآن</div>
+                <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">قائمة باللاعبين النشطين حالياً في مختلف بقاع القارة الإفريقية.</p>
+            </div>
+        </div>
+
+        <div id="view-continent-parties" class="game-view" style="display: none;">
+            <div class="page-inner-card">
+                <div class="page-title-banner">🤝 الأحزاب السياسية الإقليمية</div>
+                <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">قائمة بكافة التكتلات السياسية المعترف بها دولياً في البرلمانات الإقليمية.</p>
+            </div>
+        </div>
+
+        <div id="view-continent-factories" class="game-view" style="display: none;">
+            <div class="page-inner-card">
+                <div class="page-title-banner">🏭 قطاع الصناعة القاري</div>
+                <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">بيانات وتحديثات خطوط الإنتاج والمصانع الثقيلة في قارة أفريقيا.</p>
+            </div>
+        </div>
+
+        <div id="view-continent-countries" class="game-view" style="display: none;">
+            <div class="page-inner-card">
+                <div class="page-title-banner">🏳️ سجل الـ 50 دولة إفريقية</div>
+                <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">استعرض البيانات الاقتصادية والقدرة الدفاعية لجميع الدول الـ 50.</p>
+            </div>
+        </div>
+
+        <div id="view-continent-alliances" class="game-view" style="display: none;">
+            <div class="page-inner-card">
+                <div class="page-title-banner">🛡️ تحالفات الدفاع العسكري المشترك</div>
+                <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">عرض المعاهدات ومواثيق التعاون العسكري بين القوى الكبرى وحلفاء اللعبة.</p>
+            </div>
+        </div>
+
+        <div id="view-continent-independent" class="game-view" style="display: none;">
+            <div class="page-inner-card">
+                <div class="page-title-banner">🔓 الدول والكيانات المستقلة</div>
+                <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">سجل الدول غير المنضوية تحت مظلة أي تكتل عسكري دولي حالياً.</p>
+            </div>
+        </div>
+
+        <div id="view-country-info" class="game-view" style="display: none;">
+            <div class="page-inner-card">
+                <div class="page-title-banner">🏛️ ديوان رئاسة الدولة وعلم الوطن</div>
+                <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">هنا يتم اتخاذ القرارات السيادية وتغيير الضرائب واستعراض مخزون الخزانة العامة للدولة.</p>
+            </div>
+        </div>
+
+        <div id="view-country-players" class="game-view" style="display: none;">
+            <div class="page-inner-card">
+                <div class="page-title-banner">👥 سجل مواطني وسكان الدولة</div>
+                <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">قائمة بأسماء ومرتبات القادة الحاملين جنسية الدولة الحالية ورتبهم الفعالة.</p>
+            </div>
+        </div>
+
+        <div id="view-country-online" class="game-view" style="display: none;">
+            <div class="page-inner-card">
+                <div class="page-title-banner">🟢 المتصلون بالوطن حالياً</div>
+                <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">شاشة المراقبة اللحظية للاعبي ومواطني وطنك المتواجدين على خوادم اللعبة الآن.</p>
+            </div>
+        </div>
+
+        <div id="view-country-parties" class="game-view" style="display: none;">
+            <div class="page-inner-card">
+                <div class="page-title-banner">🤝 الأحزاب والائتلافات المحلية</div>
+                <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">انضم أو أسس حزبك السياسي الخاص لتنافس على الأغلبية البرلمانية وإدارة الحكومة.</p>
+            </div>
+        </div>
+
+        <div id="view-country-factories" class="game-view" style="display: none;">
+            <div class="page-inner-card">
+                <div class="page-title-banner">🏭 إدارة وتطوير المصانع المحلية</div>
+                <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">أدر خطوط إنتاج المعدات والأسلحة والذخائر والمنتجات الغذائية لتأمين جبهات القتال.</p>
+            </div>
+        </div>
+
     </main>
 
-    <!-- 🧭 شريط التنقل السفلي الكامل الثابت (الرئيسية نشطة افتراضياً) -->
     <nav class="bottom-nav">
-        <button class="nav-link active" id="nav-main" onclick="switchView('main')"><i class="fa-solid fa-house"></i><span>الرئيسية</span></button>
-        <button class="nav-link" id="nav-wars" onclick="switchView('wars')"><i class="fa-solid fa-shield-halved"></i><span>الحروب</span></button>
-        <button class="nav-link" id="nav-work" onclick="switchView('work')"><i class="fa-solid fa-briefcase"></i><span>العمل</span></button>
-        <button class="nav-link" id="nav-profile" onclick="switchView('profile')"><i class="fa-solid fa-user"></i><span>البروفايل</span></button>
+        <button id="nav-btn-main" class="nav-link active">
+            <i class="fa-solid fa-house"></i>
+            <span>الرئيسية</span>
+        </button>
+        <button id="nav-btn-work" class="nav-link">
+            <i class="fa-solid fa-briefcase"></i>
+            <span>العمل</span>
+        </button>
+        <button id="nav-btn-wars" class="nav-link">
+            <i class="fa-solid fa-shield-halved"></i>
+            <span>الحروب</span>
+        </button>
+        <button id="nav-btn-profile" class="nav-link">
+            <i class="fa-solid fa-user"></i>
+            <span>الحساب</span>
+        </button>
     </nav>
 
-    <!-- نافذة الإعدادات -->
-    <div id="settings-modal" class="modal">
-        <div class="modal-content">
-            <h3 style="color: #fff; text-align: right;">⚙️ إعدادات الحساب</h3>
-            <input type="text" id="settings-name-input" placeholder="الاسم الجديد للقائد" style="background: #2d3748; border: 1px solid #4a5568; color: #fff; padding: 10px; border-radius: 6px; text-align: right;">
-            <input type="text" id="settings-avatar-url-input" placeholder="رابط صورة URL مباشر" style="background: #2d3748; border: 1px solid #4a5568; color: #fff; padding: 10px; border-radius: 6px; text-align: left;" dir="ltr">
-            <div style="display: flex; gap: 10px;">
-                <button onclick="savePlayerSettings()" style="flex: 1; background: #38a169; color: #fff; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer;">حفظ التغييرات</button>
-                <button onclick="closeSettingsModal()" style="background: #e53e3e; color: #fff; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer;">إلغاء</button>
-            </div>
-        </div>
-    </div>
-
-    <script src="js/profile.js"></script>
+    <!-- استدعاء ملف الـ JS في نهاية الصفحة لضمان تحميل الواجهة أولاً -->
+    <script src="js/main_game.js"></script>
 </body>
 </html>
