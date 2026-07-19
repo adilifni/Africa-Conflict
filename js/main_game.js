@@ -41,9 +41,9 @@ function initGameSystem() {
                         localPlayerData = data;
 
                         // 🚀 استدعاء الدالة الجديدة هنا مباشرة 🚀
-                        if (data) {
-                            startLiveCounters(data.nationality || "المغرب", data.currentRegion || "المغرب");
-                        }
+if (data) {
+    startLiveCounters(data.residence_country || "morocco", data.current_location || "morocco");
+}
                         // تحديث الاسم والصورة العلوية وفي الحساب الشخصي
                         let playerName = data.name || user.displayName || user.email.split('@')[0];
                         playerName = playerName.replace(/قائد/g, '').replace(/مجهول/g, '').trim();
@@ -66,47 +66,62 @@ if (profileGoldVal) profileGoldVal.textContent = data.gold || 0;
 function startLiveCounters(playerCountry, playerRegion) {
     const db = firebase.firestore();
 
-    // 1. الاستماع الحي لجميع اللاعبين لحساب إحصائيات اللعبة والدولة
     db.collection('players').onSnapshot((snapshot) => {
         const now = Date.now();
-        const fiveMinutes = 5 * 60 * 1000; // 5 دقائق بالمللي ثانية
+        const fiveMinutes = 5 * 60 * 1000; 
 
         let globalPopulation = 0;
         let globalOnline = 0;
         let countryPopulation = 0;
         let countryOnline = 0;
 
+        // دالة مساعدة داخلية لتوحيد الأسماء (تحويل morocco أو المغرب لنفس الصيغة)
+        const normalizeCountry = (text) => {
+            const clean = String(text || "").trim().toLowerCase();
+            if (clean === "morocco" || clean === "المغرب") return "morocco";
+            return clean;
+        };
+
+        const pCountryClean = normalizeCountry(playerCountry);
+        const pRegionClean = normalizeCountry(playerRegion);
+
         snapshot.forEach((doc) => {
             const data = doc.data();
-            globalPopulation++; // حساب كل مسجل في اللعبة
+            globalPopulation++; // حساب إجمالي المسجلين
 
-            // تحويل timestamp الفايربيس إلى مللي ثانية بأمان
-            const lastActiveTime = data.lastActive ? data.lastActive.toDate().getTime() : 0;
+            // حساب حالة الاتصال (آخر ظهور خلال 5 دقائق)
+            // ندعم الصيغتين: إذا كان حقل lastActive عبارة عن Timestamp أو رقم عادي مللي ثانية
+            let lastActiveTime = 0;
+            if (data.lastActive) {
+                lastActiveTime = typeof data.lastActive.toDate === 'function' 
+                    ? data.lastActive.toDate().getTime() 
+                    : data.lastActive;
+            }
             const timeDiff = now - lastActiveTime;
             
-            // شرط الاتصال: أن يكون معلم كـ متصل ولم يمر 5 دقائق على غيابه
             const isUserGloballyOnline = data.isOnline === true && timeDiff <= fiveMinutes;
 
             if (isUserGloballyOnline) {
                 globalOnline++;
             }
 
-            // --- إحصائيات الدولة الخاصة باللاعب الحقيقي ---
-            const userRegion = data.currentRegion || "";
-            const userNationality = data.nationality || "";
+            // قراءة الحقول الصحيحة بناءً على صورة الفايربيس المرفقة
+            const userLocation = normalizeCountry(data.current_location);
+            const userResidence = normalizeCountry(data.residence_country);
 
-            // سكان الدولة: إذا كان في المنطقة حالياً أو يحمل جنسيتها الأصلية
-            if (userRegion === playerRegion || userNationality === playerCountry) {
+            // 1. شرط سكان الدولة: متواجد بها حالياً أو يحمل جنسيتها الإقامية
+            if ((userLocation !== "" && userLocation === pRegionClean) || 
+                (userResidence !== "" && userResidence === pCountryClean)) {
                 countryPopulation++;
             }
 
-            // متصل في الدولة: يجب أن يكون متصلاً (ضمن الـ 5 دقائق) وموجود فعلياً في المنطقة الحالية (إذا سافر يختفي)
-            if (isUserGloballyOnline && userRegion === playerRegion) {
+            // 2. شرط متصلي الدولة: متصل حالياً ومتواجد في نفس المنطقة (إذا سافر وتغير اللوكيشن يختفي فوراً)
+            if (isUserGloballyOnline && userLocation !== "" && userLocation === pRegionClean) {
                 countryOnline++;
             }
         });
 
-        // 3. تحديث الأرقام مباشرة في واجهة المستخدم (HTML)
+        // تحديث واجهة الـ HTML
         const gPop = document.getElementById('global-pop-val');
         const gOnline = document.getElementById('global-online-val');
         const cPop = document.getElementById('country-pop-val');
