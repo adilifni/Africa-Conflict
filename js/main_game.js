@@ -406,7 +406,8 @@ function checkActiveTraining(data) {
             }
         } else {
             if (timerVal) {
-                timerVal.textContent = formatTimeDynamic(timeLeft);
+                // 🛠️ تم التحديث هنا: استخدام الدالة الجديدة formatTimeShort بدلاً من القديمة
+                timerVal.textContent = `متبقي: ⏳ ${formatTimeShort(timeLeft)}`;
             }
         }
     }, 1000);
