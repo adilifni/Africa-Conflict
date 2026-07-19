@@ -30,8 +30,7 @@ function initGameSystem() {
             firebase.auth().onAuthStateChanged((user) => {
                 if (user) {
                     const userUid = user.uid;
-
-                    // 1. الاستماع المباشر لبيانات حساب اللاعب وتحديث الواجهات بناءً عليها
+// 1. الاستماع المباشر لبيانات حساب اللاعب وتحديث الواجهات بناءً عليها
                     db.collection('players').doc(userUid).onSnapshot((doc) => {
                         if (!doc.exists) {
                             createNewPlayerProfile(user);
@@ -41,6 +40,10 @@ function initGameSystem() {
                         const data = doc.data();
                         localPlayerData = data;
 
+                        // 🚀 استدعاء الدالة الجديدة هنا مباشرة 🚀
+                        if (data) {
+                            startLiveCounters(data.nationality || "المغرب", data.currentRegion || "المغرب");
+                        }
                         // تحديث الاسم والصورة العلوية وفي الحساب الشخصي
                         let playerName = data.name || user.displayName || user.email.split('@')[0];
                         playerName = playerName.replace(/قائد/g, '').replace(/مجهول/g, '').trim();
@@ -58,6 +61,66 @@ if (profileMoneyVal) profileMoneyVal.textContent = data.money || 0;
 const profileGoldVal = document.getElementById('profile-gold-val');
 if (profileGoldVal) profileGoldVal.textContent = data.gold || 0;
 
+ 
+// دالة لتشغيل عدادات السكان والمتصلين بشكل حي وديناميكي
+function startLiveCounters(playerCountry, playerRegion) {
+    const db = firebase.firestore();
+
+    // 1. الاستماع الحي لجميع اللاعبين لحساب إحصائيات اللعبة والدولة
+    db.collection('players').onSnapshot((snapshot) => {
+        const now = Date.now();
+        const fiveMinutes = 5 * 60 * 1000; // 5 دقائق بالمللي ثانية
+
+        let globalPopulation = 0;
+        let globalOnline = 0;
+        let countryPopulation = 0;
+        let countryOnline = 0;
+
+        snapshot.forEach((doc) => {
+            const data = doc.data();
+            globalPopulation++; // حساب كل مسجل في اللعبة
+
+            // تحويل timestamp الفايربيس إلى مللي ثانية بأمان
+            const lastActiveTime = data.lastActive ? data.lastActive.toDate().getTime() : 0;
+            const timeDiff = now - lastActiveTime;
+            
+            // شرط الاتصال: أن يكون معلم كـ متصل ولم يمر 5 دقائق على غيابه
+            const isUserGloballyOnline = data.isOnline === true && timeDiff <= fiveMinutes;
+
+            if (isUserGloballyOnline) {
+                globalOnline++;
+            }
+
+            // --- إحصائيات الدولة الخاصة باللاعب الحقيقي ---
+            const userRegion = data.currentRegion || "";
+            const userNationality = data.nationality || "";
+
+            // سكان الدولة: إذا كان في المنطقة حالياً أو يحمل جنسيتها الأصلية
+            if (userRegion === playerRegion || userNationality === playerCountry) {
+                countryPopulation++;
+            }
+
+            // متصل في الدولة: يجب أن يكون متصلاً (ضمن الـ 5 دقائق) وموجود فعلياً في المنطقة الحالية (إذا سافر يختفي)
+            if (isUserGloballyOnline && userRegion === playerRegion) {
+                countryOnline++;
+            }
+        });
+
+        // 3. تحديث الأرقام مباشرة في واجهة المستخدم (HTML)
+        const gPop = document.getElementById('global-pop-val');
+        const gOnline = document.getElementById('global-online-val');
+        const cPop = document.getElementById('country-pop-val');
+        const cOnline = document.getElementById('country-online-val');
+
+        if (gPop) gPop.textContent = globalPopulation;
+        if (gOnline) gOnline.textContent = globalOnline;
+        if (cPop) cPop.textContent = countryPopulation;
+        if (cOnline) cOnline.textContent = countryOnline;
+    });
+}
+ 
+ 
+ 
                         // تحديث شريط المستوى والـ XP بالمعادلة الأصلية
                         updateXPProgressBar(data.xp || 0);
 
