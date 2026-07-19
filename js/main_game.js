@@ -162,37 +162,6 @@ function updateXPProgressBar(totalXP) {
 }
 
 // ==========================================
-// 🔄 قوائم التطوير المنزلقة والأسعار الدقيقة
-// ==========================================
-function setupStatDropdowns() {
-    const stats = ['power', 'education', 'experience'];
-    
-    stats.forEach(stat => {
-        const header = document.getElementById(`stat-${stat}-header`);
-        const dropdown = document.getElementById(`stat-${stat}-dropdown`);
-        
-        if (header && dropdown) {
-            header.addEventListener('click', () => {
-                stats.forEach(s => {
-                    if (s !== stat) document.getElementById(`stat-${s}-dropdown`)?.classList.remove('open');
-                });
-                dropdown.classList.toggle('open');
-                
-                if (dropdown.classList.contains('open') && localPlayerData) {
-                    const currentStatLevel = localPlayerData[stat] || 0;
-                    
-                    const moneyCost = (currentStatLevel + 1) * 1000;
-                    const goldCost = (currentStatLevel + 1) * 5;
-                    const timeInSeconds = (currentStatLevel + 1) * 30; 
-
-                    if(document.getElementById(`cost-${stat}-money`)) document.getElementById(`cost-${stat}-money`).textContent = `${moneyCost} مال`;
-                    if(document.getElementById(`cost-${stat}-gold`)) document.getElementById(`cost-${stat}-gold`).textContent = `${goldCost} ذهب`;
-                    if(document.getElementById(`time-${stat}`)) document.getElementById(`time-${stat}`).textContent = `الوقت: ${timeInSeconds} ثانية`;
-                }
-            });
-        }
-    });
-}
 
 // ==========================================
 // ⚙️ معالجة عمليات التطوير والأوقات وإنهائها
@@ -237,18 +206,97 @@ function startStatUpgrade(statName, currencyType) {
         .catch(err => console.error(err));
 }
 
+
+// ==========================================
+// ⏳ المطور الجديد لنظام الترقية والوقت والعدادات الحية
+// ==========================================
+
+function formatTimeDynamic(ms) {
+    let seconds = Math.floor(ms / 1000);
+    let minutes = Math.floor(seconds / 60);
+    let hours = Math.floor(minutes / 60);
+    let days = Math.floor(hours / 24);
+
+    seconds = seconds % 60;
+    minutes = minutes % 60;
+    hours = hours % 24;
+
+    let timeString = "";
+    if (days > 0) timeString += `${days} يوم و `;
+    if (hours > 0 || days > 0) timeString += `${hours} ساعة و `;
+    if (minutes > 0 || hours > 0 || days > 0) timeString += `${minutes} دقيقة و `;
+    timeString += `${seconds} ثانية`;
+
+    return timeString;
+}
+
+function setupStatDropdowns() {
+    const stats = ['power', 'education', 'experience'];
+    
+    stats.forEach(stat => {
+        const header = document.getElementById(`stat-${stat}-header`);
+        const dropdown = document.getElementById(`stat-${stat}-dropdown`);
+        
+        if (header && dropdown) {
+            header.addEventListener('click', () => {
+                stats.forEach(s => {
+                    if (s !== stat) {
+                        const otherDropdown = document.getElementById(`stat-${s}-dropdown`);
+                        if (otherDropdown) otherDropdown.style.maxHeight = "0px";
+                    }
+                });
+                
+                if (dropdown.style.maxHeight === "0px" || !dropdown.style.maxHeight || dropdown.style.maxHeight === "0") {
+                    dropdown.style.maxHeight = "none";
+                } else {
+                    dropdown.style.maxHeight = "0px";
+                }
+                
+                if (localPlayerData) {
+                    const currentStatLevel = localPlayerData[stat] || 0;
+                    
+                    const moneyCost = (currentStatLevel + 1) * 1000;
+                    const goldCost = (currentStatLevel + 1) * 5;
+                    const timeInSeconds = (currentStatLevel + 1) * 30; 
+
+                    if(document.getElementById(`cost-${stat}-money`)) document.getElementById(`cost-${stat}-money`).textContent = `${moneyCost} مال`;
+                    if(document.getElementById(`cost-${stat}-gold`)) document.getElementById(`cost-${stat}-gold`).textContent = `${goldCost} ذهب`;
+                    
+                    if(document.getElementById(`time-${stat}`)) {
+                        document.getElementById(`time-${stat}`).textContent = `الوقت المستغرق: ${formatTimeDynamic(timeInSeconds * 1000)}`;
+                    }
+                }
+            });
+        }
+    });
+}
+
 function checkActiveTraining(data) {
-    const timerDisplay = document.getElementById('training-global-timer');
-    if (!timerDisplay) return;
+    const stats = ['power', 'education', 'experience'];
+    
+    stats.forEach(stat => {
+        const btnContainer = document.getElementById(`actions-${stat}`);
+        const timerContainer = document.getElementById(`timer-container-${stat}`);
+        if (btnContainer) btnContainer.style.display = 'flex';
+        if (timerContainer) timerContainer.style.display = 'none';
+    });
+
+    if (trainingInterval) clearInterval(trainingInterval);
 
     if (!data.activeTraining) {
-        timerDisplay.style.display = 'none';
-        if (trainingInterval) clearInterval(trainingInterval);
         isUpgradingNow = false;
         return;
     }
 
-    if (trainingInterval) clearInterval(trainingInterval);
+    const activeStat = data.activeTraining.stat;
+    const btnContainer = document.getElementById(`actions-${activeStat}`);
+    const timerContainer = document.getElementById(`timer-container-${activeStat}`);
+    const timerVal = document.getElementById(`timer-val-${activeStat}`);
+    const activeDropdown = document.getElementById(`stat-${activeStat}-dropdown`);
+
+    if (btnContainer) btnContainer.style.display = 'none';
+    if (timerContainer) timerContainer.style.display = 'block';
+    if (activeDropdown) activeDropdown.style.maxHeight = "none";
 
     trainingInterval = setInterval(() => {
         const now = Date.now();
@@ -256,19 +304,22 @@ function checkActiveTraining(data) {
 
         if (timeLeft <= 0) {
             clearInterval(trainingInterval);
-            timerDisplay.style.display = 'none';
+            if (timerContainer) timerContainer.style.display = 'none';
+            if (btnContainer) btnContainer.style.display = 'flex';
             
             if (!isUpgradingNow) {
                 isUpgradingNow = true; 
-                completeUpgrade(data.activeTraining.stat);
+                completeUpgrade(activeStat);
             }
         } else {
-            timerDisplay.style.display = 'block';
-            timerDisplay.textContent = `جاري تطوير ${data.activeTraining.stat}: ${Math.ceil(timeLeft / 1000)} ثانية متبقية`;
+            if (timerVal) {
+                timerVal.textContent = formatTimeDynamic(timeLeft);
+            }
         }
     }, 1000);
 }
 
+// 👈 هنا تبدأ الدالة القديمة التي طلبت منك تركها كما هي دون تغيير 👇
 function completeUpgrade(statName) {
     const user = firebase.auth().currentUser;
     if (!user) return;
