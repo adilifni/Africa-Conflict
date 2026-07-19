@@ -437,11 +437,11 @@
                             <div class="card-header-stats">
                                 <div class="stat-box" id="btn-continent-pop">
                                     <span class="stat-label">سكان</span>
-                    <span class="stat-value global-population" id="global-pop-val">..</span>
+                                    <span class="stat-value global-population" id="global-pop-val">..</span>
                                 </div>
                                 <div class="stat-box" id="btn-continent-online">
                                     <span class="stat-label">متصل</span>
-                    <span class="stat-value global-online" id="global-online-val" style="color: #39d353;">..</span>
+                                    <span class="stat-value global-online" id="global-online-val" style="color: #39d353;">..</span>
                                 </div>
                                 <div class="stat-box" id="btn-continent-parties">
                                     <span class="stat-label">أحزاب</span>
@@ -494,11 +494,11 @@
                 <div class="card-header-stats">
                     <div class="stat-box" id="btn-country-pop">
                         <span class="stat-label">سكان</span>
-                    <span class="stat-value country-population" id="country-pop-val">..</span>
+                        <span class="stat-value country-population" id="country-pop-val">..</span>
                     </div>
                     <div class="stat-box" id="btn-country-online">
                         <span class="stat-label">متصل</span>
-                    <span class="stat-value country-online" id="country-online-val" style="color: #39d353;">..</span>
+                        <span class="stat-value country-online" id="country-online-val" style="color: #39d353;">..</span>
                     </div>
                     <div class="stat-box" id="btn-country-parties">
                         <span class="stat-label">أحزاب</span>
@@ -548,27 +548,22 @@
                 </div>
 
                 <!-- شريط المستوى والـ XP -->
-<div style="margin-top: 15px; text-align: right;">
-        <div style="display: flex; justify-content: space-between; color: #cbd5e0; font-size: 14px; margin-bottom: 5px;">
-            <span id="profile-level-number" style="font-weight: bold; color: #3182ce;">المستوى 1</span>
-            <span id="profile-xp-text">0 / 100 XP</span>
-        </div>
-        <div style="width: 100%; height: 12px; background: #2d3748; border-radius: 6px; overflow: hidden;">
-            <div id="profile-xp-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #3182ce, #63b3ed); transition: width 0.5s ease;"></div>
-        </div>
-        
-        <!-- 👇 هنا يوضع كود المال والذهب الجديد تماماً 👇 -->
-        <div style="display: flex; justify-content: space-between; margin-top: 15px; padding: 0 5px; font-weight: bold; font-size: 16px;">
-            <!-- المال على اليمين باللون الأبيض (أرقام فقط) -->
-            <span id="profile-money-val" style="color: #ffffff;">0</span>
-            
-            <!-- الذهب على اليسار باللون الأصفر (أرقام فقط) -->
-            <span id="profile-gold-val" style="color: #ffd700;">0</span>
-        </div>
-        <!-- 👆 نهاية كود المال والذهب 👆 -->
-
-    </div>
-</div>
+                <div style="margin-top: 15px; text-align: right;">
+                    <div style="display: flex; justify-content: space-between; color: #cbd5e0; font-size: 14px; margin-bottom: 5px;">
+                        <span id="profile-level-number" style="font-weight: bold; color: #3182ce;">المستوى 1</span>
+                        <span id="profile-xp-text">0 / 100 XP</span>
+                    </div>
+                    <div style="width: 100%; height: 12px; background: #2d3748; border-radius: 6px; overflow: hidden;">
+                        <div id="profile-xp-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #3182ce, #63b3ed); transition: width 0.5s ease;"></div>
+                    </div>
+                    
+                    <!-- المال والذهب -->
+                    <div style="display: flex; justify-content: space-between; margin-top: 15px; padding: 0 5px; font-weight: bold; font-size: 16px;">
+                        <span id="profile-money-val" style="color: #ffffff;">0</span>
+                        <span id="profile-gold-val" style="color: #ffd700;">0</span>
+                    </div>
+                </div>
+            </div>
 
             <!-- بلوك المنطقة والجنسية التفاعلي -->
             <div class="info-block" style="background: #1a1f26; border-radius: 12px; padding: 15px; display: flex; flex-direction: column; gap: 12px; border: 1px solid #2d3748;">
@@ -581,82 +576,74 @@
                     <span id="profile-nationality" style="font-weight: bold;">المغرب</span>
                 </div>
             </div>
-<!-- قوائم التطوير المنزلقة المتطورة -->
-<div class="stats-upgrade-container" style="display: flex; flex-direction: column; gap: 10px;">
-    
-    <!-- 1. عنصر القوة -->
-    <div class="stat-box" style="background: #1a1f26; border-radius: 12px; border: 1px solid #2d3748; overflow: hidden;">
-        <div id="stat-power-header" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #fff;">
-            <span>💪 القوة القتالية</span>
-            <span style="font-weight: bold; color: #e53e3e; font-size: 18px;" id="stat-power-val">0</span>
-        </div>
-        <div id="stat-power-dropdown" class="stat-dropdown" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease; background: #151920; padding: 0 15px;">
-            <div style="padding: 15px 0; display: flex; flex-direction: column; gap: 10px;">
-                <p id="time-power" style="color: #a0aec0; margin: 0; font-size: 13px;">الوقت المستغرق: --</p>
+
+            <!-- قوائم التطوير المنزلقة المتطورة -->
+            <div class="stats-upgrade-container" style="display: flex; flex-direction: column; gap: 10px;">
                 
-                <!-- حاوية الأزرار الأصلية للقوة: تختفي تلقائياً عند بدء التطوير -->
-                <div id="actions-power" style="display: flex; gap: 10px;">
-                    <button onclick="startStatUpgrade('power', 'money')" style="flex: 1; background: #2b6cb0; color: #fff; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-power-money">0 مال</button>
-                    <button onclick="startStatUpgrade('power', 'gold')" style="flex: 1; background: #d69e2e; color: #fff; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-power-gold">0 ذهب</button>
+                <!-- 1. عنصر القوة -->
+                <div class="stat-box" style="background: #1a1f26; border-radius: 12px; border: 1px solid #2d3748; overflow: hidden;">
+                    <div id="stat-power-header" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #fff;">
+                        <span>💪 القوة القتالية</span>
+                        <span style="font-weight: bold; color: #e53e3e; font-size: 18px;" id="stat-power-val">0</span>
+                    </div>
+                    <div id="stat-power-dropdown" class="stat-dropdown" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease; background: #151920; padding: 0 15px;">
+                        <div style="padding: 15px 0; display: flex; flex-direction: column; gap: 10px;">
+                            <p id="time-power" style="color: #a0aec0; margin: 0; font-size: 13px;">الوقت المستغرق: --</p>
+                            <div id="actions-power" style="display: flex; gap: 10px;">
+                                <button onclick="startStatUpgrade('power', 'money')" style="flex: 1; background: #2b6cb0; color: #fff; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-power-money">0 مال</button>
+                                <button onclick="startStatUpgrade('power', 'gold')" style="flex: 1; background: #d69e2e; color: #fff; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-power-gold">0 ذهب</button>
+                            </div>
+                            <div id="timer-container-power" style="display: none; text-align: center; color: #fc8181; font-weight: bold; padding: 8px; background: #2d3748; border-radius: 6px; font-size: 14px;">
+                                ⏳ متبقي: <span id="timer-val-power">--</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- ⏳ حاوية العداد الداخلي للقوة: تظهر فقط عند التطوير الجاري -->
-                <div id="timer-container-power" style="display: none; text-align: center; color: #fc8181; font-weight: bold; padding: 8px; background: #2d3748; border-radius: 6px; font-size: 14px;">
-                    ⏳ متبقي: <span id="timer-val-power">--</span>
+                <!-- 2. عنصر التعليم -->
+                <div class="stat-box" style="background: #1a1f26; border-radius: 12px; border: 1px solid #2d3748; overflow: hidden;">
+                    <div id="stat-education-header" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #fff;">
+                        <span>📚 مستوي التعليم</span>
+                        <span style="font-weight: bold; color: #3182ce; font-size: 18px;" id="stat-education-val">0</span>
+                    </div>
+                    <div id="stat-education-dropdown" class="stat-dropdown" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease; background: #151920; padding: 0 15px;">
+                        <div style="padding: 15px 0; display: flex; flex-direction: column; gap: 10px;">
+                            <p id="time-education" style="color: #a0aec0; margin: 0; font-size: 13px;">الوقت المستغرق: --</p>
+                            <div id="actions-education" style="display: flex; gap: 10px;">
+                                <button onclick="startStatUpgrade('education', 'money')" style="flex: 1; background: #2b6cb0; color: #fff; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-education-money">0 مال</button>
+                                <button onclick="startStatUpgrade('education', 'gold')" style="flex: 1; background: #d69e2e; color: #fff; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-education-gold">0 ذهب</button>
+                            </div>
+                            <div id="timer-container-education" style="display: none; text-align: center; color: #fc8181; font-weight: bold; padding: 8px; background: #2d3748; border-radius: 6px; font-size: 14px;">
+                                ⏳ متبقي: <span id="timer-val-education">--</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+
+                <!-- 3. عنصر الطاقة -->
+                <div class="stat-box" style="background: #1a1f26; border-radius: 12px; border: 1px solid #2d3748; overflow: hidden;">
+                    <div id="stat-experience-header" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #fff;">
+                        <span>⚡ مستوى الطاقة</span>
+                        <span style="font-weight: bold; color: #38a169; font-size: 18px;" id="stat-experience-val">0</span>
+                    </div>
+                    <div id="stat-experience-dropdown" class="stat-dropdown" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease; background: #151920; padding: 0 15px;">
+                        <div style="padding: 15px 0; display: flex; flex-direction: column; gap: 10px;">
+                            <p id="time-experience" style="color: #a0aec0; margin: 0; font-size: 13px;">الوقت المستغرق: --</p>
+                            <div id="actions-experience" style="display: flex; gap: 10px;">
+                                <button onclick="startStatUpgrade('experience', 'money')" style="flex: 1; background: #2b6cb0; color: #fff; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-experience-money">0 مال</button>
+                                <button onclick="startStatUpgrade('experience', 'gold')" style="flex: 1; background: #d69e2e; color: #fff; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-experience-gold">0 ذهب</button>
+                            </div>
+                            <div id="timer-container-experience" style="display: none; text-align: center; color: #fc8181; font-weight: bold; padding: 8px; background: #2d3748; border-radius: 6px; font-size: 14px;">
+                                ⏳ متبقي: <span id="timer-val-experience">--</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
-    </div>
-
-    <!-- 2. عنصر التعليم -->
-    <div class="stat-box" style="background: #1a1f26; border-radius: 12px; border: 1px solid #2d3748; overflow: hidden;">
-        <div id="stat-education-header" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #fff;">
-            <span>📚 مستوي التعليم</span>
-            <span style="font-weight: bold; color: #3182ce; font-size: 18px;" id="stat-education-val">0</span>
-        </div>
-        <div id="stat-education-dropdown" class="stat-dropdown" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease; background: #151920; padding: 0 15px;">
-            <div style="padding: 15px 0; display: flex; flex-direction: column; gap: 10px;">
-                <p id="time-education" style="color: #a0aec0; margin: 0; font-size: 13px;">الوقت المستغرق: --</p>
-                
-                <!-- حاوية الأزرار الأصلية للتعليم -->
-                <div id="actions-education" style="display: flex; gap: 10px;">
-                    <button onclick="startStatUpgrade('education', 'money')" style="flex: 1; background: #2b6cb0; color: #fff; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-education-money">0 مال</button>
-                    <button onclick="startStatUpgrade('education', 'gold')" style="flex: 1; background: #d69e2e; color: #fff; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-education-gold">0 ذهب</button>
-                </div>
-
-                <!-- ⏳ حاوية العداد الداخلي للتعليم -->
-                <div id="timer-container-education" style="display: none; text-align: center; color: #fc8181; font-weight: bold; padding: 8px; background: #2d3748; border-radius: 6px; font-size: 14px;">
-                    ⏳ متبقي: <span id="timer-val-education">--</span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 3. عنصر الخبرة -->
-    <div class="stat-box" style="background: #1a1f26; border-radius: 12px; border: 1px solid #2d3748; overflow: hidden;">
-        <div id="stat-experience-header" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #fff;"><span>⚡ مستوى الطاقة</span>
-            <span style="font-weight: bold; color: #38a169; font-size: 18px;" id="stat-experience-val">0</span>
-        </div>
-        <div id="stat-experience-dropdown" class="stat-dropdown" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease; background: #151920; padding: 0 15px;">
-            <div style="padding: 15px 0; display: flex; flex-direction: column; gap: 10px;">
-                <p id="time-experience" style="color: #a0aec0; margin: 0; font-size: 13px;">الوقت المستغرق: --</p>
-                
-                <!-- حاوية الأزرار الأصلية للخبرة -->
-                <div id="actions-experience" style="display: flex; gap: 10px;">
-                    <button onclick="startStatUpgrade('experience', 'money')" style="flex: 1; background: #2b6cb0; color: #fff; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-experience-money">0 مال</button>
-                    <button onclick="startStatUpgrade('experience', 'gold')" style="flex: 1; background: #d69e2e; color: #fff; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-experience-gold">0 ذهب</button>
-                </div>
-
-                <!-- ⏳ حاوية العداد الداخلي للخبرة -->
-                <div id="timer-container-experience" style="display: none; text-align: center; color: #fc8181; font-weight: bold; padding: 8px; background: #2d3748; border-radius: 6px; font-size: 14px;">
-                    ⏳ متبقي: <span id="timer-val-experience">--</span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-</div>
-        <!-- باقي بوابات العرض الداخلية للعبة المعتمدة على الـ Component Container -->
+        
+        <!-- بوابات العرض الإضافية -->
         <div id="view-work" class="game-view" style="display: none;">
             <div class="page-inner-card">
                 <div class="page-title-banner">💼 قطاع العمل والإنتاج المالي</div>
@@ -671,138 +658,151 @@
             </div>
         </div>
 
+        <div id="view-alliances" class="game-view" style="display: none;">
+            <div class="page-inner-card">
+                <div class="page-title-banner">🛡️ تحالفات الدفاع العسكري المشترك</div>
+                <p style="text-align: center; color: #8b949e; padding: 20px;">شاشة التكتلات والتحالفات العسكرية الإقليمية والدولية.</p>
+            </div>
+        </div>
+
+        <!-- الشاشات الفرعية للإحصائيات والتنقل -->
         <div id="view-continent-map" class="game-view" style="display: none;">
             <div class="page-inner-card">
                 <div class="page-title-banner">🗺️ خريطة قارة أفريقيا السياسية</div>
                 <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">جاري معالجة وتجهيز الخارطة الاستراتيجية للنزاعات الدولية والحدودية...</p>
             </div>
         </div>
-
-        <div id="view-continent-players" class="game-view" style="display: none;">
-            <div class="page-inner-card">
-                <div class="page-title-banner">👥 التعداد السكاني للقارة</div>
-                <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">تعداد كافة قادة وجنرالات الدول الإفريقية الحلفاء والخصوم.</p>
-            </div>
-        </div>
-
-        <div id="view-continent-online" class="game-view" style="display: none;">
-            <div class="page-inner-card">
-                <div class="page-title-banner">🟢 المتواجدون على الخط الآن</div>
-                <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">قائمة باللاعبين النشطين حالياً في مختلف بقاع القارة الإفريقية.</p>
-            </div>
-        </div>
-
-        <div id="view-continent-parties" class="game-view" style="display: none;">
-            <div class="page-inner-card">
-                <div class="page-title-banner">🤝 الأحزاب السياسية الإقليمية</div>
-                <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">قائمة بكافة التكتلات السياسية المعترف بها دولياً في البرلمانات الإقليمية.</p>
-            </div>
-        </div>
-
-        <div id="view-continent-factories" class="game-view" style="display: none;">
-            <div class="page-inner-card">
-                <div class="page-title-banner">🏭 قطاع الصناعة القاري</div>
-                <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">بيانات وتحديثات خطوط الإنتاج والمصانع الثقيلة في قارة أفريقيا.</p>
-            </div>
-        </div>
-
-        <div id="view-continent-countries" class="game-view" style="display: none;">
-            <div class="page-inner-card">
-                <div class="page-title-banner">🏳️ سجل الـ 50 دولة إفريقية</div>
-                <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">استعرض البيانات الاقتصادية والقدرة الدفاعية لجميع الدول الـ 50.</p>
-            </div>
-        </div>
-
-        <div id="view-continent-alliances" class="game-view" style="display: none;">
-            <div class="page-inner-card">
-                <div class="page-title-banner">🛡️ تحالفات الدفاع العسكري المشترك</div>
-                <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">عرض المعاهدات ومواثيق التعاون العسكري بين القوى الكبرى وحلفاء اللعبة.</p>
-            </div>
-        </div>
-
-        <div id="view-continent-independent" class="game-view" style="display: none;">
-            <div class="page-inner-card">
-                <div class="page-title-banner">🔓 الدول والكيانات المستقلة</div>
-                <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">سجل الدول غير المنضوية تحت مظلة أي تكتل عسكري دولي حالياً.</p>
-            </div>
-        </div>
-
-        <div id="view-country-info" class="game-view" style="display: none;">
-            <div class="page-inner-card">
-                <div class="page-title-banner">🏛️ ديوان رئاسة الدولة وعلم الوطن</div>
-                <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">هنا يتم اتخاذ القرارات السيادية وتغيير الضرائب واستعراض مخزون الخزانة العامة للدولة.</p>
-            </div>
-        </div>
-
-        <div id="view-country-players" class="game-view" style="display: none;">
-            <div class="page-inner-card">
-                <div class="page-title-banner">👥 سجل مواطني وسكان الدولة</div>
-                <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">قائمة بأسماء ومرتبات القادة الحاملين جنسية الدولة الحالية ورتبهم الفعالة.</p>
-            </div>
-        </div>
-
-        <div id="view-country-online" class="game-view" style="display: none;">
-            <div class="page-inner-card">
-                <div class="page-title-banner">🟢 المتصلون بالوطن حالياً</div>
-                <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">شاشة المراقبة اللحظية للاعبي ومواطني وطنك المتواجدين على خوادم اللعبة الآن.</p>
-            </div>
-        </div>
-
-        <div id="view-country-parties" class="game-view" style="display: none;">
-            <div class="page-inner-card">
-                <div class="page-title-banner">🤝 الأحزاب والائتلافات المحلية</div>
-                <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">انضم أو أسس حزبك السياسي الخاص لتنافس على الأغلبية البرلمانية وإدارة الحكومة.</p>
-            </div>
-        </div>
-
-        <div id="view-country-factories" class="game-view" style="display: none;">
-            <div class="page-inner-card">
-                <div class="page-title-banner">🏭 إدارة وتطوير المصانع المحلية</div>
-                <p style="color: #8b949e; font-size: 14px; text-align: center; padding: 20px;">أدر خطوط إنتاج المعدات والأسلحة والذخائر والمنتجات الغذائية لتأمين جبهات القتال.</p>
-            </div>
-        </div>
+        <div id="view-continent-pop" class="game-view" style="display: none;"><div class="page-inner-card"><div class="page-title-banner">👥 التعداد السكاني للقارة</div><p style="color:#8b949e; text-align:center; padding:20px;">قائمة باللاعبين والقادة على مستوى القارة.</p></div></div>
+        <div id="view-continent-online" class="game-view" style="display: none;"><div class="page-inner-card"><div class="page-title-banner">🟢 المتصلون بالقارة الآن</div><p style="color:#8b949e; text-align:center; padding:20px;">اللاعبون المتصلون بالإنترنت في إفريقيا حالياً.</p></div></div>
+        <div id="view-continent-parties" class="game-view" style="display: none;"><div class="page-inner-card"><div class="page-title-banner">🤝 الأحزاب السياسية الإقليمية</div><p style="color:#8b949e; text-align:center; padding:20px;">استعراض الأحزاب السياسية الكبرى القارية.</p></div></div>
+        <div id="view-continent-factories" class="game-view" style="display: none;"><div class="page-inner-card"><div class="page-title-banner">🏭 قطاع الصناعة القاري</div><p style="color:#8b949e; text-align:center; padding:20px;">تحديثات المصانع والإنتاج الاقتصادي الأفريقي.</p></div></div>
+        <div id="view-continent-countries" class="game-view" style="display: none;"><div class="page-inner-card"><div class="page-title-banner">🏳️ سجل الـ 50 دولة إفريقية</div><p style="color:#8b949e; text-align:center; padding:20px;">استعراض إحصائيات الدول الخمسين.</p></div></div>
+        <div id="view-continent-alliances" class="game-view" style="display: none;"><div class="page-inner-card"><div class="page-title-banner">🛡️ أحلاف الدفاع القارية</div><p style="color:#8b949e; text-align:center; padding:20px;">بيانات التحالفات السيادية وعقود السلام.</p></div></div>
+        <div id="view-continent-independent" class="game-view" style="display: none;"><div class="page-inner-card"><div class="page-title-banner">🔓 الأقاليم المستقلة</div><p style="color:#8b949e; text-align:center; padding:20px;">المقاطعات غير الخاضعة لسيطرة أي تكتل حالياً.</p></div></div>
+        <div id="view-country-info" class="game-view" style="display: none;"><div class="page-inner-card"><div class="page-title-banner">🏛️ رئاسة الدولة والديوان السيادي</div><p style="color:#8b949e; text-align:center; padding:20px;">إدارة الشؤون المحلية ووزارة المالية بوطنك الحلي.</p></div></div>
+        <div id="view-country-pop" class="game-view" style="display: none;"><div class="page-inner-card"><div class="page-title-banner">👥 سجل مواطني الدولة</div><p style="color:#8b949e; text-align:center; padding:20px;">قائمة باللاعبين المسجلين في دولتك.</p></div></div>
+        <div id="view-country-online" class="game-view" style="display: none;"><div class="page-inner-card"><div class="page-title-banner">🟢 المتصلون بالوطن</div><p style="color:#8b949e; text-align:center; padding:20px;">أبناء وطنك النشطين في هذه اللحظة.</p></div></div>
+        <div id="view-country-parties" class="game-view" style="display: none;"><div class="page-inner-card"><div class="page-title-banner">🤝 الأحزاب الائتلافية المحلية</div><p style="color:#8b949e; text-align:center; padding:20px;">الأحزاب والانتخابات البرلمانية داخل الدولة.</p></div></div>
+        <div id="view-country-factories" class="game-view" style="display: none;"><div class="page-inner-card"><div class="page-title-banner">🏭 المصانع والمنشآت المحلية</div><p style="color:#8b949e; text-align:center; padding:20px;">إدارة الموارد وتطوير البنية الصناعية الاقتصادية للدولة.</p></div></div>
+        <div id="view-parliament" class="game-view" style="display: none;"><div class="page-inner-card"><div class="page-title-banner">🏛️ برلمان مجلس النواب</div><p style="color:#8b949e; text-align:center; padding:20px;">شاشة التصويت على القوانين والمراسيم الرئاسية بالدولة.</p></div></div>
 
     </main>
 
-    <!-- شريط التنقل السفلي الثابت والإحترافي -->
+    <!-- 📌 شريط التنقل السفلي الذي سقط في الرد السابق -->
     <nav class="bottom-nav">
-        <button class="nav-link active" onclick="switchView('main')">
-            <i class="fa-solid fa-house"></i>
-            <span>الرئيسية</span>
+        <button class="nav-link active" onclick="switchView('view-main')">
+            <i class="fa-solid fa-earth-africa"></i>
+            <span>العالم</span>
         </button>
-        <button class="nav-link" onclick="switchView('work')">
+        <button class="nav-link" onclick="switchView('view-work')">
             <i class="fa-solid fa-briefcase"></i>
             <span>العمل</span>
         </button>
-        <button class="nav-link" onclick="switchView('wars')">
-            <i class="fa-solid fa-shield-halved"></i>
+        <button class="nav-link" onclick="switchView('view-wars')">
+            <i class="fa-solid fa-jet-fighter-up"></i>
             <span>الحروب</span>
         </button>
-        <button class="nav-link" onclick="switchView('profile')">
-            <i class="fa-solid fa-user"></i>
+        <button class="nav-link" onclick="switchView('view-alliances')">
+            <i class="fa-solid fa-shield-halved"></i>
+            <span>التحالف</span>
+        </button>
+        <button class="nav-link" onclick="switchView('view-profile')">
+            <i class="fa-solid fa-user-gear"></i>
             <span>الحساب</span>
         </button>
     </nav>
 
-    <!-- دالة مساعدة سريعة لفتح نافذة إدخال الاسم الجديد -->
+    <!-- 📌 الـ JavaScript التشغيلي الكامل لربط العناصر وفتح النوافذ -->
     <script>
-    function triggerNameChange() {
-        const newName = prompt("أدخل اسم الشهرة الجديد الخاص بك:");
-        if (newName && typeof changePlayerName === 'function') {
-            changePlayerName(newName);
-        }
-    }
-    </script>
- <script src="js/main_game.js"></script>
+        // دالة التبديل بين الشاشات الرئيسية والفرعية
+        function switchView(viewId) {
+            // إخفاء كل البوابات والشاشات
+            document.querySelectorAll('.game-view').forEach(view => {
+                view.style.display = 'none';
+            });
+            
+            // إظهار الشاشة المطلوبة
+            const activeView = document.getElementById(viewId);
+            if (activeView) {
+                if (viewId === 'view-profile') {
+                    activeView.style.display = 'flex';
+                } else {
+                    activeView.style.display = 'flex';
+                }
+            }
 
+            // تحديث حالة الأزرار النشطة في الشريط السفلي إذا كانت شاشة رئيسية
+            document.querySelectorAll('.bottom-nav .nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            
+            // ربط تفعيل الزر بالسلاسل الرئيسية
+            if(viewId === 'view-main') document.querySelectorAll('.bottom-nav .nav-link')[0].classList.add('active');
+            if(viewId === 'view-work') document.querySelectorAll('.bottom-nav .nav-link')[1].classList.add('active');
+            if(viewId === 'view-wars') document.querySelectorAll('.bottom-nav .nav-link')[2].classList.add('active');
+            if(viewId === 'view-alliances') document.querySelectorAll('.bottom-nav .nav-link')[3].classList.add('active');
+            if(viewId === 'view-profile') document.querySelectorAll('.bottom-nav .nav-link')[4].classList.add('active');
+        }
+
+        // محرك تشغيل السلايدشو الدائري (البلوك الأول)
+        const container = document.getElementById('slides-container');
+        const dot1 = document.getElementById('dot-1');
+        const dot2 = document.getElementById('dot-2');
+
+        if(dot1 && dot2 && container) {
+            dot1.addEventListener('click', () => {
+                container.style.transform = 'translateX(0%)';
+                dot1.classList.add('active');
+                dot2.classList.remove('active');
+            });
+            dot2.addEventListener('click', () => {
+                container.style.transform = 'translateX(50%)';
+                dot2.classList.add('active');
+                dot1.classList.remove('active');
+            });
+        }
+
+        // ربط أزرار ومربعات الإحصائيات لفتح الشاشات الداخلية الفرعية
+        const setupClick = (id, targetView) => {
+            const el = document.getElementById(id);
+            if(el) el.addEventListener('click', () => switchView(targetView));
+        };
+
+        setupClick('btn-continent-map', 'view-continent-map');
+        setupClick('btn-continent-pop', 'view-continent-pop');
+        setupClick('btn-continent-online', 'view-continent-online');
+        setupClick('btn-continent-parties', 'view-continent-parties');
+        setupClick('btn-continent-factories', 'view-continent-factories');
+        setupClick('btn-continent-countries', 'view-continent-countries');
+        setupClick('btn-continent-alliances', 'view-continent-alliances');
+        setupClick('btn-continent-independent', 'view-continent-independent');
+        
+        setupClick('btn-country-flag', 'view-country-info');
+        setupClick('btn-country-pop', 'view-country-pop');
+        setupClick('btn-country-online', 'view-country-online');
+        setupClick('btn-country-parties', 'view-country-parties');
+        setupClick('btn-country-factories', 'view-country-factories');
+        setupClick('btn-parliament', 'view-parliament');
+
+        // كود الفتح التفاعلي لقوائم الحساب المنزلقة بالتناوب (Accordions)
+        const setupDropdown = (headerId, dropdownId) => {
+            const header = document.getElementById(headerId);
+            const drop = document.getElementById(dropdownId);
+            if(header && drop) {
+                header.addEventListener('click', () => {
+                    const isOpen = drop.classList.contains('open');
+                    // إغلاق أي قائمة مفتوحة أولاً
+                    document.querySelectorAll('.stat-dropdown').forEach(d => d.classList.remove('open'));
+                    if(!isOpen) {
+                        drop.classList.add('open');
+                    }
+                });
+            }
+        };
+
+        setupDropdown('stat-power-header', 'stat-power-dropdown');
+        setupDropdown('stat-education-header', 'stat-education-dropdown');
+        setupDropdown('stat-experience-header', 'stat-experience-dropdown');
+    </script>
 </body>
 </html>
-   
-   
-   
-   
-   
-   
-   
-
-
