@@ -247,6 +247,7 @@ function updateXPProgressBar(totalXP) {
 }
 
 // ==========================================
+// ==========================================
 // ⚙️ معالجة عمليات التطوير والأوقات وإنهائها
 // ==========================================
 function startStatUpgrade(statName, currencyType) {
@@ -260,7 +261,9 @@ function startStatUpgrade(statName, currencyType) {
     const currentStatLevel = localPlayerData[statName] || 0;
     const moneyCost = (currentStatLevel + 1) * 1000;
     const goldCost = (currentStatLevel + 1) * 5;
-    let timeInSeconds = (currentStatLevel + 1) * 30;
+    
+    // 🚀 التعديل هنا: تطبيق نفس المعادلة الأسية الجديدة لكي تتطابق مع الأزرار
+    let timeInSeconds = Math.floor(Math.pow(currentStatLevel + 1, 1.5) * 60);
 
     const user = firebase.auth().currentUser;
     const db = firebase.firestore();
@@ -272,6 +275,7 @@ function startStatUpgrade(statName, currencyType) {
     } else if (currencyType === 'gold') {
         if ((localPlayerData.gold || 0) < goldCost) { return alert("🔴 لا تملك الذهب الكافي!"); }
         updates['gold'] = firebase.firestore.FieldValue.increment(-goldCost);
+        // قسمة الوقت على 2 في حالة استخدام الذهب
         timeInSeconds = Math.floor(timeInSeconds / 2); 
     }
 
@@ -288,7 +292,6 @@ function startStatUpgrade(statName, currencyType) {
         .then(() => alert(`⏳ بدأ تطوير مهارة ${statName} الآن...`))
         .catch(err => console.error(err));
 }
-
 // ==========================================
 // ==========================================
 // ⏳ نظام الترقية والوقت والعدادات الحية للقوائم المنزلقة
