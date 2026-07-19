@@ -223,23 +223,7 @@ function createNewPlayerProfile(user) {
 // ==========================================
 // 📈 معادلة المستوى وشريط الـ XP التراكمي في البلوك الأول
 // ==========================================
-function updateXPProgressBar(totalXP) {
-    // حساب المستوى بناءً على نقاط الخبرة التراكمية الحقيقية للاعب
-    const currentLevel = Math.floor(Math.sqrt(totalXP / 100)) + 1;
-    const xpForCurrentLevel = Math.pow(currentLevel - 1, 2) * 100;
-    const xpForNextLevel = Math.pow(currentLevel, 2) * 100;
-    
-    const xpInCurrentLevel = totalXP - xpForCurrentLevel;
-    const xpNeededForNext = xpForNextLevel - xpForCurrentLevel;
-    
-    const progressPercent = Math.max(0, Math.min(100, (xpInCurrentLevel / xpNeededForNext) * 100));
 
-    const levelDisplay = document.getElementById('profile-level-number');
-    const progressBar = document.getElementById('profile-xp-bar');
-    const progressText = document.getElementById('profile-xp-text');
-
-    if (levelDisplay) levelDisplay.textContent = `المستوى ${currentLevel}`;
-    if (progressBar) progressBar.style.width = `${progressPercent}%`;
     
     // التعديل الجديد لعرض التقدم بشكل احترافي
     if (progressText) progressText.textContent = `${Math.floor(totalXP)} / ${xpForNextLevel} XP`;
