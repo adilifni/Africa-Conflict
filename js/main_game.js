@@ -51,6 +51,12 @@ function initGameSystem() {
 
                         const profileImg = document.getElementById('profile-avatar');
                         if (profileImg) profileImg.src = data.avatarUrl || user.photoURL || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + userUid;
+// كود الذهب والمال
+const profileMoneyVal = document.getElementById('profile-money-val');
+if (profileMoneyVal) profileMoneyVal.textContent = data.money || 0;
+
+const profileGoldVal = document.getElementById('profile-gold-val');
+if (profileGoldVal) profileGoldVal.textContent = data.gold || 0;
 
                         // تحديث شريط المستوى والـ XP بالمعادلة الأصلية
                         updateXPProgressBar(data.xp || 0);
