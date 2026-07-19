@@ -582,84 +582,155 @@
                 </div>
             </div>
 
-            <!-- قوائم التطوير المنزلقة المتطورة -->
-            <div class="stats-upgrade-container" style="display: flex; flex-direction: column; gap: 10px;">
+<!-- قوائم التطوير المنزلقة المتطورة -->
+<style>
+    /* التعديل الصحيح لحركة الأكورديون الانسيابية */
+    .stat-dropdown {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.35s ease-out, padding 0.35s ease;
+        background: #151920;
+        padding: 0 15px;
+    }
+    /* عند فتح القائمة، نعطيها مساحة كافية لتظهر الأزرار والعدادات بالكامل */
+    .stat-dropdown.open {
+        max-height: 500px; /* تضمن عدم قص أي زر */
+        padding: 10px 15px;
+        border-top: 1px dashed #2d3748;
+    }
+</style>
+
+<div class="stats-upgrade-container" style="display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 600px; margin: 0 auto;">
+    
+    <!-- 1. عنصر القوة -->
+    <div class="stat-box" style="background: #1a1f26; border-radius: 12px; border: 1px solid #2d3748; overflow: hidden;">
+        <div id="stat-power-header" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #fff;">
+            <span>💪 القوة القتالية</span>
+            <span style="font-weight: bold; color: #e53e3e; font-size: 18px;" id="stat-power-val">0</span>
+        </div>
+        <div id="stat-power-dropdown" class="stat-dropdown">
+            <div style="padding: 10px 0; display: flex; flex-direction: column; gap: 10px;">
+                <p id="time-power" style="color: #a0aec0; margin: 0; font-size: 13px;">الوقت المستغرق: 5 دقائق</p>
                 
-                <!-- 1. عنصر القوة -->
-                <div class="stat-box" style="background: #1a1f26; border-radius: 12px; border: 1px solid #2d3748; overflow: hidden;">
-                    <div id="stat-power-header" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #fff;">
-                        <span>💪 القوة القتالية</span>
-                        <span style="font-weight: bold; color: #e53e3e; font-size: 18px;" id="stat-power-val">0</span>
-                    </div>
-                    <div id="stat-power-dropdown" class="stat-dropdown" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease; background: #151920; padding: 0 15px;">
-                        <div style="padding: 15px 0; display: flex; flex-direction: column; gap: 10px;">
-                            <p id="time-power" style="color: #a0aec0; margin: 0; font-size: 13px;">الوقت المستغرق: --</p>
-                            
-                            <!-- حاوية الأزرار الأصلية للقوة: تختفي تلقائياً عند بدء التطوير -->
-                            <div id="actions-power" style="display: flex; gap: 10px;">
-                                <button onclick="startStatUpgrade('power', 'money')" style="flex: 1; background: #2b6cb0; color: #fff; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-power-money">0 مال</button>
-                                <button onclick="startStatUpgrade('power', 'gold')" style="flex: 1; background: #d69e2e; color: #fff; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-power-gold">0 ذهب</button>
-                            </div>
-
-                            <!-- ⏳ حاوية العداد الداخلي للقوة: تظهر فقط عند التطوير الجاري -->
-                            <div id="timer-container-power" style="display: none; text-align: center; color: #fc8181; font-weight: bold; padding: 8px; background: #2d3748; border-radius: 6px; font-size: 14px;">
-                                ⏳ متبقي: <span id="timer-val-power">--</span>
-                            </div>
-                        </div>
-                    </div>
+                <!-- حاوية الأزرار الأصلية للقوة -->
+                <div id="actions-power" style="display: flex; gap: 10px;">
+                    <button onclick="startStatUpgrade('power', 'money')" style="flex: 1; background: #2b6cb0; color: #fff; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-power-money">100 مال</button>
+                    <button onclick="startStatUpgrade('power', 'gold')" style="flex: 1; background: #d69e2e; color: #fff; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-power-gold">5 ذهب</button>
                 </div>
-
-                <!-- 2. عنصر التعليم -->
-                <div class="stat-box" style="background: #1a1f26; border-radius: 12px; border: 1px solid #2d3748; overflow: hidden;">
-                    <div id="stat-education-header" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #fff;">
-                        <span>📚 مستوي التعليم</span>
-                        <span style="font-weight: bold; color: #3182ce; font-size: 18px;" id="stat-education-val">0</span>
-                    </div>
-                    <div id="stat-education-dropdown" class="stat-dropdown" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease; background: #151920; padding: 0 15px;">
-                        <div style="padding: 15px 0; display: flex; flex-direction: column; gap: 10px;">
-                            <p id="time-education" style="color: #a0aec0; margin: 0; font-size: 13px;">الوقت المستغرق: --</p>
-                            
-                            <!-- حاوية الأزرار الأصلية للتعليم -->
-                            <div id="actions-education" style="display: flex; gap: 10px;">
-                                <button onclick="startStatUpgrade('education', 'money')" style="flex: 1; background: #2b6cb0; color: #fff; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-education-money">0 مال</button>
-                                <button onclick="startStatUpgrade('education', 'gold')" style="flex: 1; background: #d69e2e; color: #fff; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-education-gold">0 ذهب</button>
-                            </div>
-
-                            <!-- ⏳ حاوية العداد الداخلي للتعليم -->
-                            <div id="timer-container-education" style="display: none; text-align: center; color: #fc8181; font-weight: bold; padding: 8px; background: #2d3748; border-radius: 6px; font-size: 14px;">
-                                ⏳ متبقي: <span id="timer-val-education">--</span>
-                            </div>
-                        </div>
-                    </div>
+                <!-- ⏳ حاوية العداد الداخلي للقوة -->
+                <div id="timer-container-power" style="display: none; text-align: center; color: #fc8181; font-weight: bold; padding: 8px; background: #2d3748; border-radius: 6px; font-size: 14px;">
+                    ⏳ متبقي: <span id="timer-val-power">--:--</span>
                 </div>
-
-                <!-- 3. عنصر الخبرة -->
-                <div class="stat-box" style="background: #1a1f26; border-radius: 12px; border: 1px solid #2d3748; overflow: hidden;">
-                    <div id="stat-experience-header" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #fff;">
-                        <span>⚡ مستوى الطاقة</span>
-                        <span style="font-weight: bold; color: #38a169; font-size: 18px;" id="stat-experience-val">0</span>
-                    </div>
-                    <div id="stat-experience-dropdown" class="stat-dropdown" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease; background: #151920; padding: 0 15px;">
-                        <div style="padding: 15px 0; display: flex; flex-direction: column; gap: 10px;">
-                            <p id="time-experience" style="color: #a0aec0; margin: 0; font-size: 13px;">الوقت المستغرق: --</p>
-                            
-                            <!-- حاوية الأزرار الأصلية للخبرة -->
-                            <div id="actions-experience" style="display: flex; gap: 10px;">
-                                <button onclick="startStatUpgrade('experience', 'money')" style="flex: 1; background: #2b6cb0; color: #fff; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-experience-money">0 مال</button>
-                                <button onclick="startStatUpgrade('experience', 'gold')" style="flex: 1; background: #d69e2e; color: #fff; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-experience-gold">0 ذهب</button>
-                            </div>
-
-                            <!-- ⏳ حاوية العداد الداخلي للخبرة -->
-                            <div id="timer-container-experience" style="display: none; text-align: center; color: #fc8181; font-weight: bold; padding: 8px; background: #2d3748; border-radius: 6px; font-size: 14px;">
-                                ⏳ متبقي: <span id="timer-val-experience">--</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
             </div>
         </div>
+    </div>
+
+    <!-- 2. عنصر التعليم -->
+    <div class="stat-box" style="background: #1a1f26; border-radius: 12px; border: 1px solid #2d3748; overflow: hidden;">
+        <div id="stat-education-header" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #fff;">
+            <span>📚 مستوي التعليم</span>
+            <span style="font-weight: bold; color: #3182ce; font-size: 18px;" id="stat-education-val">0</span>
+        </div>
+        <div id="stat-education-dropdown" class="stat-dropdown">
+            <div style="padding: 10px 0; display: flex; flex-direction: column; gap: 10px;">
+                <p id="time-education" style="color: #a0aec0; margin: 0; font-size: 13px;">الوقت المستغرق: 10 دقائق</p>
+                
+                <!-- حاوية الأزرار الأصلية للتعليم -->
+                <div id="actions-education" style="display: flex; gap: 10px;">
+                    <button onclick="startStatUpgrade('education', 'money')" style="flex: 1; background: #2b6cb0; color: #fff; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-education-money">200 مال</button>
+                    <button onclick="startStatUpgrade('education', 'gold')" style="flex: 1; background: #d69e2e; color: #fff; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-education-gold">10 ذهب</button>
+                </div>
+                <!-- ⏳ حاوية العداد الداخلي للتعليم -->
+                <div id="timer-container-education" style="display: none; text-align: center; color: #fc8181; font-weight: bold; padding: 8px; background: #2d3748; border-radius: 6px; font-size: 14px;">
+                    ⏳ متبقي: <span id="timer-val-education">--:--</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. عنصر الخبرة (الطاقة) -->
+    <div class="stat-box" style="background: #1a1f26; border-radius: 12px; border: 1px solid #2d3748; overflow: hidden;">
+        <div id="stat-experience-header" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #fff;">
+            <span>⚡ مستوى الطاقة</span>
+            <span style="font-weight: bold; color: #38a169; font-size: 18px;" id="stat-experience-val">0</span>
+        </div>
+        <div id="stat-experience-dropdown" class="stat-dropdown">
+            <div style="padding: 10px 0; display: flex; flex-direction: column; gap: 10px;">
+                <p id="time-experience" style="color: #a0aec0; margin: 0; font-size: 13px;">الوقت المستغرق: 3 دقائق</p>
+                
+                <!-- حاوية الأزرار الأصلية للخبرة -->
+                <div id="actions-experience" style="display: flex; gap: 10px;">
+                    <button onclick="startStatUpgrade('experience', 'money')" style="flex: 1; background: #2b6cb0; color: #fff; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-experience-money">50 مال</button>
+                    <button onclick="startStatUpgrade('experience', 'gold')" style="flex: 1; background: #d69e2e; color: #fff; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-experience-gold">2 ذهب</button>
+                </div>
+                <!-- ⏳ حاوية العداد الداخلي للخبرة -->
+                <div id="timer-container-experience" style="display: none; text-align: center; color: #fc8181; font-weight: bold; padding: 8px; background: #2d3748; border-radius: 6px; font-size: 14px;">
+                    ⏳ متبقي: <span id="timer-val-experience">--:--</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 1. كود فتح وإغلاق القوائم المنزلقة بالتناوب بشكل صحيح
+    const setupDropdown = (headerId, dropdownId) => {
+        const header = document.getElementById(headerId);
+        const drop = document.getElementById(dropdownId);
+        if(header && drop) {
+            header.addEventListener('click', () => {
+                const isOpen = drop.classList.contains('open');
+                // إغلاق أي قائمة مفتوحة أخرى أولاً
+                document.querySelectorAll('.stat-dropdown').forEach(d => d.classList.remove('open'));
+                if(!isOpen) {
+                    drop.classList.add('open');
+                }
+            });
+        }
+    };
+
+    setupDropdown('stat-power-header', 'stat-power-dropdown');
+    setupDropdown('stat-education-header', 'stat-education-dropdown');
+    setupDropdown('stat-experience-header', 'stat-experience-dropdown');
+
+    // 2. الدالة المسؤولة عن بدء التطوير وتشغيل العدادات (منطق فرونت إند تجريبي)
+    function startStatUpgrade(statType, currencyType) {
+        // إخفاء الأزرار وإظهار العداد
+        document.getElementById(`actions-${statType}`).style.display = 'none';
+        document.getElementById(`timer-container-${statType}`).style.display = 'block';
         
+        // تعيين مؤقت افتراضي (مثال: 10 ثوانٍ للتجربة)
+        let timeLeft = 10; 
+        const timerVal = document.getElementById(`timer-val-${statType}`);
+        timerVal.innerText = `00:${timeLeft < 10 ? '0' : ''}${timeLeft}`;
+
+        const countdown = setInterval(() => {
+            timeLeft--;
+            timerVal.innerText = `00:${timeLeft < 10 ? '0' : ''}${timeLeft}`;
+
+            if (timeLeft <= 0) {
+                clearInterval(countdown);
+                // إنهاء التطوير: زيادة القيمة الظاهرية بمقدار 1
+                const statValEl = document.getElementById(`stat-${statType}-val`);
+                statValEl.innerText = parseInt(statValEl.innerText) + 1;
+                
+                // إعادة الواجهة لحالتها الأصلية
+                document.getElementById(`actions-${statType}`).style.display = 'flex';
+                document.getElementById(`timer-container-${statType}`).style.display = 'none';
+                alert(`تهانينا! تم ترقية ${statType} بنجاح.`);
+            }
+        }, 1000);
+    }
+
+    // دالة تغيير الاسم الاحتياطية لتجنب أخطاء الكونسول
+    function triggerNameChange() {
+        let newName = prompt("أدخل اسم القائد الجديد:");
+        if(newName) {
+            alert("تم حفظ الاسم: " + newName);
+        }
+    }
+</script>
+
         <!-- باقي بوابات العرض الداخلية للعبة المعتمدة على الـ Component Container -->
         <div id="view-work" class="game-view" style="display: none;">
             <div class="page-inner-card">
