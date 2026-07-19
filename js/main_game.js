@@ -290,9 +290,11 @@ function startStatUpgrade(statName, currencyType) {
 }
 
 // ==========================================
+// ==========================================
 // ⏳ نظام الترقية والوقت والعدادات الحية للقوائم المنزلقة
 // ==========================================
-function formatTimeDynamic(ms) {
+
+function formatTimeShort(ms) {
     let seconds = Math.floor(ms / 1000);
     let minutes = Math.floor(seconds / 60);
     let hours = Math.floor(minutes / 60);
@@ -302,13 +304,14 @@ function formatTimeDynamic(ms) {
     minutes = minutes % 60;
     hours = hours % 24;
 
-    let timeString = "";
-    if (days > 0) timeString += `${days} يوم و `;
-    if (hours > 0 || days > 0) timeString += `${hours} ساعة و `;
-    if (minutes > 0 || hours > 0 || days > 0) timeString += `${minutes} دقيقة و `;
-    timeString += `${seconds} ثانية`;
+    let timeString = [];
+    if (days > 0) timeString.push(`${days}j`);
+    if (hours > 0) timeString.push(`${hours}h`);
+    if (minutes > 0) timeString.push(`${minutes}m`);
+    // نعرض الثواني فقط إذا كان الوقت أقل من يوم لكي لا يكون النص طويلاً جداً
+    if (seconds > 0 && days === 0) timeString.push(`${seconds}s`); 
 
-    return timeString;
+    return timeString.join(' ') || "1s";
 }
 
 function setupStatDropdowns() {
@@ -338,13 +341,22 @@ function setupStatDropdowns() {
                     
                     const moneyCost = (currentStatLevel + 1) * 1000;
                     const goldCost = (currentStatLevel + 1) * 5;
-                    const timeInSeconds = (currentStatLevel + 1) * 30; 
-
-                    if(document.getElementById(`cost-${stat}-money`)) document.getElementById(`cost-${stat}-money`).textContent = `${moneyCost} مال`;
-                    if(document.getElementById(`cost-${stat}-gold`)) document.getElementById(`cost-${stat}-gold`).textContent = `${goldCost} ذهب`;
                     
+                    // 🚀 المعادلة الأسية الجديدة لزيادة الوقت بشكل كبير في المستويات العالية
+                    const timeInSecondsMoney = Math.floor(Math.pow(currentStatLevel + 1, 1.5) * 60); 
+                    const timeInSecondsGold = Math.floor(timeInSecondsMoney / 2); // الذهب يستهلك نصف الوقت
+                    
+                    // كتابة السعر والوقت داخل الأزرار
+                    if(document.getElementById(`cost-${stat}-money`)) {
+                        document.getElementById(`cost-${stat}-money`).textContent = `${moneyCost} مال | ⏱️ ${formatTimeShort(timeInSecondsMoney * 1000)}`;
+                    }
+                    if(document.getElementById(`cost-${stat}-gold`)) {
+                        document.getElementById(`cost-${stat}-gold`).textContent = `${goldCost} ذهب | ⏱️ ${formatTimeShort(timeInSecondsGold * 1000)}`;
+                    }
+                    
+                    // إخفاء نص الوقت القديم الذي كان يظهر فوق الأزرار
                     if(document.getElementById(`time-${stat}`)) {
-                        document.getElementById(`time-${stat}`).textContent = `الوقت المستغرق: ${formatTimeDynamic(timeInSeconds * 1000)}`;
+                        document.getElementById(`time-${stat}`).style.display = "none";
                     }
                 }
             });
