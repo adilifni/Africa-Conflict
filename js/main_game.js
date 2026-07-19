@@ -30,7 +30,8 @@ function initGameSystem() {
             firebase.auth().onAuthStateChanged((user) => {
                 if (user) {
                     const userUid = user.uid;
-// 1. الاستماع المباشر لبيانات حساب اللاعب وتحديث الواجهات بناءً عليها
+                    
+                    // 1. الاستماع المباشر لبيانات حساب اللاعب وتحديث الواجهات بناءً عليها
                     db.collection('players').doc(userUid).onSnapshot((doc) => {
                         if (!doc.exists) {
                             createNewPlayerProfile(user);
@@ -40,10 +41,10 @@ function initGameSystem() {
                         const data = doc.data();
                         localPlayerData = data;
 
-                        // 🚀 استدعاء الدالة الجديدة هنا مباشرة 🚀
-if (data) {
-    startLiveCounters(data.residence_country || "morocco", data.current_location || "morocco");
-}
+                        if (data) {
+                            startLiveCounters(data.residence_country || "morocco", data.current_location || "morocco");
+                        }
+                        
                         // تحديث الاسم والصورة العلوية وفي الحساب الشخصي
                         let playerName = data.name || user.displayName || user.email.split('@')[0];
                         playerName = playerName.replace(/قائد/g, '').replace(/مجهول/g, '').trim();
@@ -54,90 +55,16 @@ if (data) {
 
                         const profileImg = document.getElementById('profile-avatar');
                         if (profileImg) profileImg.src = data.avatarUrl || user.photoURL || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + userUid;
-// كود الذهب والمال
-const profileMoneyVal = document.getElementById('profile-money-val');
-if (profileMoneyVal) profileMoneyVal.textContent = data.money || 0;
+                        
+                        // كود الذهب والمال
+                        const profileMoneyVal = document.getElementById('profile-money-val');
+                        if (profileMoneyVal) profileMoneyVal.textContent = data.money || 0;
 
-const profileGoldVal = document.getElementById('profile-gold-val');
-if (profileGoldVal) profileGoldVal.textContent = data.gold || 0;
+                        const profileGoldVal = document.getElementById('profile-gold-val');
+                        if (profileGoldVal) profileGoldVal.textContent = data.gold || 0;
 
- 
-// دالة لتشغيل عدادات السكان والمتصلين بشكل حي وديناميكي
-function startLiveCounters(playerCountry, playerRegion) {
-    const db = firebase.firestore();
-
-    db.collection('players').onSnapshot((snapshot) => {
-        const now = Date.now();
-        const fiveMinutes = 5 * 60 * 1000; 
-
-        let globalPopulation = 0;
-        let globalOnline = 0;
-        let countryPopulation = 0;
-        let countryOnline = 0;
-
-        // دالة مساعدة داخلية لتوحيد الأسماء (تحويل morocco أو المغرب لنفس الصيغة)
-        const normalizeCountry = (text) => {
-            const clean = String(text || "").trim().toLowerCase();
-            if (clean === "morocco" || clean === "المغرب") return "morocco";
-            return clean;
-        };
-
-        const pCountryClean = normalizeCountry(playerCountry);
-        const pRegionClean = normalizeCountry(playerRegion);
-
-        snapshot.forEach((doc) => {
-            const data = doc.data();
-            globalPopulation++; // حساب إجمالي المسجلين
-
-            // حساب حالة الاتصال (آخر ظهور خلال 5 دقائق)
-            // ندعم الصيغتين: إذا كان حقل lastActive عبارة عن Timestamp أو رقم عادي مللي ثانية
-            let lastActiveTime = 0;
-            if (data.lastActive) {
-                lastActiveTime = typeof data.lastActive.toDate === 'function' 
-                    ? data.lastActive.toDate().getTime() 
-                    : data.lastActive;
-            }
-            const timeDiff = now - lastActiveTime;
-            
-            const isUserGloballyOnline = data.isOnline === true && timeDiff <= fiveMinutes;
-
-            if (isUserGloballyOnline) {
-                globalOnline++;
-            }
-
-            // قراءة الحقول الصحيحة بناءً على صورة الفايربيس المرفقة
-            const userLocation = normalizeCountry(data.current_location);
-            const userResidence = normalizeCountry(data.residence_country);
-
-            // 1. شرط سكان الدولة: متواجد بها حالياً أو يحمل جنسيتها الإقامية
-            if ((userLocation !== "" && userLocation === pRegionClean) || 
-                (userResidence !== "" && userResidence === pCountryClean)) {
-                countryPopulation++;
-            }
-
-            // 2. شرط متصلي الدولة: متصل حالياً ومتواجد في نفس المنطقة (إذا سافر وتغير اللوكيشن يختفي فوراً)
-            if (isUserGloballyOnline && userLocation !== "" && userLocation === pRegionClean) {
-                countryOnline++;
-            }
-        });
-
-        // تحديث واجهة الـ HTML
-        const gPop = document.getElementById('global-pop-val');
-        const gOnline = document.getElementById('global-online-val');
-        const cPop = document.getElementById('country-pop-val');
-        const cOnline = document.getElementById('country-online-val');
-
-        if (gPop) gPop.textContent = globalPopulation;
-        if (gOnline) gOnline.textContent = globalOnline;
-        if (cPop) cPop.textContent = countryPopulation;
-        if (cOnline) cOnline.textContent = countryOnline;
-    });
-}
- 
- 
- 
-                        // تحديث شريط المستوى والـ XP بالمعادلة الأصلية
-                        updateXPProgressBar(data.xp || 0);
+                        // 📈 تحديث شريط المستوى والـ XP التراكمي (يقرأ من حقل experience الفعلي)
+                        updateXPProgressBar(data.experience || 1);
 
                         // تحديث بيانات الموقع والجنسية الحالية
                         const currentLoc = data.current_location || "morocco";
@@ -145,14 +72,24 @@ function startLiveCounters(playerCountry, playerRegion) {
 
                         const nationalityText = document.getElementById('profile-nationality');
                         if (nationalityText) {
-                            const nation = data.nationality || "morocco";
+                            const nation = data.nationality || data.residence_country || "morocco";
                             nationalityText.textContent = africanCountries[nation]?.name || "لم تحدد";
                         }
 
-                        // تحديث أرقام التطوير الثلاثة الأساسية
-                        if (document.getElementById('stat-power-val')) document.getElementById('stat-power-val').textContent = data.power || 0;
-                        if (document.getElementById('stat-education-val')) document.getElementById('stat-education-val').textContent = data.education || 0;
-                        if (document.getElementById('stat-experience-val')) document.getElementById('stat-experience-val').textContent = data.experience || 0;
+                        // 🎯 ربط الحقول الأربعة المطلوبة وقراءتها وتحديثها تلقائياً بالقيم الحقيقية
+                        if (document.getElementById('stat-power-val')) {
+                            document.getElementById('stat-power-val').textContent = data.power || 10;
+                        }
+                        if (document.getElementById('stat-education-val')) {
+                            document.getElementById('stat-education-val').textContent = data.education || 1;
+                        }
+                        // تحديث مستوى الطاقة (يقوم بالفحص على كلا المعرفين لضمان العمل التلقائي)
+                        if (document.getElementById('stat-energy-val')) {
+                            document.getElementById('stat-energy-val').textContent = data.energy || 100;
+                        }
+                        if (document.getElementById('stat-energy-level-val')) {
+                            document.getElementById('stat-energy-level-val').textContent = data.energy || 100;
+                        }
 
                         // فحص ومراقبة عداد التطوير التنازلي الحالي النشط
                         checkActiveTraining(data);
@@ -199,28 +136,95 @@ function startLiveCounters(playerCountry, playerRegion) {
     waitForFirebase();
 }
 
-// دالة إنشاء ملف لاعب جديد لأول مرة بدقة
+// دالة لتشغيل عدادات السكان والمتصلين بشكل حي وديناميكي
+function startLiveCounters(playerCountry, playerRegion) {
+    const db = firebase.firestore();
+
+    db.collection('players').onSnapshot((snapshot) => {
+        const now = Date.now();
+        const fiveMinutes = 5 * 60 * 1000; 
+
+        let globalPopulation = 0;
+        let globalOnline = 0;
+        let countryPopulation = 0;
+        let countryOnline = 0;
+
+        const normalizeCountry = (text) => {
+            const clean = String(text || "").trim().toLowerCase();
+            if (clean === "morocco" || clean === "المغرب") return "morocco";
+            return clean;
+        };
+
+        const pCountryClean = normalizeCountry(playerCountry);
+        const pRegionClean = normalizeCountry(playerRegion);
+
+        snapshot.forEach((doc) => {
+            const data = doc.data();
+            globalPopulation++; 
+
+            let lastActiveTime = 0;
+            if (data.lastActive) {
+                lastActiveTime = typeof data.lastActive.toDate === 'function' 
+                    ? data.lastActive.toDate().getTime() 
+                    : data.lastActive;
+            }
+            const timeDiff = now - lastActiveTime;
+            
+            const isUserGloballyOnline = data.isOnline === true && timeDiff <= fiveMinutes;
+
+            if (isUserGloballyOnline) {
+                globalOnline++;
+            }
+
+            const userLocation = normalizeCountry(data.current_location);
+            const userResidence = normalizeCountry(data.residence_country || data.nationality);
+
+            if ((userLocation !== "" && userLocation === pRegionClean) || 
+                (userResidence !== "" && userResidence === pCountryClean)) {
+                countryPopulation++;
+            }
+
+            if (isUserGloballyOnline && userLocation !== "" && userLocation === pRegionClean) {
+                countryOnline++;
+            }
+        });
+
+        const gPop = document.getElementById('global-pop-val');
+        const gOnline = document.getElementById('global-online-val');
+        const cPop = document.getElementById('country-pop-val');
+        const cOnline = document.getElementById('country-online-val');
+
+        if (gPop) gPop.textContent = globalPopulation;
+        if (gOnline) gOnline.textContent = globalOnline;
+        if (cPop) cPop.textContent = countryPopulation;
+        if (cOnline) cOnline.textContent = countryOnline;
+    });
+}
+
+// دالة إنشاء ملف لاعب جديد لأول مرة بقيم افتراضية صحيحة تماثل الصورة تماماً
 function createNewPlayerProfile(user) {
     const db = firebase.firestore();
     db.collection('players').doc(user.uid).set({
         name: user.displayName || "قائد جديد",
         avatarUrl: user.photoURL || '',
-        xp: 0,
+        experience: 1,      // مستوى الخبرة يبدأ من 1 مطابقة لقاعدة بياناتك
         current_location: "morocco",
+        residence_country: "morocco",
         nationality: "morocco",
-        power: 0,
-        education: 0,
-        experience: 0,
-        money: 5000, 
-        gold: 50,      
+        power: 10,          // القوة القتالية تبدأ من 10 لتطابق شاشتك
+        education: 1,       // مستوى التعليم يبدأ من 1
+        energy: 100,        // مستوى الطاقة يبدأ من 100 لتطابق شاشتك المرفقة
+        money: 1000, 
+        gold: 23230,      
         activeTraining: null 
     }, { merge: true });
 }
 
 // ==========================================
-// 📈 معادلة المستوى وشريط الـ XP التباطئي الأصلي
+// 📈 معادلة المستوى وشريط الـ XP التراكمي في البلوك الأول
 // ==========================================
 function updateXPProgressBar(totalXP) {
+    // حساب المستوى بناءً على نقاط الخبرة التراكمية الحقيقية للاعب
     const currentLevel = Math.floor(Math.sqrt(totalXP / 100)) + 1;
     const xpForCurrentLevel = Math.pow(currentLevel - 1, 2) * 100;
     const xpForNextLevel = Math.pow(currentLevel, 2) * 100;
@@ -228,7 +232,7 @@ function updateXPProgressBar(totalXP) {
     const xpInCurrentLevel = totalXP - xpForCurrentLevel;
     const xpNeededForNext = xpForNextLevel - xpForCurrentLevel;
     
-    const progressPercent = (xpInCurrentLevel / xpNeededForNext) * 100;
+    const progressPercent = Math.max(0, Math.min(100, (xpInCurrentLevel / xpNeededForNext) * 100));
 
     const levelDisplay = document.getElementById('profile-level-number');
     const progressBar = document.getElementById('profile-xp-bar');
@@ -236,10 +240,8 @@ function updateXPProgressBar(totalXP) {
 
     if (levelDisplay) levelDisplay.textContent = `المستوى ${currentLevel}`;
     if (progressBar) progressBar.style.width = `${progressPercent}%`;
-    if (progressText) progressText.textContent = `${Math.floor(xpInCurrentLevel)} / ${xpNeededForNext} XP`;
+    if (progressText) progressText.textContent = `${Math.floor(totalXP)} XP`;
 }
-
-// ==========================================
 
 // ==========================================
 // ⚙️ معالجة عمليات التطوير والأوقات وإنهائها
@@ -280,15 +282,13 @@ function startStatUpgrade(statName, currencyType) {
     isUpgradingNow = false; 
 
     db.collection('players').doc(user.uid).update(updates)
-        .then(() => alert(`⏳ بدأ تطوير ${statName} الآن...`))
+        .then(() => alert(`⏳ بدأ تطوير مهارة ${statName} الآن...`))
         .catch(err => console.error(err));
 }
 
-
 // ==========================================
-// ⏳ المطور الجديد لنظام الترقية والوقت والعدادات الحية
+// ⏳ نظام الترقية والوقت والعدادات الحية للقوائم المنزلقة
 // ==========================================
-
 function formatTimeDynamic(ms) {
     let seconds = Math.floor(ms / 1000);
     let minutes = Math.floor(seconds / 60);
@@ -309,7 +309,7 @@ function formatTimeDynamic(ms) {
 }
 
 function setupStatDropdowns() {
-    const stats = ['power', 'education', 'experience'];
+    const stats = ['power', 'education', 'energy'];
     
     stats.forEach(stat => {
         const header = document.getElementById(`stat-${stat}-header`);
@@ -350,7 +350,7 @@ function setupStatDropdowns() {
 }
 
 function checkActiveTraining(data) {
-    const stats = ['power', 'education', 'experience'];
+    const stats = ['power', 'education', 'energy'];
     
     stats.forEach(stat => {
         const btnContainer = document.getElementById(`actions-${stat}`);
@@ -397,7 +397,6 @@ function checkActiveTraining(data) {
     }, 1000);
 }
 
-// 👈 هنا تبدأ الدالة القديمة التي طلبت منك تركها كما هي دون تغيير 👇
 function completeUpgrade(statName) {
     const user = firebase.auth().currentUser;
     if (!user) return;
@@ -408,7 +407,7 @@ function completeUpgrade(statName) {
         activeTraining: null 
     }).then(() => {
         isUpgradingNow = false; 
-        alert(`🎉 تهانينا! تم ترقية ${statName} بنجاح.`);
+        alert(`🎉 تهانينا! تم ترقية المهارة بنجاح.`);
     }).catch(err => {
         isUpgradingNow = false;
         console.error("خطأ أثناء إنهاء الترقية:", err);
@@ -539,9 +538,6 @@ function renderSingleMessage(container, msg, isMe) {
     container.appendChild(messageDiv);
 }
 
-// ==========================================
-// 🔁 نظام السلايدشو التابع للواجهة
-// ==========================================
 function setupSliderSystem() {
     const slides = document.querySelectorAll('#slides-container .slide');
     const dot1 = document.getElementById('dot-1');
@@ -572,9 +568,6 @@ function setupSliderSystem() {
     }
 }
 
-// ==========================================
-// 🎯 ربط التنقل الفرعي والـ Routing لشريط الأزرار
-// ==========================================
 function setupInteractiveElements() {
     const interactiveStats = [
         { id: 'btn-continent-map', page: 'continent-map' },
@@ -629,11 +622,7 @@ function switchView(pageName) {
     navigateTo(pageName);
 }
 
-// ==========================================
-// 🏁 بدء التشغيل الآمن عند اكتمال الـ DOM
-// ==========================================
 document.addEventListener('DOMContentLoaded', () => {
-    // تشغيل الأنظمة بمهلة قصيرة لضمان تحميل مكتبات Firebase
     setTimeout(() => {
         initGameSystem();
         setupSliderSystem();
