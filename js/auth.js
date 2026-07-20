@@ -81,6 +81,11 @@ function checkAndCreateUserAccount(user) {
                 gold: 5,
                 oil: 20,
                 wheat: 50,
+                // 🚀 الحقول التي كانت ناقصة يجب إضافتها هنا كقيم افتراضية:
+                 power: 0,
+                 education: 0,
+                 experience: 0,
+                 activeTraining: null,
                 residence_country: "morocco", 
                 current_location: "morocco",   
                 has_party: false,
