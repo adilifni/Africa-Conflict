@@ -1,0 +1,107 @@
+<div id="view-profile" class="game-view" style="display: flex; flex-direction: column; gap: 15px;">
+    <!-- مؤقت التطوير العالمي -->
+    <div id="training-global-timer" style="display: none; background-color: #f39c12; color: #fff; padding: 10px; text-align: center; border-radius: 8px; font-weight: bold; font-size: 14px;">
+        جاري التطوير...
+    </div>
+
+    <!-- بلوك معلومات اللاعب العلوي -->
+    <div class="profile-card" style="background: #1a1f26; border-radius: 12px; padding: 20px; text-align: center; border: 1px solid #2d3748;">
+        <img id="profile-avatar" src="" alt="Avatar" style="width: 90px; height: 90px; border-radius: 50%; border: 3px solid #3182ce; object-fit: cover; margin-bottom: 10px;">
+        <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+            <h2 id="profile-name-display" style="color: #fff; margin: 0; font-size: 20px;">جاري التحميل...</h2>
+            <button onclick="triggerNameChange()" style="background: none; border: none; color: #a0aec0; cursor: pointer; font-size: 16px;">⚙️</button>
+        </div>
+
+        <!-- شريط المستوى والـ XP -->
+        <div style="margin-top: 15px; text-align: right;">
+            <div style="display: flex; justify-content: space-between; color: #cbd5e0; font-size: 14px; margin-bottom: 5px;">
+                <span id="profile-level-number" style="font-weight: bold; color: #3182ce;">المستوى 1</span>
+                <span id="profile-xp-text">0 / 100 XP</span>
+            </div>
+            <div style="width: 100%; height: 12px; background: #2d3748; border-radius: 6px; overflow: hidden;">
+                <div id="profile-xp-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #3182ce, #63b3ed); transition: width 0.5s ease;"></div>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; margin-top: 15px; padding: 0 5px; font-weight: bold; font-size: 16px;">
+                <span id="profile-money-val" style="color: #ffffff;">0</span>
+                <span id="profile-gold-val" style="color: #ffd700;">0</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- بلوك المنطقة والجنسية -->
+    <div class="info-block" style="background: #1a1f26; border-radius: 12px; padding: 15px; display: flex; flex-direction: column; gap: 12px; border: 1px solid #2d3748;">
+        <div style="display: flex; justify-content: space-between; color: #fff; border-bottom: 1px solid #2d3748; padding-bottom: 8px;">
+           <span style="color: #a0aec0;">المنطقة </span>
+            <span id="profile-region" style="font-weight: bold;">المغرب</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; color: #fff; padding-top: 4px;">
+            <span style="color: #a0aec0;">الجنسية </span>
+            <span id="profile-nationality" style="font-weight: bold;">المغرب</span>
+        </div>
+    </div>
+
+    <!-- قوائم التطوير المنزلقة -->
+    <div class="stats-upgrade-container" style="display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 600px; margin: 0 auto;">
+        
+        <!-- القوة القتالية -->
+        <div class="stat-box" style="background: #1a1f26; border-radius: 12px; border: 1px solid #2d3748; overflow: hidden;">
+            <div id="stat-power-header" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #fff;">
+                <span>💪 القوة القتالية</span>
+                <span style="font-weight: bold; color: #e53e3e; font-size: 18px;" id="stat-power-val">0</span>
+            </div>
+            <div id="stat-power-dropdown" class="stat-dropdown">
+                <div style="padding: 10px 0; display: flex; flex-direction: column; gap: 10px;">
+                    <p id="time-power" style="color: #a0aec0; margin: 0; font-size: 13px;">الوقت المستغرق: 5 دقائق</p>
+                    <div id="actions-power" style="display: flex; gap: 10px;">
+                        <button onclick="startStatUpgrade('power', 'money')" style="flex: 1; background: #2b6cb0; color: #fff; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-power-money">100 مال</button>
+                        <button onclick="startStatUpgrade('power', 'gold')" style="flex: 1; background: #d69e2e; color: #fff; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-power-gold">5 ذهب</button>
+                    </div>
+                    <div id="timer-container-power" style="display: none; text-align: center; color: #fc8181; font-weight: bold; padding: 8px; background: #2d3748; border-radius: 6px; font-size: 14px;">
+                        ⏳ متبقي: <span id="timer-val-power">--:--</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- مستوى التعليم -->
+        <div class="stat-box" style="background: #1a1f26; border-radius: 12px; border: 1px solid #2d3748; overflow: hidden;">
+            <div id="stat-education-header" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #fff;">
+                <span>📚 مستوى التعليم</span>
+                <span style="font-weight: bold; color: #3182ce; font-size: 18px;" id="stat-education-val">0</span>
+            </div>
+            <div id="stat-education-dropdown" class="stat-dropdown">
+                <div style="padding: 10px 0; display: flex; flex-direction: column; gap: 10px;">
+                    <p id="time-education" style="color: #a0aec0; margin: 0; font-size: 13px;">الوقت المستغرق: 10 دقائق</p>
+                    <div id="actions-education" style="display: flex; gap: 10px;">
+                        <button onclick="startStatUpgrade('education', 'money')" style="flex: 1; background: #2b6cb0; color: #fff; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-education-money">200 مال</button>
+                        <button onclick="startStatUpgrade('education', 'gold')" style="flex: 1; background: #d69e2e; color: #fff; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-education-gold">10 ذهب</button>
+                    </div>
+                    <div id="timer-container-education" style="display: none; text-align: center; color: #fc8181; font-weight: bold; padding: 8px; background: #2d3748; border-radius: 6px; font-size: 14px;">
+                        ⏳ متبقي: <span id="timer-val-education">--:--</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- مستوى الطاقة -->
+        <div class="stat-box" style="background: #1a1f26; border-radius: 12px; border: 1px solid #2d3748; overflow: hidden;">
+            <div id="stat-energy-header" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #fff;">
+                <span>⚡ مستوى الطاقة</span>
+                <span style="font-weight: bold; color: #38a169; font-size: 18px;" id="stat-energy-val">0</span>
+            </div>
+            <div id="stat-energy-dropdown" class="stat-dropdown">
+                <div style="padding: 10px 0; display: flex; flex-direction: column; gap: 10px;">
+                    <p id="time-energy" style="color: #a0aec0; margin: 0; font-size: 13px;">الوقت المستغرق: 3 دقائق</p>
+                    <div id="actions-energy" style="display: flex; gap: 10px;">
+                        <button onclick="startStatUpgrade('energy', 'money')" style="flex: 1; background: #2b6cb0; color: #fff; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-energy-money">50 مال</button>
+                        <button onclick="startStatUpgrade('energy', 'gold')" style="flex: 1; background: #d69e2e; color: #fff; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-energy-gold">2 ذهب</button>
+                    </div>
+                    <div id="timer-container-energy" style="display: none; text-align: center; color: #fc8181; font-weight: bold; padding: 8px; background: #2d3748; border-radius: 6px; font-size: 14px;">
+                        ⏳ متبقي: <span id="timer-val-energy">--:--</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

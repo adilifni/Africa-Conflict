@@ -1,0 +1,100 @@
+<div id="view-main" class="game-view">
+    <!-- البلوك الأول (إحصائيات القارة) -->
+    <div class="card">
+        <div class="slider-wrapper">
+            <div class="slides-container" id="slides-container">
+                <div class="slide">
+                    <div class="card-header-stats">
+                        <div class="stat-box" id="btn-continent-pop">
+                            <span class="stat-label">سكان</span>
+                            <span class="stat-value global-population" id="global-pop-val">..</span>
+                        </div>
+                        <div class="stat-box" id="btn-continent-online">
+                            <span class="stat-label">متصل</span>
+                            <span class="stat-value global-online" id="global-online-val" style="color: #39d353;">..</span>
+                        </div>
+                        <div class="stat-box" id="btn-continent-parties">
+                            <span class="stat-label">أحزاب</span>
+                            <span class="stat-value">0</span>
+                        </div>
+                        <div class="stat-box" id="btn-continent-factories">
+                            <span class="stat-label">مصانع</span>
+                            <span class="stat-value">0</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide">
+                    <div class="card-header-stats">
+                        <div class="stat-box" id="btn-continent-countries">
+                            <span class="stat-label">دول</span>
+                            <span class="stat-value">50</span>
+                        </div>
+                        <div class="stat-box" id="btn-continent-alliances">
+                            <span class="stat-label">تحالف</span>
+                            <span class="stat-value">0</span>
+                        </div>
+                        <div class="stat-box" id="btn-continent-independent">
+                            <span class="stat-label">مستقلة</span>
+                            <span class="stat-value">0</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-label">-</span>
+                            <span class="stat-value">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="slider-footer">
+            <div class="slider-dots">
+                <span class="dot active" id="dot-1"></span>
+                <span class="dot" id="dot-2"></span>
+            </div>
+            <div class="continent-img-container" id="btn-continent-map">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/8/86/Africa_%28orthographic_projection%29.svg" alt="Africa" class="continent-img">
+            </div>
+        </div>
+    </div>
+
+    <!-- البلوك الثاني (إحصائيات الدولة) -->
+    <div class="card">
+        <div class="card-header-stats">
+            <div class="stat-box" id="btn-country-pop">
+                <span class="stat-label">سكان</span>
+                <span class="stat-value country-population" id="country-pop-val">..</span>
+            </div>
+            <div class="stat-box" id="btn-country-online">
+                <span class="stat-label">متصل</span>
+                <span class="stat-value country-online" id="country-online-val" style="color: #39d353;">..</span>
+            </div>
+            <div class="stat-box" id="btn-country-parties">
+                <span class="stat-label">أحزاب</span>
+                <span class="stat-value">0</span>
+            </div>
+            <div class="stat-box" id="btn-country-factories">
+                <span class="stat-label">مصانع</span>
+                <span class="stat-value">0</span>
+            </div>
+        </div>
+        <div class="flag-img-container" id="btn-country-flag">
+            <div class="country-title-block">
+                <span class="country-flag-emoji" id="country-flag">🇲🇦</span>
+                <span id="country-name-text">المغرب</span>
+            </div>
+        </div>
+    </div>
+
+    <button class="parliament-btn" id="btn-parliament">برلمان الدولة</button>
+
+    <!-- الشات العام -->
+    <div class="card chat-container">
+        <div class="chat-title">غرفة الدردشة العامة</div>
+        <div class="chat-messages" id="chat-messages-box"></div>
+        <div class="chat-input-area">
+            <input type="text" class="chat-input" id="chat-input-field" placeholder="اكتب رسالة برقية هنا...">
+            <button class="chat-send-btn" id="chat-send-btn">
+                <i class="fa-solid fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+</div>
