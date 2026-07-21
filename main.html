@@ -61,24 +61,13 @@
     </main>
 
     <!-- شريط التنقل السفلي الثابت بالترتيب الصحيح -->
-    <nav class="bottom-nav">
-        <button class="nav-link active" onclick="switchView('main')">
-            <i class="fa-solid fa-house"></i>
-            <span>الرئيسية</span>
-        </button>
-        <button class="nav-link" onclick="switchView('work')">
-            <i class="fa-solid fa-briefcase"></i>
-            <span>العمل</span>
-        </button>
-        <button class="nav-link" onclick="switchView('wars')">
-            <i class="fa-solid fa-shield-halved"></i>
-            <span>الحروب</span>
-        </button>
-        <button class="nav-link" onclick="switchView('profile')">
-            <i class="fa-solid fa-user"></i>
-            <span>الحساب</span>
-        </button>
-    </nav>
+<!-- شريط التنقل السفلي في main.html -->
+<nav class="bottom-nav">
+    <button onclick="switchView('main')">الرئيسية</button>
+    <button onclick="switchView('work')">العمل</button>
+    <button onclick="switchView('wars')">الحروب</button>
+    <button onclick="switchView('profile')">الحساب</button>
+</nav>
 
     <!-- دالة تغيير الاسم -->
     <script>
