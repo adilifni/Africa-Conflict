@@ -43,8 +43,22 @@
         </div>
     </header>
 
-    <main id="app-container">
-        <!-- هنا سيتم حقن الصفحات ديناميكياً أو تركها كمحتوى مخفي -->
+<main id="app-container">
+        <!-- واجهة الرئيسية (Main View) -->
+        <div id="view-main" class="game-view">
+            <!-- إحصائيات القارة والدولة والشات (نفس محتويات الرئيسية المعتادة) -->
+        </div>
+
+        <!-- واجهة الحساب الشخصي (Profile View) - يتم جلبها أو تفويضها لهيكل الملفات -->
+        <div id="view-profile" class="game-view" style="display: none; flex-direction: column; gap: 15px;">
+            <!-- محتوى الحساب المنفصل (تأكد من وجوده أيضاً في pages/profile.html إذا كنت تحمله عبر Fetch أو وحدات JS) -->
+        </div>
+
+        <!-- واجهة العمل -->
+        <div id="view-work" class="game-view" style="display: none;"></div>
+
+        <!-- واجهة الحروب -->
+        <div id="view-wars" class="game-view" style="display: none;"></div>
     </main>
 
     <!-- شريط التنقل السفلي الثابت -->
