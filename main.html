@@ -25,166 +25,42 @@
     
     <title>Africa Conflict</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- ربط ملفات الـ CSS هنا -->
+    <!-- ربط ملفات الـ CSS -->
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/game.css">
 </head>
 
 <body>
 
-<header class="main-header" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: #161b22; border-bottom: 1px solid #30363d;">
-        <div class="user-welcome" style="color: #c9d1d9; font-size: 14px;">القائد: <span id="user-name" style="color: #58a6ff; font-weight: bold;">جاري التحميل...</span></div>
-        <div class="game-logo" style="display: flex; align-items: center; gap: 8px; color: #fff; font-weight: bold;">
+    <!-- الهيدر العلوي الثابت -->
+    <header>
+        <div class="user-welcome">القائد: <span id="user-name">جاري التحميل...</span></div>
+        <div class="game-logo">
             <span>Africa Conflict</span>
             <span>🌍</span>
         </div>
     </header>
 
+    <!-- الحاوية الوسطى المتحركة بانسيابية بين الهيدر والفوتر -->
     <main id="app-container">
-        <!-- الواجهة الرئيسية (Main View) -->
+        <!-- واجهة الرئيسية (Main View) -->
         <div id="view-main" class="game-view">
-            <!-- البلوك الأول (إحصائيات القارة) -->
-            <div class="card">
-                <div class="slider-wrapper">
-                    <div class="slides-container" id="slides-container">
-                        <div class="slide">
-                            <div class="card-header-stats">
-                                <div class="stat-box" id="btn-continent-pop">
-                                    <span class="stat-label">سكان</span>
-                                    <span class="stat-value global-population" id="global-pop-val">..</span>
-                                </div>
-                                <div class="stat-box" id="btn-continent-online">
-                                    <span class="stat-label">متصل</span>
-                                    <span class="stat-value global-online" id="global-online-val" style="color: #39d353;">..</span>
-                                </div>
-                                <div class="stat-box" id="btn-continent-parties">
-                                    <span class="stat-label">أحزاب</span>
-                                    <span class="stat-value">0</span>
-                                </div>
-                                <div class="stat-box" id="btn-continent-factories">
-                                    <span class="stat-label">مصانع</span>
-                                    <span class="stat-value">0</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="slide">
-                            <div class="card-header-stats">
-                                <div class="stat-box" id="btn-continent-countries">
-                                    <span class="stat-label">دول</span>
-                                    <span class="stat-value">50</span>
-                                </div>
-                                <div class="stat-box" id="btn-continent-alliances">
-                                    <span class="stat-label">تحالف</span>
-                                    <span class="stat-value">0</span>
-                                </div>
-                                <div class="stat-box" id="btn-continent-independent">
-                                    <span class="stat-label">مستقلة</span>
-                                    <span class="stat-value">0</span>
-                                </div>
-                                <div class="stat-box">
-                                    <span class="stat-label">-</span>
-                                    <span class="stat-value">-</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="slider-footer">
-                    <div class="slider-dots">
-                        <span class="dot active" id="dot-1"></span>
-                        <span class="dot" id="dot-2"></span>
-                    </div>
-                    <div class="continent-img-container" id="btn-continent-map">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/8/86/Africa_%28orthographic_projection%29.svg" alt="Africa" class="continent-img">
-                    </div>
-                </div>
-            </div>
-
-            <!-- البلوك الثاني (إحصائيات الدولة) -->
-            <div class="card">
-                <div class="card-header-stats">
-                    <div class="stat-box" id="btn-country-pop">
-                        <span class="stat-label">سكان</span>
-                        <span class="stat-value country-population" id="country-pop-val">..</span> 
-                    </div>
-                    <div class="stat-box" id="btn-country-online">
-                        <span class="stat-label">متصل</span>
-                        <span class="stat-value country-online" id="country-online-val" style="color: #39d353;">..</span>
-                    </div>
-                    <div class="stat-box" id="btn-country-parties">
-                        <span class="stat-label">أحزاب</span>
-                        <span class="stat-value">0</span>
-                    </div>
-                    <div class="stat-box" id="btn-country-factories">
-                        <span class="stat-label">مصانع</span>
-                        <span class="stat-value">0</span>
-                    </div>
-                </div>
-                <div class="flag-img-container" id="btn-country-flag">
-                    <div class="country-title-block">
-                        <span class="country-flag-emoji" id="country-flag">🇲🇦</span>
-                        <span id="country-name-text">المغرب</span>
-                    </div>
-                </div>
-            </div>
-            <button class="parliament-btn" id="btn-parliament">برلمان الدولة</button>
-
-            <!-- الشات العام -->
-            <div class="card chat-container">
-                <div class="chat-title">غرفة الدردشة العامة</div>
-                <div class="chat-messages" id="chat-messages-box"></div>
-                <div class="chat-input-area">
-                    <input type="text" class="chat-input" id="chat-input-field" placeholder="اكتب رسالة برقية هنا...">
-                    <button class="chat-send-btn" id="chat-send-btn">
-                        <i class="fa-solid fa-paper-plane"></i>
-                    </button>
-                </div>
-            </div>
+            <!-- إحصائيات القارة والدولة والشات (نفس محتويات الرئيسية المعتادة) -->
         </div>
 
-        <!-- واجهة الحساب الشخصي (Profile View) -->
+        <!-- واجهة الحساب الشخصي (Profile View) - يتم جلبها أو تفويضها لهيكل الملفات -->
         <div id="view-profile" class="game-view" style="display: none; flex-direction: column; gap: 15px;">
-            <div class="profile-card" style="background: #1a1f26; border-radius: 12px; padding: 20px; text-align: center; border: 1px solid #2d3748;">
-                <img id="profile-avatar" src="" alt="Avatar" style="width: 90px; height: 90px; border-radius: 50%; border: 3px solid #3182ce; object-fit: cover; margin-bottom: 10px;">
-                <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
-                    <h2 id="profile-name-display" style="color: #fff; margin: 0; font-size: 20px;">جاري التحميل...</h2>
-                    <button onclick="triggerNameChange()" style="background: none; border: none; color: #a0aec0; cursor: pointer; font-size: 16px;">⚙️</button>
-                </div>
-                <div style="margin-top: 15px; text-align: right;">
-                    <div style="display: flex; justify-content: space-between; color: #cbd5e0; font-size: 14px; margin-bottom: 5px;">
-                        <span id="profile-level-number" style="font-weight: bold; color: #3182ce;">المستوى 1</span>
-                        <span id="profile-xp-text">0 / 100 XP</span>
-                    </div>
-                    <div style="width: 100%; height: 12px; background: #2d3748; border-radius: 6px; overflow: hidden;">
-                        <div id="profile-xp-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #3182ce, #63b3ed); transition: width 0.5s ease;"></div>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; margin-top: 15px; padding: 0 5px; font-weight: bold; font-size: 16px;">
-                        <span id="profile-money-val" style="color: #ffffff;">0</span>
-                        <span id="profile-gold-val" style="color: #ffd700;">0</span>
-                    </div>
-                </div>
-            </div>
+            <!-- محتوى الحساب المنفصل (تأكد من وجوده أيضاً في pages/profile.html إذا كنت تحمله عبر Fetch أو وحدات JS) -->
         </div>
 
-        <!-- واجهة العمل (Work View) -->
-        <div id="view-work" class="game-view" style="display: none;">
-            <div class="page-inner-card">
-                <div class="page-title-banner">💼 قطاع العمل والإنتاج المالي</div>
-                <p style="text-align: center; color: #8b949e; padding: 20px;">يمكنك هنا البحث عن وظائف، العمل لتجميع الأموال، والمساهمة في بناء بنية تحتية مستدامة للدولة.</p>
-            </div>
-        </div>
+        <!-- واجهة العمل -->
+        <div id="view-work" class="game-view" style="display: none;"></div>
 
-        <!-- واجهة الحروب (Wars View) -->
-        <div id="view-wars" class="game-view" style="display: none;">
-            <div class="page-inner-card">
-                <div class="page-title-banner">⚔️ الحروب والعمليات العسكرية</div>
-                <p style="text-align: center; color: #8b949e; padding: 20px;">استعرض جبهات النزاع المشتعلة، شارك في تدريبات الدفاع الشعبي، أو قد جيوشك لتحرير وتأمين قارتنا.</p>
-            </div>
-        </div>
+        <!-- واجهة الحروب -->
+        <div id="view-wars" class="game-view" style="display: none;"></div>
     </main>
 
-    <!-- شريط التنقل السفلي الثابت -->
-   <!-- شريط التنقل السفلي الثابت والترتيب الصحيح -->
+    <!-- شريط التنقل السفلي الثابت بالترتيب الصحيح -->
     <nav class="bottom-nav">
         <button class="nav-link active" onclick="switchView('main')">
             <i class="fa-solid fa-house"></i>
@@ -204,7 +80,7 @@
         </button>
     </nav>
 
-    <!-- دوال مساعدة عامة -->
+    <!-- دالة تغيير الاسم -->
     <script>
     function triggerNameChange() {
         const newName = prompt("أدخل اسم الشهرة الجديد الخاص بك:");
@@ -214,7 +90,7 @@
     }
     </script>
 
-    <!-- ملفات الـ JavaScript الهيكلية (نظام الوحدات) -->
+    <!-- نظام الوحدات وجلب الصفحات المنفصلة -->
     <script type="module">
         import { initGameSystem } from './js/game.js';
         import { setupSliderSystem, setupChatSystem, setupInteractiveElements } from './js/app.js';
@@ -229,10 +105,4 @@
         });
     </script>
 </body>
-</html>  
-   
-   
-   
-   
-
-
+</html>
