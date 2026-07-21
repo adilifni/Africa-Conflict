@@ -1,5 +1,5 @@
 // ==========================================
-// 💬 نظام الشات النشط والسلايدر والتنقل (Router & Fetch System)
+// 💬 نظام الشات النشط والسلايدر والتنقل (Router)
 // ==========================================
 
 export function formatTimeShort(ms) {
@@ -123,19 +123,19 @@ export function setupSliderSystem() {
 
 export function setupInteractiveElements() {
     const interactiveStats = [
-        { id: 'btn-continent-map', page: 'countries' },
-        { id: 'btn-continent-pop', page: 'countries' },
-        { id: 'btn-continent-online', page: 'countries' },
-        { id: 'btn-continent-parties', page: 'parties' },
-        { id: 'btn-continent-factories', page: 'work' },
-        { id: 'btn-continent-countries', page: 'countries' },
-        { id: 'btn-continent-alliances', page: 'wars' },
-        { id: 'btn-continent-independent', page: 'countries' },
-        { id: 'btn-country-flag', page: 'profile' },
-        { id: 'btn-country-pop', page: 'countries' },
-        { id: 'btn-country-online', page: 'countries' },
-        { id: 'btn-country-parties', page: 'parties' },
-        { id: 'btn-country-factories', page: 'work' }
+        { id: 'btn-continent-map', page: 'continent-map' },
+        { id: 'btn-continent-pop', page: 'continent-players' },
+        { id: 'btn-continent-online', page: 'continent-online' },
+        { id: 'btn-continent-parties', page: 'continent-parties' },
+        { id: 'btn-continent-factories', page: 'continent-factories' },
+        { id: 'btn-continent-countries', page: 'continent-countries' },
+        { id: 'btn-continent-alliances', page: 'continent-alliances' },
+        { id: 'btn-continent-independent', page: 'continent-independent' },
+        { id: 'btn-country-flag', page: 'country-info' },
+        { id: 'btn-country-pop', page: 'country-players' },
+        { id: 'btn-country-online', page: 'country-online' },
+        { id: 'btn-country-parties', page: 'country-parties' },
+        { id: 'btn-country-factories', page: 'country-factories' }
     ];
 
     interactiveStats.forEach(item => {
@@ -146,71 +146,33 @@ export function setupInteractiveElements() {
     });
 }
 
-// 🌐 نظام التنقل الذكي وجلب الصفحات ديناميكياً من مجلد pages/
-export async function navigateTo(targetPage) {
-    // 1. إخفاء جميع الواجهات الحالية داخل المسرح
+export function navigateTo(targetPage) {
     const allViews = document.querySelectorAll('.game-view');
     allViews.forEach(view => { if (view) view.style.display = 'none'; });
 
-    let viewId = `view-${targetPage}`;
-    let targetElement = document.getElementById(viewId);
-
-    // 2. إذا لم تكن الحاوية موجودة مسبقاً في الـ DOM، نقوم بإنشائها ديناميكياً داخل المسرح
-    if (!targetElement) {
-        targetElement = document.createElement('div');
-        targetElement.id = viewId;
-        targetElement.className = 'game-view';
-        targetElement.style.cssText = "display: flex; flex-direction: column; gap: 15px; width: 100%;";
-        
-        const appContainer = document.getElementById('app-container');
-        if (appContainer) {
-            appContainer.appendChild(targetElement);
-        }
+    let viewId = 'view-main';
+    switch (targetPage) {
+        case 'main': viewId = 'view-main'; break;
+        case 'work': viewId = 'view-work'; break;
+        case 'wars': viewId = 'view-wars'; break;
+        case 'profile': viewId = 'view-profile'; break;
+        default: viewId = `view-${targetPage}`;
     }
 
-    // 3. جلب محتوى الصفحة من مجلد pages/ عبر fetch إذا كانت الحاوية فارغة
-    if (!targetElement.hasChildNodes() || targetElement.innerHTML.trim() === "") {
-        try {
-            const response = await fetch(`pages/${targetPage}.html`);
-            if (response.ok) {
-                const htmlContent = await response.text();
-                targetElement.innerHTML = htmlContent;
-                
-                // إذا تم جلب صفحة الرئيسية main.html، قد تحتاج لإعادة تفعيل السلايدر أو الشات إن وجدوا داخلها
-                if (targetPage === 'main') {
-                    setupSliderSystem();
-                    setupChatSystem();
-                }
-            } else {
-                targetElement.innerHTML = `<p style="text-align: center; color: #fc8181; padding: 20px;">عذراً، تعذر تحميل الصفحة (${targetPage}.html).</p>`;
-            }
-        } catch (error) {
-            console.error("خطأ أثناء جلب الملف:", error);
-            targetElement.innerHTML = `<p style="text-align: center; color: #fc8181; padding: 20px;">حدث خطأ في الاتصال أثناء جلب الصفحة.</p>`;
-        }
-    }
+    const targetElement = document.getElementById(viewId);
+    if (targetElement) targetElement.style.display = 'flex';
 
-    // 4. إظهار الواجهة المطلوبة
-    targetElement.style.display = 'flex';
-
-    // 5. إعادة التمرير للأعلى بسلاسة
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-
-    // 6. تحديث الأزرار النشطة في شريط التنقل السفلي
     const allNavLinks = document.querySelectorAll('.bottom-nav .nav-link');
     allNavLinks.forEach(link => { if (link) link.classList.remove('active'); });
 
     allNavLinks.forEach(link => {
         const attr = link.getAttribute('onclick') || link.getAttribute('data-target');
-        if (attr && attr.includes(`'${targetPage}'`)) {
-            link.classList.add('active');
-        }
+        if (attr && attr.includes(`'${targetPage}'`)) link.classList.add('active');
     });
 }
 
 export function switchView(pageName) {
     navigateTo(pageName);
 }
-
-// ربط الدالة بنافذة المتصفح لتعمل مباشرة عبر الأزرار
+// ربط دالة switchView بنافذة المتصفح لتعمل مباشرة عبر الأزرار الداخلية
 window.switchView = switchView;

@@ -25,14 +25,16 @@
     
     <title>Africa Conflict</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <!-- ربط ملفات الـ CSS -->
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/game.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
 <body>
 
-    <!-- الهيدر العلوي الثابت -->
+
     <header>
         <div class="user-welcome">القائد: <span id="user-name">جاري التحميل...</span></div>
         <div class="game-logo">
@@ -41,35 +43,31 @@
         </div>
     </header>
 
-    <!-- الحاوية الوسطى المتحركة بانسيابية بين الهيدر والفوتر -->
     <main id="app-container">
-        <!-- واجهة الرئيسية (Main View) -->
-        <div id="view-main" class="game-view">
-            <!-- إحصائيات القارة والدولة والشات (نفس محتويات الرئيسية المعتادة) -->
-        </div>
-
-        <!-- واجهة الحساب الشخصي (Profile View) - يتم جلبها أو تفويضها لهيكل الملفات -->
-        <div id="view-profile" class="game-view" style="display: none; flex-direction: column; gap: 15px;">
-            <!-- محتوى الحساب المنفصل (تأكد من وجوده أيضاً في pages/profile.html إذا كنت تحمله عبر Fetch أو وحدات JS) -->
-        </div>
-
-        <!-- واجهة العمل -->
-        <div id="view-work" class="game-view" style="display: none;"></div>
-
-        <!-- واجهة الحروب -->
-        <div id="view-wars" class="game-view" style="display: none;"></div>
+        <!-- هنا سيتم حقن الصفحات ديناميكياً أو تركها كمحتوى مخفي -->
     </main>
 
-    <!-- شريط التنقل السفلي الثابت بالترتيب الصحيح -->
-<!-- شريط التنقل السفلي في main.html -->
-<<nav class="bottom-nav" style="display: flex; justify-content: space-around; background: #1a1f26; padding: 10px; position: fixed; bottom: 0; width: 100%;">
-    <button class="nav-link" onclick="switchView('profile')">الحساب</button>
-    <button class="nav-link" onclick="switchView('wars')">الحروب</button>
-    <button class="nav-link" onclick="switchView('work')">العمل</button>
-    <button class="nav-link active" onclick="switchView('home')">الرئيسية</button>
-</nav>
+    <!-- شريط التنقل السفلي الثابت -->
+    <nav class="bottom-nav">
+        <button class="nav-link active" onclick="switchView('home')">
+            <i class="fa-solid fa-house"></i>
+            <span>الرئيسية</span>
+        </button>
+        <button class="nav-link" onclick="switchView('work')">
+            <i class="fa-solid fa-briefcase"></i>
+            <span>العمل</span>
+        </button>
+        <button class="nav-link" onclick="switchView('wars')">
+            <i class="fa-solid fa-shield-halved"></i>
+            <span>الحروب</span>
+        </button>
+        <button class="nav-link" onclick="switchView('profile')">
+            <i class="fa-solid fa-user"></i>
+            <span>الحساب</span>
+        </button>
+    </nav>
 
-    <!-- دالة تغيير الاسم -->
+<!-- دالة مساعدة سريعة لفتح نافذة إدخال الاسم الجديد -->
     <script>
     function triggerNameChange() {
         const newName = prompt("أدخل اسم الشهرة الجديد الخاص بك:");
@@ -79,19 +77,19 @@
     }
     </script>
 
-    <!-- نظام الوحدات وجلب الصفحات المنفصلة -->
+    <!-- ملفات الـ JavaScript الهيكلية -->
     <script type="module">
-        import { initGameSystem } from './js/game.js';
-        import { setupSliderSystem, setupChatSystem, setupInteractiveElements } from './app.js';
+    import { initGameSystem } from 'js/game.js';
+    import { setupSliderSystem, setupChatSystem, setupInteractiveElements } from 'js/app.js';
 
-        document.addEventListener('DOMContentLoaded', () => {
-            setTimeout(() => {
-                initGameSystem();
-                setupSliderSystem();
-                setupChatSystem();
-                setupInteractiveElements();
-            }, 1000);
-        });
-    </script>
+    document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(() => {
+            initGameSystem();
+            setupSliderSystem();
+            setupChatSystem();
+            setupInteractiveElements();
+        }, 1000);
+    });
+</script>
 </body>
 </html>
