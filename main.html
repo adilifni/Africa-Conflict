@@ -26,8 +26,205 @@
     <title>Africa Conflict</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- ربط ملفات الـ CSS -->
-    <link rel="stylesheet" href="./css/style.css">
-    <link rel="stylesheet" href="./css/game.css">
+<style>
+/* إعدادات المتصفح العامة وتصفير الهوامش */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    -webkit-tap-highlight-color: transparent; /* إزالة اللون الأزرق عند الضغط في الهاتف */
+}
+
+/* تصميم خلفية اللعبة الكاملة باللون الأسود الداكن */
+body {
+    background-color: #0b0b0b;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+/* الحاوية الرئيسية المخصصة للهواتف ملء الشاشة */
+.login-container {
+    width: 100%;
+    max-width: 450px;
+    height: 100%;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around; /* توزيع العناصر بالتساوي عمودياً */
+    align-items: center;
+}
+
+/* غلاف الصورة لمنع تمددها والحفاظ على أبعادها */
+.logo-wrapper {
+    width: 90%;
+    max-width: 380px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* تصميم أيقونة اللعبة الكبيرة الدائرية PNG المتطابقة مع صورتك */
+.game-logo {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    filter: drop-shadow(0px 0px 15px rgba(255, 255, 255, 0.05)); /* ظل خفيف جداً يبرز جمال التصميم */
+}
+
+/* زر تسجيل الدخول المليء باللون الأبيض المستوحى تماماً من صورتك */
+.google-login-btn {
+    width: 90%;
+    background-color: #ffffff;
+    border: none;
+    border-radius: 24px; /* حواف دائرية ناعمة تطابق الشاشة */
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+/* تأثير نبضي خفيف جداً عند ضغط اللاعب على الزر في الهاتف */
+.google-login-btn:active {
+    transform: scale(0.98);
+    background-color: #f1f1f1;
+}
+
+/* غلاف أيقونة جوجل الملونة جهة اليمين */
+.google-icon-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-left: 16px; /* مسافة تفصل اللوجو عن الكلام */
+}
+
+/* حاوية النصوص الإنجليزية والعربية داخل الزر لترتيبها عمودياً */
+.button-text-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* محاذاة النصوص لتبدأ معاً بشكل منظم */
+    text-align: right;
+    width: 100%;
+}
+
+/* تصميم النص الإنجليزي العلوي */
+.text-en {
+    color: #4a4a4a;
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+/* تصميم النص العربي السفلي المتناسق */
+.text-ar {
+    color: #626262;
+    font-size: 15px;
+    font-weight: bold;
+    margin-top: 2px;
+}
+
+
+
+
+
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    background-color: #0d1117;
+    color: #c9d1d9;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+header {
+    background-color: #161b22;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #30363d;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.user-welcome {
+    font-size: 14px;
+    color: #58a6ff;
+}
+
+.game-logo {
+    font-size: 20px;
+    font-weight: bold;
+    color: #f0f6fc;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+main {
+    flex: 1;
+    padding: 15px;
+    padding-bottom: 85px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-width: 600px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* شريط التنقل السفلي الاحترافي */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: #161b22;
+    border-top: 1px solid #30363d;
+    display: flex;
+    justify-content: space-around;
+    padding: 8px 0;
+    z-index: 100;
+}
+
+.nav-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    color: #8b949e;
+    text-decoration: none;
+    font-size: 11px;
+    cursor: pointer;
+    background: none;
+    border: none;
+    flex: 1;
+    outline: none;
+}
+
+.nav-link.active {
+    color: #58a6ff;
+}
+
+.nav-link i {
+    font-size: 18px;
+}
+</style>
 </head>
 
 <body>
@@ -44,7 +241,7 @@
     <!-- الحاوية الوسطى المتحركة بانسيابية بين الهيدر والفوتر -->
     <main id="app-container">
         <!-- واجهة الرئيسية (Main View) -->
-        <div id="view-main" class="game-view">
+        <div id="view-home" class="game-view">
             <!-- البلوك الأول (إحصائيات القارة) -->
             <div class="card">
                 <div class="slider-wrapper">
