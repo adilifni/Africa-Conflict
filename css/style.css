@@ -142,16 +142,16 @@ header {
 
 main {
     flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     padding: 15px;
-    padding-bottom: 20px;
+    padding-bottom: 120px; /* زيادة مساحة التمرير السفلي ليظهر الشات بالكامل فوق شريط التنقل */
     display: flex;
     flex-direction: column;
     gap: 15px;
     max-width: 600px;
     margin: 0 auto;
     width: 100%;
-    overflow-y: auto; /* السماح للمحتوى بالتمرير بسلاسة بين الهيدر والفوتير */
-    -webkit-overflow-scrolling: touch; /* تمرير ناعم جداً لأجهزة آبل والأندرويد */
 }
 
 /* شريط التنقل السفلي الاحترافي */
