@@ -62,11 +62,11 @@
 
     <!-- شريط التنقل السفلي الثابت بالترتيب الصحيح -->
 <!-- شريط التنقل السفلي في main.html -->
-<nav class="bottom-nav">
-    <button onclick="switchView('main')">الرئيسية</button>
-    <button onclick="switchView('work')">العمل</button>
-    <button onclick="switchView('wars')">الحروب</button>
-    <button onclick="switchView('profile')">الحساب</button>
+<<nav class="bottom-nav" style="display: flex; justify-content: space-around; background: #1a1f26; padding: 10px; position: fixed; bottom: 0; width: 100%;">
+    <button class="nav-link" onclick="switchView('profile')">الحساب</button>
+    <button class="nav-link" onclick="switchView('wars')">الحروب</button>
+    <button class="nav-link" onclick="switchView('work')">العمل</button>
+    <button class="nav-link active" onclick="switchView('home')">الرئيسية</button>
 </nav>
 
     <!-- دالة تغيير الاسم -->
@@ -82,7 +82,7 @@
     <!-- نظام الوحدات وجلب الصفحات المنفصلة -->
     <script type="module">
         import { initGameSystem } from './js/game.js';
-        import { setupSliderSystem, setupChatSystem, setupInteractiveElements } from './js/app.js';
+        import { setupSliderSystem, setupChatSystem, setupInteractiveElements } from './app.js';
 
         document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {

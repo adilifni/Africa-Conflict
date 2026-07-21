@@ -155,7 +155,7 @@ export async function navigateTo(targetPage) {
     let viewId = `view-${targetPage}`;
     let targetElement = document.getElementById(viewId);
 
-    // 2. إذا لم تكن الحاوية موجودة مسبقاً في الـ DOM، نقوم بإنشائها ديناميكياً داخل المسرح
+    // 2. إذا لم تكن الحاوية موجودة مسبقاً، نقوم بإنشائها ديناميكياً
     if (!targetElement) {
         targetElement = document.createElement('div');
         targetElement.id = viewId;
@@ -171,13 +171,14 @@ export async function navigateTo(targetPage) {
     // 3. جلب محتوى الصفحة من مجلد pages/ عبر fetch إذا كانت الحاوية فارغة
     if (!targetElement.hasChildNodes() || targetElement.innerHTML.trim() === "") {
         try {
-            const response = await fetch(`pages/${targetPage}.html`);
+            // استخدام مسار مطلق لضمان عدم حدوث خطأ 404 على Vercel
+            const response = await fetch(`/pages/${targetPage}.html`);
             if (response.ok) {
                 const htmlContent = await response.text();
                 targetElement.innerHTML = htmlContent;
                 
-                // إذا تم جلب صفحة الرئيسية main.html، قد تحتاج لإعادة تفعيل السلايدر أو الشات إن وجدوا داخلها
-                if (targetPage === 'main') {
+                // تفعيل المكونات الخاصة إذا كانت الصفحة الحالية هي الرئيسية
+                if (targetPage === 'home') {
                     setupSliderSystem();
                     setupChatSystem();
                 }
