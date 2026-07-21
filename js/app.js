@@ -150,9 +150,9 @@ export function navigateTo(targetPage) {
     const allViews = document.querySelectorAll('.game-view');
     allViews.forEach(view => { if (view) view.style.display = 'none'; });
 
-    let viewId = 'view-main';
+    let viewId = 'view-home'; // تم التعديل هنا لتبدأ بالرئيسية الصحيحة
     switch (targetPage) {
-        case 'main': viewId = 'view-main'; break;
+        case 'main': viewId = 'view-home'; break; // ربط صفحة main بالعنصر view-home
         case 'work': viewId = 'view-work'; break;
         case 'wars': viewId = 'view-wars'; break;
         case 'profile': viewId = 'view-profile'; break;
@@ -160,7 +160,13 @@ export function navigateTo(targetPage) {
     }
 
     const targetElement = document.getElementById(viewId);
-    if (targetElement) targetElement.style.display = 'flex';
+    if (targetElement) {
+        // تحديد طريقة العرض بناءً على الصفحة لضمان تناسق التصميم
+        targetElement.style.display = (targetPage === 'profile' || targetPage === 'main') ? 'flex' : 'block';
+        if (targetPage === 'profile' || targetPage === 'main') {
+            targetElement.style.flexDirection = 'column';
+        }
+    }
 
     const allNavLinks = document.querySelectorAll('.bottom-nav .nav-link');
     allNavLinks.forEach(link => { if (link) link.classList.remove('active'); });
@@ -170,9 +176,3 @@ export function navigateTo(targetPage) {
         if (attr && attr.includes(`'${targetPage}'`)) link.classList.add('active');
     });
 }
-
-export function switchView(pageName) {
-    navigateTo(pageName);
-}
-// ربط دالة switchView بنافذة المتصفح لتعمل مباشرة عبر الأزرار الداخلية
-window.switchView = switchView;
