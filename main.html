@@ -45,7 +45,7 @@
 
 <main id="app-container">
         <!-- واجهة الرئيسية (Main View) -->
-        <div id="view-main" class="game-view">
+        <div id="view-home" class="game-view">
             <!-- إحصائيات القارة والدولة والشات (نفس محتويات الرئيسية المعتادة) -->
         </div>
 
@@ -93,8 +93,8 @@
 
     <!-- ملفات الـ JavaScript الهيكلية -->
     <script type="module">
-    import { initGameSystem } from 'js/game.js';
-    import { setupSliderSystem, setupChatSystem, setupInteractiveElements } from 'js/app.js';
+    import { initGameSystem } from './js/game.js';
+    import { setupSliderSystem, setupChatSystem, setupInteractiveElements } from './js/app.js';
 
     document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
