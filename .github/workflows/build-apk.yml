@@ -2,120 +2,45 @@ name: Build Android APK
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    - name: Set up JDK 17
-      uses: actions/setup-java@v4
-      with:
-        distribution: 'temurin'
-        java-version: '17'
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
 
-    - name: Setup Android SDK
-      uses: android-actions/setup-android@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
 
-    - name: Prepare Web Assets
-      run: |
-        mkdir -p app/src/main/assets/www
-        cp -r * app/src/main/assets/www/ 2>/dev/null || true
-        rm -rf app/src/main/assets/www/.github app/src/main/www/app
+      - name: Install Cordova
+        run: npm install -g cordova
 
-    - name: Generate Project & Build APK
-      run: |
-        cat << 'EOF' > settings.gradle
-        pluginManagement {
-            repositories {
-                google()
-                mavenCentral()
-                gradlePluginPortal()
-            }
-        }
-        dependencyResolutionManagement {
-            repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-            repositories {
-                google()
-                mavenCentral()
-            }
-        }
-        rootProject.name = "Africaconflict"
-        include ':app'
-        EOF
+      - name: Create Cordova Project
+        run: |
+          cordova create my-app com.adillo.africaconflict CocaApp
+          cd my-app
+          rm -rf www/*
+          cp -r ../* www/ 2>/dev/null || true
+          rm -rf www/my-app www/.git www/.github
+          cordova platform add android
 
-        cat << 'EOF' > app/build.gradle
-        plugins {
-            id 'com.android.application' version '7.4.2'
-        }
+      - name: Build Release APK
+        run: |
+          cd my-app
+          cordova build android --release
 
-        android {
-            namespace 'com.adillo.africaconflict'
-            compileSdk 33
-            defaultConfig {
-                applicationId "com.adillo.africaconflict"
-                minSdk 21
-                targetSdk 33
-                versionCode 1
-                versionName "1.0"
-            }
-        }
-        EOF
-        
-        mkdir -p app/src/main
-        cat << 'EOF' > app/src/main/AndroidManifest.xml
-        <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-            package="com.example.cokeshop">
-            <uses-permission android:name="android.permission.INTERNET" />
-            <application
-                android:allowBackup="true"
-                android:label="africaconflict">
-                <activity
-                    android:name=".MainActivity"
-                    android:exported="true">
-                    <intent-filter>
-                        <action android:name="android.intent.action.MAIN" />
-                        <category android:name="android.intent.category.LAUNCHER" />
-                    </intent-filter>
-                </activity>
-            </application>
-        </manifest>
-        EOF
-
-        mkdir -p app/src/main/java/com/example/cokeshop
-        cat << 'EOF' > app/src/main/java/com/adillo/africaconflict/MainActivity.kt
-        package com.adillo.africaconflict
-        import android.app.Activity
-        import android.os.Bundle
-        import android.webkit.WebView
-        import android.webkit.WebViewClient
-
-        class MainActivity : Activity() {
-            override fun onCreate(savedInstanceState: Bundle?) {
-                super.onCreate(savedInstanceState)
-                val webView = WebView(this)
-                webView.settings.javaScriptEnabled = true
-                webView.webViewClient = WebViewClient()
-                webView.loadUrl("file:///android_asset/www/index.html")
-                setContentView(webView)
-            }
-        }
-        EOF
-
-        yes | sdkmanager --licenses || true
-        
-        wget -q https://services.gradle.org/distributions/gradle-7.5-bin.zip
-        unzip -q gradle-7.5-bin.zip
-        export PATH=$PWD/gradle-7.5/bin:$PATH
-        
-        gradle assembleDebug
-
-    - name: Upload APK Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: app-debug-apk
-        path: app/build/outputs/apk/debug/app-debug.apk
+      - name: Upload APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-release
+          path: my-app/platforms/android/app/build/outputs/apk/release/app-release-unsigned.apk
