@@ -176,3 +176,10 @@ export function navigateTo(targetPage) {
         if (attr && attr.includes(`'${targetPage}'`)) link.classList.add('active');
     });
 }
+
+export function switchView(pageName) {
+    navigateTo(pageName);
+}
+
+// ربط الدالة بنافذة المتصفح لتعمل مباشرة عبر الأزرار الداخلية
+window.switchView = switchView;
