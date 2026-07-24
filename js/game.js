@@ -269,6 +269,13 @@ function setupStatDropdowns() {
         const dropdown = document.getElementById(`stat-${stat}-dropdown`);
         
         if (header && dropdown) {
+            // ضبط القيمة الابتدائية للتأكد من أنها مغلقة
+            if (!dropdown.style.maxHeight) {
+                dropdown.style.maxHeight = "0px";
+                dropdown.style.overflow = "hidden";
+                dropdown.style.transition = "max-height 0.3s ease";
+            }
+
             header.addEventListener('click', () => {
                 stats.forEach(s => {
                     if (s !== stat) {
@@ -277,8 +284,8 @@ function setupStatDropdowns() {
                     }
                 });
                 
-                if (dropdown.style.maxHeight === "0px" || !dropdown.style.maxHeight || dropdown.style.maxHeight === "0") {
-                    dropdown.style.maxHeight = "none";
+                if (dropdown.style.maxHeight === "0px" || dropdown.style.maxHeight === "0") {
+                    dropdown.style.maxHeight = dropdown.scrollHeight + "px";
                 } else {
                     dropdown.style.maxHeight = "0px";
                 }
