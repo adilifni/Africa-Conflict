@@ -105,9 +105,6 @@ export function initGameSystem() {
                 console.error("خطأ أثناء جلب إحصائيات اللاعبين:", error);
             });
 
-            // تفعيل نظام القوائم الجديد
-            initDropdownDelegation();
-
             // ربط الدوال بالنافذة لكي تعمل مباشرة من ملف الـ HTML عند الحاجة
             window.startStatUpgrade = startStatUpgrade;
             window.travelToCountry = travelToCountry;
@@ -260,40 +257,6 @@ export function startStatUpgrade(statName, currencyType) {
     db.collection('players').doc(user.uid).update(updates)
         .then(() => alert(`⏳ بدأ تطوير مهارة ${statName} الآن...`))
         .catch(err => console.error(err));
-}
-
-// نظام تفويض الأحداث الجديد للقوائم المنزلقة (يعمل دائماً بشكل صحيح)
-function initDropdownDelegation() {
-    // استخدام حدث 'pointerdown' أو 'click' لضمان الاستجابة السريعة على شاشات اللمس
-    document.addEventListener('click', (event) => {
-        const header = event.target.closest('[id$="-header"]');
-        if (!header) return;
-
-        const headerId = header.id;
-        if (!headerId.startsWith('stat-')) return;
-
-        const statName = headerId.replace('stat-', '').replace('-header', '');
-        const dropdown = document.getElementById(`stat-${statName}-dropdown`);
-        
-        if (!dropdown) return;
-
-        // إغلاق باقي القوائم المفتوحة
-        ['power', 'education', 'energy'].forEach(s => {
-            if (s !== statName) {
-                const otherDropdown = document.getElementById(`stat-${s}-dropdown`);
-                if (otherDropdown) {
-                    otherDropdown.style.maxHeight = "0px";
-                }
-            }
-        });
-
-        // فتح أو إغلاق القائمة الحالية بسلاسة
-        if (dropdown.style.maxHeight === "0px" || dropdown.style.maxHeight === "" || dropdown.style.maxHeight === "0") {
-            dropdown.style.maxHeight = "300px"; // ارتفاع كافي لظهور المحتوى على الهاتف
-        } else {
-            dropdown.style.maxHeight = "0px";
-        }
-    });
 }
 
 function checkActiveTraining(data) {

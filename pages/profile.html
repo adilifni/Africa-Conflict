@@ -40,12 +40,13 @@
             <span id="profile-nationality" style="font-weight: bold;">المغرب</span>
         </div>
     </div>
-<!-- قوائم التطوير المنزلقة -->
+
+    <!-- قوائم التطوير المنزلقة -->
     <div class="stats-upgrade-container" style="display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 600px; margin: 0 auto;">
         
         <!-- القوة القتالية -->
         <div class="stat-box" style="background: #1a1f26; border-radius: 12px; border: 1px solid #2d3748; overflow: hidden;">
-            <div id="stat-power-header" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #fff;">
+            <div id="stat-power-header" class="stat-header-btn" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #fff;">
                 <span>💪 القوة القتالية</span>
                 <span style="font-weight: bold; color: #e53e3e; font-size: 18px;" id="stat-power-val">0</span>
             </div>
@@ -65,7 +66,7 @@
 
         <!-- مستوى التعليم -->
         <div class="stat-box" style="background: #1a1f26; border-radius: 12px; border: 1px solid #2d3748; overflow: hidden;">
-            <div id="stat-education-header" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #fff;">
+            <div id="stat-education-header" class="stat-header-btn" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #fff;">
                 <span>📚 مستوى التعليم</span>
                 <span style="font-weight: bold; color: #3182ce; font-size: 18px;" id="stat-education-val">0</span>
             </div>
@@ -85,7 +86,7 @@
 
         <!-- مستوى الطاقة -->
         <div class="stat-box" style="background: #1a1f26; border-radius: 12px; border: 1px solid #2d3748; overflow: hidden;">
-            <div id="stat-energy-header" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #fff;">
+            <div id="stat-energy-header" class="stat-header-btn" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #fff;">
                 <span>⚡ مستوى الطاقة</span>
                 <span style="font-weight: bold; color: #38a169; font-size: 18px;" id="stat-energy-val">0</span>
             </div>
@@ -103,3 +104,33 @@
             </div>
         </div>
     </div>
+
+    <!-- كود JavaScript الخاص بالقوائم يعمل مباشرة داخل الصفحة -->
+    <script>
+        (function() {
+            const headers = document.querySelectorAll('.stat-header-btn');
+            headers.forEach(header => {
+                header.addEventListener('click', function() {
+                    const statId = this.id.replace('-header', '');
+                    const dropdown = document.getElementById(`${statId}-dropdown`);
+                    
+                    if (!dropdown) return;
+
+                    // إغلاق باقي القوائم
+                    document.querySelectorAll('.stat-dropdown').forEach(box => {
+                        if (box !== dropdown) {
+                            box.style.maxHeight = '0px';
+                        }
+                    });
+
+                    // فتح أو إغلاق القائمة الحالية
+                    if (dropdown.style.maxHeight === '0px' || dropdown.style.maxHeight === '' || dropdown.style.maxHeight === '0') {
+                        dropdown.style.maxHeight = '300px';
+                    } else {
+                        dropdown.style.maxHeight = '0px';
+                    }
+                });
+            });
+        })();
+    </script>
+</div>
