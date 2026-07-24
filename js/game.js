@@ -264,6 +264,7 @@ export function startStatUpgrade(statName, currencyType) {
 
 // نظام تفويض الأحداث الجديد للقوائم المنزلقة (يعمل دائماً بشكل صحيح)
 function initDropdownDelegation() {
+    // استخدام حدث 'pointerdown' أو 'click' لضمان الاستجابة السريعة على شاشات اللمس
     document.addEventListener('click', (event) => {
         const header = event.target.closest('[id$="-header"]');
         if (!header) return;
@@ -276,37 +277,21 @@ function initDropdownDelegation() {
         
         if (!dropdown) return;
 
+        // إغلاق باقي القوائم المفتوحة
         ['power', 'education', 'energy'].forEach(s => {
             if (s !== statName) {
                 const otherDropdown = document.getElementById(`stat-${s}-dropdown`);
-                if (otherDropdown) otherDropdown.style.maxHeight = "0px";
+                if (otherDropdown) {
+                    otherDropdown.style.maxHeight = "0px";
+                }
             }
         });
 
-        if (dropdown.style.maxHeight === "0px" || dropdown.style.maxHeight === "0" || !dropdown.style.maxHeight) {
-            dropdown.style.overflow = "hidden";
-            dropdown.style.transition = "max-height 0.3s ease";
-            dropdown.style.maxHeight = dropdown.scrollHeight + "px";
+        // فتح أو إغلاق القائمة الحالية بسلاسة
+        if (dropdown.style.maxHeight === "0px" || dropdown.style.maxHeight === "" || dropdown.style.maxHeight === "0") {
+            dropdown.style.maxHeight = "300px"; // ارتفاع كافي لظهور المحتوى على الهاتف
         } else {
             dropdown.style.maxHeight = "0px";
-        }
-
-        if (localPlayerData && (dropdown.style.maxHeight !== "0px")) {
-            const currentStatLevel = localPlayerData[statName] || 0;
-            
-            const moneyCost = (currentStatLevel + 1) * 1000;
-            const goldCost = (currentStatLevel + 1) * 5;
-            
-            const timeInSecondsMoney = Math.floor(Math.pow(currentStatLevel + 1, 1.5) * 60); 
-            const timeInSecondsGold = Math.floor(timeInSecondsMoney / 2);
-            
-            const moneyEl = document.getElementById(`cost-${statName}-money`);
-            const goldEl = document.getElementById(`cost-${statName}-gold`);
-            const timeEl = document.getElementById(`time-${statName}`);
-
-            if(moneyEl) moneyEl.textContent = `${moneyCost} مال | ⏱️ ${formatTimeShort(timeInSecondsMoney * 1000)}`;
-            if(goldEl) goldEl.textContent = `${goldCost} ذهب | ⏱️ ${formatTimeShort(timeInSecondsGold * 1000)}`;
-            if(timeEl) timeEl.style.display = "none";
         }
     });
 }
