@@ -25,7 +25,7 @@ jobs:
       run: |
         mkdir -p app/src/main/assets/www
         cp -r * app/src/main/assets/www/ 2>/dev/null || true
-        rm -rf app/src/main/assets/www/.github app/src/main/assets/www/app
+        rm -rf app/src/main/assets/www/.github app/src/main/www/app
 
     - name: Generate Project & Build APK
       run: |
@@ -44,7 +44,7 @@ jobs:
                 mavenCentral()
             }
         }
-        rootProject.name = "Cokeshop"
+        rootProject.name = "Africaconflict"
         include ':app'
         EOF
 
@@ -54,10 +54,10 @@ jobs:
         }
 
         android {
-            namespace 'com.example.cokeshop'
+            namespace 'com.adillo.africaconflict'
             compileSdk 33
             defaultConfig {
-                applicationId "com.example.cokeshop"
+                applicationId "com.adillo.africaconflict"
                 minSdk 21
                 targetSdk 33
                 versionCode 1
@@ -73,7 +73,7 @@ jobs:
             <uses-permission android:name="android.permission.INTERNET" />
             <application
                 android:allowBackup="true"
-                android:label="Cokeshop">
+                android:label="africaconflict">
                 <activity
                     android:name=".MainActivity"
                     android:exported="true">
@@ -87,8 +87,8 @@ jobs:
         EOF
 
         mkdir -p app/src/main/java/com/example/cokeshop
-        cat << 'EOF' > app/src/main/java/com/example/cokeshop/MainActivity.kt
-        package com.example.cokeshop
+        cat << 'EOF' > app/src/main/java/com/adillo/africaconflict/MainActivity.kt
+        package com.adillo.africaconflict
         import android.app.Activity
         import android.os.Bundle
         import android.webkit.WebView
