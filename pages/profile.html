@@ -40,8 +40,7 @@
             <span id="profile-nationality" style="font-weight: bold;">المغرب</span>
         </div>
     </div>
-
-    <!-- قوائم التطوير المنزلقة -->
+<!-- قوائم التطوير المنزلقة -->
     <div class="stats-upgrade-container" style="display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 600px; margin: 0 auto;">
         
         <!-- القوة القتالية -->
@@ -50,7 +49,7 @@
                 <span>💪 القوة القتالية</span>
                 <span style="font-weight: bold; color: #e53e3e; font-size: 18px;" id="stat-power-val">0</span>
             </div>
-            <div id="stat-power-dropdown" class="stat-dropdown">
+            <div id="stat-power-dropdown" class="stat-dropdown" style="max-height: 0px; overflow: hidden; transition: max-height 0.3s ease; padding: 0 15px;">
                 <div style="padding: 10px 0; display: flex; flex-direction: column; gap: 10px;">
                     <p id="time-power" style="color: #a0aec0; margin: 0; font-size: 13px;">الوقت المستغرق: 5 دقائق</p>
                     <div id="actions-power" style="display: flex; gap: 10px;">
@@ -70,7 +69,7 @@
                 <span>📚 مستوى التعليم</span>
                 <span style="font-weight: bold; color: #3182ce; font-size: 18px;" id="stat-education-val">0</span>
             </div>
-            <div id="stat-education-dropdown" class="stat-dropdown">
+            <div id="stat-education-dropdown" class="stat-dropdown" style="max-height: 0px; overflow: hidden; transition: max-height 0.3s ease; padding: 0 15px;">
                 <div style="padding: 10px 0; display: flex; flex-direction: column; gap: 10px;">
                     <p id="time-education" style="color: #a0aec0; margin: 0; font-size: 13px;">الوقت المستغرق: 10 دقائق</p>
                     <div id="actions-education" style="display: flex; gap: 10px;">
@@ -90,7 +89,7 @@
                 <span>⚡ مستوى الطاقة</span>
                 <span style="font-weight: bold; color: #38a169; font-size: 18px;" id="stat-energy-val">0</span>
             </div>
-            <div id="stat-energy-dropdown" class="stat-dropdown">
+            <div id="stat-energy-dropdown" class="stat-dropdown" style="max-height: 0px; overflow: hidden; transition: max-height 0.3s ease; padding: 0 15px;">
                 <div style="padding: 10px 0; display: flex; flex-direction: column; gap: 10px;">
                     <p id="time-energy" style="color: #a0aec0; margin: 0; font-size: 13px;">الوقت المستغرق: 3 دقائق</p>
                     <div id="actions-energy" style="display: flex; gap: 10px;">
@@ -104,4 +103,3 @@
             </div>
         </div>
     </div>
-</div>
