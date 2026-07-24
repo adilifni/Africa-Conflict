@@ -340,7 +340,11 @@ function checkActiveTraining(data) {
 
     if (btnContainer) btnContainer.style.display = 'none';
     if (timerContainer) timerContainer.style.display = 'block';
-    if (activeDropdown) activeDropdown.style.maxHeight = "none";
+    
+    // تم تعديل هذا السطر لكي لا يفتح القائمة قسراً مع كل تحديث للبيانات
+    if (activeDropdown && activeDropdown.style.maxHeight !== "0px" && activeDropdown.style.maxHeight !== "") {
+        activeDropdown.style.maxHeight = activeDropdown.scrollHeight + "px";
+    }
 
     trainingInterval = setInterval(() => {
         const now = Date.now();
