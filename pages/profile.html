@@ -106,31 +106,34 @@
     </div>
 
     <!-- كود JavaScript الخاص بالقوائم يعمل مباشرة داخل الصفحة -->
-    <script>
-        (function() {
-            const headers = document.querySelectorAll('.stat-header-btn');
-            headers.forEach(header => {
-                header.addEventListener('click', function() {
-                    const statId = this.id.replace('-header', '');
-                    const dropdown = document.getElementById(`${statId}-dropdown`);
-                    
-                    if (!dropdown) return;
+<script>
+    // استخدام نظام تفويض الأحداث (Event Delegation) لضمان عمل القوائم حتى لو تم تحميل الـ HTML ديناميكياً
+    if (!window.hasStatDropdownListener) {
+        window.hasStatDropdownListener = true;
+        
+        document.addEventListener('click', function(event) {
+            const header = event.target.closest('.stat-header-btn');
+            if (!header) return;
 
-                    // إغلاق باقي القوائم
-                    document.querySelectorAll('.stat-dropdown').forEach(box => {
-                        if (box !== dropdown) {
-                            box.style.maxHeight = '0px';
-                        }
-                    });
+            const statId = header.id.replace('-header', '');
+            const dropdown = document.getElementById(`${statId}-dropdown`);
+            
+            if (!dropdown) return;
 
-                    // فتح أو إغلاق القائمة الحالية
-                    if (dropdown.style.maxHeight === '0px' || dropdown.style.maxHeight === '' || dropdown.style.maxHeight === '0') {
-                        dropdown.style.maxHeight = '300px';
-                    } else {
-                        dropdown.style.maxHeight = '0px';
-                    }
-                });
+            // إغلاق باقي القوائم
+            document.querySelectorAll('.stat-dropdown').forEach(box => {
+                if (box !== dropdown) {
+                    box.style.maxHeight = '0px';
+                }
             });
-        })();
-    </script>
+
+            // فتح أو إغلاق القائمة الحالية
+            if (dropdown.style.maxHeight === '0px' || dropdown.style.maxHeight === '' || dropdown.style.maxHeight === '0') {
+                dropdown.style.maxHeight = dropdown.scrollHeight + 'px'; // استخدام الارتفاع الفعلي للمحتوى
+            } else {
+                dropdown.style.maxHeight = '0px';
+            }
+        });
+    }
+</script>
 </div>
