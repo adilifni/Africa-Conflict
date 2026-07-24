@@ -105,7 +105,8 @@ export function initGameSystem() {
                 console.error("خطأ أثناء جلب إحصائيات اللاعبين:", error);
             });
 
-            setupStatDropdowns();
+            // تفعيل نظام القوائم الجديد
+            initDropdownDelegation();
 
             // ربط الدوال بالنافذة لكي تعمل مباشرة من ملف الـ HTML عند الحاجة
             window.startStatUpgrade = startStatUpgrade;
@@ -261,56 +262,51 @@ export function startStatUpgrade(statName, currencyType) {
         .catch(err => console.error(err));
 }
 
-function setupStatDropdowns() {
-    const stats = ['power', 'education', 'energy'];
-    
-    stats.forEach(stat => {
-        const header = document.getElementById(`stat-${stat}-header`);
-        const dropdown = document.getElementById(`stat-${stat}-dropdown`);
-        
-        if (header && dropdown) {
-            // ضبط القيمة الابتدائية للتأكد من أنها مغلقة
-            if (!dropdown.style.maxHeight) {
-                dropdown.style.maxHeight = "0px";
-                dropdown.style.overflow = "hidden";
-                dropdown.style.transition = "max-height 0.3s ease";
-            }
+// نظام تفويض الأحداث الجديد للقوائم المنزلقة (يعمل دائماً بشكل صحيح)
+function initDropdownDelegation() {
+    document.addEventListener('click', (event) => {
+        const header = event.target.closest('[id$="-header"]');
+        if (!header) return;
 
-            header.addEventListener('click', () => {
-                stats.forEach(s => {
-                    if (s !== stat) {
-                        const otherDropdown = document.getElementById(`stat-${s}-dropdown`);
-                        if (otherDropdown) otherDropdown.style.maxHeight = "0px";
-                    }
-                });
-                
-                if (dropdown.style.maxHeight === "0px" || dropdown.style.maxHeight === "0") {
-                    dropdown.style.maxHeight = dropdown.scrollHeight + "px";
-                } else {
-                    dropdown.style.maxHeight = "0px";
-                }
-                
-                if (localPlayerData) {
-                    const currentStatLevel = localPlayerData[stat] || 0;
-                    
-                    const moneyCost = (currentStatLevel + 1) * 1000;
-                    const goldCost = (currentStatLevel + 1) * 5;
-                    
-                    const timeInSecondsMoney = Math.floor(Math.pow(currentStatLevel + 1, 1.5) * 60); 
-                    const timeInSecondsGold = Math.floor(timeInSecondsMoney / 2);
-                    
-                    if(document.getElementById(`cost-${stat}-money`)) {
-                        document.getElementById(`cost-${stat}-money`).textContent = `${moneyCost} مال | ⏱️ ${formatTimeShort(timeInSecondsMoney * 1000)}`;
-                    }
-                    if(document.getElementById(`cost-${stat}-gold`)) {
-                        document.getElementById(`cost-${stat}-gold`).textContent = `${goldCost} ذهب | ⏱️ ${formatTimeShort(timeInSecondsGold * 1000)}`;
-                    }
-                    
-                    if(document.getElementById(`time-${stat}`)) {
-                        document.getElementById(`time-${stat}`).style.display = "none";
-                    }
-                }
-            });
+        const headerId = header.id;
+        if (!headerId.startsWith('stat-')) return;
+
+        const statName = headerId.replace('stat-', '').replace('-header', '');
+        const dropdown = document.getElementById(`stat-${statName}-dropdown`);
+        
+        if (!dropdown) return;
+
+        ['power', 'education', 'energy'].forEach(s => {
+            if (s !== statName) {
+                const otherDropdown = document.getElementById(`stat-${s}-dropdown`);
+                if (otherDropdown) otherDropdown.style.maxHeight = "0px";
+            }
+        });
+
+        if (dropdown.style.maxHeight === "0px" || dropdown.style.maxHeight === "0" || !dropdown.style.maxHeight) {
+            dropdown.style.overflow = "hidden";
+            dropdown.style.transition = "max-height 0.3s ease";
+            dropdown.style.maxHeight = dropdown.scrollHeight + "px";
+        } else {
+            dropdown.style.maxHeight = "0px";
+        }
+
+        if (localPlayerData && (dropdown.style.maxHeight !== "0px")) {
+            const currentStatLevel = localPlayerData[statName] || 0;
+            
+            const moneyCost = (currentStatLevel + 1) * 1000;
+            const goldCost = (currentStatLevel + 1) * 5;
+            
+            const timeInSecondsMoney = Math.floor(Math.pow(currentStatLevel + 1, 1.5) * 60); 
+            const timeInSecondsGold = Math.floor(timeInSecondsMoney / 2);
+            
+            const moneyEl = document.getElementById(`cost-${statName}-money`);
+            const goldEl = document.getElementById(`cost-${statName}-gold`);
+            const timeEl = document.getElementById(`time-${statName}`);
+
+            if(moneyEl) moneyEl.textContent = `${moneyCost} مال | ⏱️ ${formatTimeShort(timeInSecondsMoney * 1000)}`;
+            if(goldEl) goldEl.textContent = `${goldCost} ذهب | ⏱️ ${formatTimeShort(timeInSecondsGold * 1000)}`;
+            if(timeEl) timeEl.style.display = "none";
         }
     });
 }
@@ -341,7 +337,6 @@ function checkActiveTraining(data) {
     if (btnContainer) btnContainer.style.display = 'none';
     if (timerContainer) timerContainer.style.display = 'block';
     
-    // تم تعديل هذا السطر لكي لا يفتح القائمة قسراً مع كل تحديث للبيانات
     if (activeDropdown && activeDropdown.style.maxHeight !== "0px" && activeDropdown.style.maxHeight !== "") {
         activeDropdown.style.maxHeight = activeDropdown.scrollHeight + "px";
     }
