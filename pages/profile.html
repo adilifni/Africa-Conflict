@@ -42,96 +42,94 @@
     </div>
 
     <!-- قوائم التطوير المنزلقة -->
-<div class="stats-upgrade-container" style="display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 600px; margin: 0 auto;">
-    
-    <!-- القوة القتالية -->
-    <div class="stat-box" style="background: #1a1f26; border-radius: 12px; border: 1px solid #2d3748; overflow: hidden;">
-        <div id="stat-power-header" class="stat-header-btn" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #fff;">
-            <span>💪 القوة القتالية</span>
-            <span style="font-weight: bold; color: #e53e3e; font-size: 18px;" id="stat-power-val">0</span>
-        </div>
-        <div id="stat-power-dropdown" class="stat-dropdown" style="max-height: 0px; overflow: hidden; transition: max-height 0.3s ease; padding: 0 15px;">
-            <div style="padding: 10px 0; display: flex; flex-direction: column; gap: 10px;">
-                <p id="time-power" style="color: #a0aec0; margin: 0; font-size: 13px;">الوقت المستغرق: 5 دقائق</p>
-                <div id="actions-power" style="display: flex; gap: 10px;">
-                    <button onclick="startStatUpgrade('power', 'money')" style="flex: 1; background: #2b6cb0; color: #fff; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-power-money">100 مال</button>
-                    <button onclick="startStatUpgrade('power', 'gold')" style="flex: 1; background: #d69e2e; color: #fff; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-power-gold">5 ذهب</button>
+    <div class="stats-upgrade-container" style="display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 600px; margin: 0 auto;">
+        
+        <!-- القوة القتالية -->
+        <div class="stat-box" style="background: #1a1f26; border-radius: 12px; border: 1px solid #2d3748; overflow: hidden;">
+            <div id="stat-power-header" class="stat-header-btn" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #fff;">
+                <span>💪 القوة القتالية</span>
+                <span style="font-weight: bold; color: #e53e3e; font-size: 18px;" id="stat-power-val">0</span>
+            </div>
+            <div id="stat-power-dropdown" class="stat-dropdown" style="max-height: 0px; overflow: hidden; transition: max-height 0.3s ease; padding: 0 15px;">
+                <div style="padding: 10px 0; display: flex; flex-direction: column; gap: 10px;">
+                    <p id="time-power" style="color: #a0aec0; margin: 0; font-size: 13px;">الوقت المستغرق: 5 دقائق</p>
+                    <div id="actions-power" style="display: flex; gap: 10px;">
+                        <button onclick="startStatUpgrade('power', 'money')" style="flex: 1; background: #2b6cb0; color: #fff; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-power-money">100 مال</button>
+                        <button onclick="startStatUpgrade('power', 'gold')" style="flex: 1; background: #d69e2e; color: #fff; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-power-gold">5 ذهب</button>
+                    </div>
+                    <div id="timer-container-power" style="display: none; text-align: center; color: #fc8181; font-weight: bold; padding: 8px; background: #2d3748; border-radius: 6px; font-size: 14px;">
+                        ⏳ متبقي: <span id="timer-val-power">--:--</span>
+                    </div>
                 </div>
-                <div id="timer-container-power" style="display: none; text-align: center; color: #fc8181; font-weight: bold; padding: 8px; background: #2d3748; border-radius: 6px; font-size: 14px;">
-                    ⏳ متبقي: <span id="timer-val-power">--:--</span>
+            </div>
+        </div>
+
+        <!-- مستوى التعليم -->
+        <div class="stat-box" style="background: #1a1f26; border-radius: 12px; border: 1px solid #2d3748; overflow: hidden;">
+            <div id="stat-education-header" class="stat-header-btn" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #fff;">
+                <span>📚 مستوى التعليم</span>
+                <span style="font-weight: bold; color: #3182ce; font-size: 18px;" id="stat-education-val">0</span>
+            </div>
+            <div id="stat-education-dropdown" class="stat-dropdown" style="max-height: 0px; overflow: hidden; transition: max-height 0.3s ease; padding: 0 15px;">
+                <div style="padding: 10px 0; display: flex; flex-direction: column; gap: 10px;">
+                    <p id="time-education" style="color: #a0aec0; margin: 0; font-size: 13px;">الوقت المستغرق: 10 دقائق</p>
+                    <div id="actions-education" style="display: flex; gap: 10px;">
+                        <button onclick="startStatUpgrade('education', 'money')" style="flex: 1; background: #2b6cb0; color: #fff; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-education-money">200 مال</button>
+                        <button onclick="startStatUpgrade('education', 'gold')" style="flex: 1; background: #d69e2e; color: #fff; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-education-gold">10 ذهب</button>
+                    </div>
+                    <div id="timer-container-education" style="display: none; text-align: center; color: #fc8181; font-weight: bold; padding: 8px; background: #2d3748; border-radius: 6px; font-size: 14px;">
+                        ⏳ متبقي: <span id="timer-val-education">--:--</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- مستوى الطاقة -->
+        <div class="stat-box" style="background: #1a1f26; border-radius: 12px; border: 1px solid #2d3748; overflow: hidden;">
+            <div id="stat-energy-header" class="stat-header-btn" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #fff;">
+                <span>⚡ مستوى الطاقة</span>
+                <span style="font-weight: bold; color: #38a169; font-size: 18px;" id="stat-energy-val">0</span>
+            </div>
+            <div id="stat-energy-dropdown" class="stat-dropdown" style="max-height: 0px; overflow: hidden; transition: max-height 0.3s ease; padding: 0 15px;">
+                <div style="padding: 10px 0; display: flex; flex-direction: column; gap: 10px;">
+                    <p id="time-energy" style="color: #a0aec0; margin: 0; font-size: 13px;">الوقت المستغرق: 3 دقائق</p>
+                    <div id="actions-energy" style="display: flex; gap: 10px;">
+                        <button onclick="startStatUpgrade('energy', 'money')" style="flex: 1; background: #2b6cb0; color: #fff; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-energy-money">50 مال</button>
+                        <button onclick="startStatUpgrade('energy', 'gold')" style="flex: 1; background: #d69e2e; color: #fff; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-energy-gold">2 ذهب</button>
+                    </div>
+                    <div id="timer-container-energy" style="display: none; text-align: center; color: #fc8181; font-weight: bold; padding: 8px; background: #2d3748; border-radius: 6px; font-size: 14px;">
+                        ⏳ متبقي: <span id="timer-val-energy">--:--</span>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- مستوى التعليم -->
-    <div class="stat-box" style="background: #1a1f26; border-radius: 12px; border: 1px solid #2d3748; overflow: hidden;">
-        <div id="stat-education-header" class="stat-header-btn" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #fff;">
-            <span>📚 مستوى التعليم</span>
-            <span style="font-weight: bold; color: #3182ce; font-size: 18px;" id="stat-education-val">0</span>
-        </div>
-        <div id="stat-education-dropdown" class="stat-dropdown" style="max-height: 0px; overflow: hidden; transition: max-height 0.3s ease; padding: 0 15px;">
-            <div style="padding: 10px 0; display: flex; flex-direction: column; gap: 10px;">
-                <p id="time-education" style="color: #a0aec0; margin: 0; font-size: 13px;">الوقت المستغرق: 10 دقائق</p>
-                <div id="actions-education" style="display: flex; gap: 10px;">
-                    <button onclick="startStatUpgrade('education', 'money')" style="flex: 1; background: #2b6cb0; color: #fff; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-education-money">200 مال</button>
-                    <button onclick="startStatUpgrade('education', 'gold')" style="flex: 1; background: #d69e2e; color: #fff; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-education-gold">10 ذهب</button>
-                </div>
-                <div id="timer-container-education" style="display: none; text-align: center; color: #fc8181; font-weight: bold; padding: 8px; background: #2d3748; border-radius: 6px; font-size: 14px;">
-                    ⏳ متبقي: <span id="timer-val-education">--:--</span>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- كود الجافاسكريبت الخاص بالقوائم المنسدلة -->
+    <script>
+        if (!window.hasStatDropdownListener) {
+            window.hasStatDropdownListener = true;
+            document.addEventListener('click', function(event) {
+                const header = event.target.closest('.stat-header-btn');
+                if (!header) return;
 
-    <!-- مستوى الطاقة -->
-    <div class="stat-box" style="background: #1a1f26; border-radius: 12px; border: 1px solid #2d3748; overflow: hidden;">
-        <div id="stat-energy-header" class="stat-header-btn" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #fff;">
-            <span>⚡ مستوى الطاقة</span>
-            <span style="font-weight: bold; color: #38a169; font-size: 18px;" id="stat-energy-val">0</span>
-        </div>
-        <div id="stat-energy-dropdown" class="stat-dropdown" style="max-height: 0px; overflow: hidden; transition: max-height 0.3s ease; padding: 0 15px;">
-            <div style="padding: 10px 0; display: flex; flex-direction: column; gap: 10px;">
-                <p id="time-energy" style="color: #a0aec0; margin: 0; font-size: 13px;">الوقت المستغرق: 3 دقائق</p>
-                <div id="actions-energy" style="display: flex; gap: 10px;">
-                    <button onclick="startStatUpgrade('energy', 'money')" style="flex: 1; background: #2b6cb0; color: #fff; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-energy-money">50 مال</button>
-                    <button onclick="startStatUpgrade('energy', 'gold')" style="flex: 1; background: #d69e2e; color: #fff; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-energy-gold">2 ذهب</button>
-                </div>
-                <div id="timer-container-energy" style="display: none; text-align: center; color: #fc8181; font-weight: bold; padding: 8px; background: #2d3748; border-radius: 6px; font-size: 14px;">
-                    ⏳ متبقي: <span id="timer-val-energy">--:--</span>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+                const statId = header.id.replace('-header', '');
+                const dropdown = document.getElementById(`${statId}-dropdown`);
+                
+                if (!dropdown) return;
 
-<!-- السكريبت المسؤول عن فتح وإغلاق القوائم عند الضغط -->
-<script>
-    if (!window.hasStatDropdownListener) {
-        window.hasStatDropdownListener = true;
-        document.addEventListener('click', function(event) {
-            const header = event.target.closest('.stat-header-btn');
-            if (!header) return;
+                document.querySelectorAll('.stat-dropdown').forEach(box => {
+                    if (box !== dropdown) {
+                        box.style.maxHeight = '0px';
+                    }
+                });
 
-            const statId = header.id.replace('-header', '');
-            const dropdown = document.getElementById(`${statId}-dropdown`);
-            
-            if (!dropdown) return;
-
-            // إغلاق باقي القوائم المفتوحة
-            document.querySelectorAll('.stat-dropdown').forEach(box => {
-                if (box !== dropdown) {
-                    box.style.maxHeight = '0px';
+                if (dropdown.style.maxHeight === '0px' || dropdown.style.maxHeight === '' || dropdown.style.maxHeight === '0') {
+                    dropdown.style.maxHeight = dropdown.scrollHeight + 'px';
+                } else {
+                    dropdown.style.maxHeight = '0px';
                 }
             });
-
-            // تبديل حالة القائمة الحالية (فتح / إغلاق)
-            if (dropdown.style.maxHeight === '0px' || dropdown.style.maxHeight === '' || dropdown.style.maxHeight === '0') {
-                dropdown.style.maxHeight = dropdown.scrollHeight + 'px';
-            } else {
-                dropdown.style.maxHeight = '0px';
-            }
-        });
-    }
-</script>
+        }
+    </script>
 </div>
