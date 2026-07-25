@@ -4,117 +4,21 @@
     padding: 0;
     box-sizing: border-box;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    -webkit-tap-highlight-color: transparent; /* إزالة اللون الأزرق عند الضغط في الهاتف */
+    -webkit-tap-highlight-color: transparent;
 }
 
-/* تصميم خلفية اللعبة الكاملة باللون الأسود الداكن */
+/* تصميم خلفية اللعبة الكاملة باللون الأسود الداكن مع منع التمرير الخارجي */
 body {
     background-color: #0d1117;
     color: #c9d1d9;
     display: flex;
     flex-direction: column;
-    min-height: 100vh;
-    height: 100vh; /* تثبيت الارتفاع لملء شاشة الجوال تماماً */
-    overflow: hidden; /* منع التمرير الكلي للجسم وجعله داخل الـ ميني فقط */
+    height: 100vh;
+    height: 100dvh; /* التوافق التام مع شاشات الجوال الحديثة */
+    overflow: hidden;
 }
 
-/* الحاوية الرئيسية المخصصة للهواتف ملء الشاشة */
-.login-container {
-    width: 100%;
-    max-width: 450px;
-    height: 100%;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-around; /* توزيع العناصر بالتساوي عمودياً */
-    align-items: center;
-}
-
-/* غلاف الصورة لمنع تمددها والحفاظ على أبعادها */
-.logo-wrapper {
-    width: 90%;
-    max-width: 380px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-/* تصميم أيقونة اللعبة الكبيرة الدائرية PNG المتطابقة مع صورتك */
-.game-logo {
-    width: 100%;
-    height: auto;
-    object-fit: contain;
-    filter: drop-shadow(0px 0px 15px rgba(255, 255, 255, 0.05)); /* ظل خفيف جداً يبرز جمال التصميم */
-}
-
-/* زر تسجيل الدخول المليء باللون الأبيض المستوحى تماماً من صورتك */
-.google-login-btn {
-    width: 90%;
-    background-color: #ffffff;
-    border: none;
-    border-radius: 24px; /* حواف دائرية ناعمة تطابق الشاشة */
-    padding: 14px 24px;
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-    transition: transform 0.2s, box-shadow 0.2s;
-}
-
-/* تأثير نبضي خفيف جداً عند ضغط اللاعب على الزر في الهاتف */
-.google-login-btn:active {
-    transform: scale(0.98);
-    background-color: #f1f1f1;
-}
-
-/* غلاف أيقونة جوجل الملونة جهة اليمين */
-.google-icon-wrapper {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-left: 16px; /* مسافة تفصل اللوجو عن الكلام */
-}
-
-/* حاوية النصوص الإنجليزية والعربية داخل الزر لترتيبها عمودياً */
-.button-text-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start; /* محاذاة النصوص لتبدأ معاً بشكل منظم */
-    text-align: right;
-    width: 100%;
-}
-
-/* تصميم النص الإنجليزي العلوي */
-.text-en {
-    color: #4a4a4a;
-    font-size: 20px;
-    font-weight: 600;
-    line-height: 1.2;
-}
-
-/* تصميم النص العربي السفلي المتناسق */
-.text-ar {
-    color: #626262;
-    font-size: 15px;
-    font-weight: bold;
-    margin-top: 2px;
-}
-
-
-
-
-
-
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    -webkit-tap-highlight-color: transparent;
-}
-
-
-
+/* الهيدر الثابت في الأعلى */
 header {
     background-color: #161b22;
     padding: 15px 20px;
@@ -122,7 +26,7 @@ header {
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid #30363d;
-    flex-shrink: 0; /* منع الهيدر من الانكماش */
+    flex-shrink: 0;
     z-index: 100;
 }
 
@@ -140,12 +44,13 @@ header {
     gap: 8px;
 }
 
+/* الجزء الأوسط القابل للتمدد والتمرير بحرية بين الهيدر والنافبار */
 main {
-    flex: 1;
+    flex: 1 1 auto;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     padding: 15px;
-    padding-bottom: 120px; /* زيادة مساحة التمرير السفلي ليظهر الشات بالكامل فوق شريط التنقل */
+    padding-bottom: 100px; /* مساحة كافية لكيلا يغطي شريط التنقل المحتوى الأخير */
     display: flex;
     flex-direction: column;
     gap: 15px;
@@ -154,7 +59,7 @@ main {
     width: 100%;
 }
 
-/* شريط التنقل السفلي الاحترافي */
+/* شريط التنقل السفلي الاحترافي والثابت */
 .bottom-nav {
     position: fixed;
     bottom: 0;
@@ -166,6 +71,7 @@ main {
     justify-content: space-around;
     padding: 8px 0;
     z-index: 100;
+    flex-shrink: 0;
 }
 
 .nav-link {
@@ -189,4 +95,64 @@ main {
 
 .nav-link i {
     font-size: 18px;
+}
+
+/* --- تنسيقات بطاقات المهارات والقوائم المنسدلة للتطوير --- */
+.upgradeable-card {
+    background-color: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    padding: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.card-header-main {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+/* القائمة المنسدلة التي تظهر عند الضغط */
+.upgrade-dropdown {
+    display: none; /* مخفية افتراضياً */
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #30363d;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.upgrade-dropdown.active {
+    display: flex; /* تظهر عند الضغط */
+}
+
+.upgrade-btn-row {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-upgrade {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.btn-gold {
+    background-color: #d29922;
+    color: #0d1117;
+}
+
+.btn-money {
+    background-color: #238636;
+    color: #ffffff;
 }
