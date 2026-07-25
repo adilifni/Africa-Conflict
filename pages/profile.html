@@ -45,83 +45,90 @@
     <div class="stats-upgrade-container" style="display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 600px; margin: 0 auto; padding-bottom: 50px;">
         
         <!-- القوة القتالية -->
-<!-- مثال لبطاقة القوة القتالية -->
-<div class="upgradeable-card" onclick="toggleDropdown('strength-dropdown')">
+<!-- القوة القتالية -->
+<div class="upgradeable-card stat-card-box" data-dropdown="strength-dropdown">
     <div class="card-header-main">
-        <span>القوة القتالية 💪</span>
+        <span>💪 القوة القتالية</span>
         <span id="strength-value">129</span>
     </div>
-    <div id="strength-dropdown" class="upgrade-dropdown">
-        <div class="upgrade-btn-row">
-            <button class="btn-upgrade btn-gold" onclick="event.stopPropagation(); upgradeSkill('strength', 'gold')">
-                تطوير بالذهب 🪙
-            </button>
-            <button class="btn-upgrade btn-money" onclick="event.stopPropagation(); upgradeSkill('strength', 'money')">
-                تطوير بالمال 💵
-            </button>
+    <div id="strength-dropdown" class="upgrade-dropdown" style="display: none;">
+        <div style="padding: 10px 0; display: flex; flex-direction: column; gap: 10px;">
+            <p style="color: #a0aec0; margin: 0; font-size: 13px;">الوقت المستغرق: 5 دقائق</p>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-upgrade-action" data-skill="power" data-currency="money" style="flex: 1; background: #2b6cb0; color: #fff; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold;">100 مال</button>
+                <button class="btn-upgrade-action" data-skill="power" data-currency="gold" style="flex: 1; background: #d69e2e; color: #fff; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold;">5 ذهب</button>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- مثال لبطاقة مستوى التعليم -->
-<div class="upgradeable-card" onclick="toggleDropdown('education-dropdown')">
+<!-- مستوى التعليم -->
+<div class="upgradeable-card stat-card-box" data-dropdown="education-dropdown">
     <div class="card-header-main">
-        <span>مستوى التعليم 📚</span>
+        <span>📚 مستوى التعليم</span>
         <span id="education-value">300</span>
     </div>
-    <div id="education-dropdown" class="upgrade-dropdown">
-        <div class="upgrade-btn-row">
-            <button class="btn-upgrade btn-gold" onclick="event.stopPropagation(); upgradeSkill('education', 'gold')">
-                تطوير بالذهب 🪙
-            </button>
-            <button class="btn-upgrade btn-money" onclick="event.stopPropagation(); upgradeSkill('education', 'money')">
-                تطوير بالمال 💵
-            </button>
+    <div id="education-dropdown" class="upgrade-dropdown" style="display: none;">
+        <div style="padding: 10px 0; display: flex; flex-direction: column; gap: 10px;">
+            <p style="color: #a0aec0; margin: 0; font-size: 13px;">الوقت المستغرق: 10 دقائق</p>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-upgrade-action" data-skill="education" data-currency="money" style="flex: 1; background: #2b6cb0; color: #fff; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold;">200 مال</button>
+                <button class="btn-upgrade-action" data-skill="education" data-currency="gold" style="flex: 1; background: #d69e2e; color: #fff; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold;">10 ذهب</button>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- مثال لبطاقة مستوى الطاقة -->
-<div class="upgradeable-card" onclick="toggleDropdown('energy-dropdown')">
+<!-- مستوى الطاقة -->
+<div class="upgradeable-card stat-card-box" data-dropdown="energy-dropdown">
     <div class="card-header-main">
-        <span>مستوى الطاقة ⚡</span>
+        <span>⚡ مستوى الطاقة</span>
         <span id="energy-value">53</span>
     </div>
-    <div id="energy-dropdown" class="upgrade-dropdown">
-        <div class="upgrade-btn-row">
-            <button class="btn-upgrade btn-gold" onclick="event.stopPropagation(); upgradeSkill('energy', 'gold')">
-                تطوير بالذهب 🪙
-            </button>
-            <button class="btn-upgrade btn-money" onclick="event.stopPropagation(); upgradeSkill('energy', 'money')">
-                تطوير بالمال 💵
-            </button>
+    <div id="energy-dropdown" class="upgrade-dropdown" style="display: none;">
+        <div style="padding: 10px 0; display: flex; flex-direction: column; gap: 10px;">
+            <p style="color: #a0aec0; margin: 0; font-size: 13px;">الوقت المستغرق: 3 دقائق</p>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-upgrade-action" data-skill="energy" data-currency="money" style="flex: 1; background: #2b6cb0; color: #fff; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold;">50 مال</button>
+                <button class="btn-upgrade-action" data-skill="energy" data-currency="gold" style="flex: 1; background: #d69e2e; color: #fff; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold;">2 ذهب</button>
+            </div>
         </div>
     </div>
 </div>
+
 <script>
-// دالة لفتح وإغلاق القائمة المنسدلة للبطاقة المطلوبة
-function toggleDropdown(dropdownId) {
-    const dropdown = document.getElementById(dropdownId);
-    
-    // إغلاق أي قوائم أخرى مفتوحة (اختياري لجعل الشكل منظماً)
-    document.querySelectorAll('.upgrade-dropdown').forEach(item => {
-        if (item.id !== dropdownId) {
-            item.classList.remove('active');
+// تفعيل الاستماع للأحداث برمجياً لضمان عدم ضياعها في الـ Modules
+document.querySelectorAll('.stat-card-box').forEach(card => {
+    card.addEventListener('click', function() {
+        const dropdownId = this.getAttribute('data-dropdown');
+        const dropdown = document.getElementById(dropdownId);
+        
+        // إغلاق باقي القوائم المنسدلة
+        document.querySelectorAll('.upgrade-dropdown').forEach(item => {
+            if (item.id !== dropdownId) {
+                item.style.display = 'none';
+            }
+        });
+
+        // تبديل العرض للقائمة الحالية
+        if (dropdown.style.display === 'none' || dropdown.style.display === '') {
+            dropdown.style.display = 'block';
+        } else {
+            dropdown.style.display = 'none';
         }
     });
+});
 
-    // تبديل حاله القائمة الحالية (فتح/إغلاق)
-    dropdown.classList.toggle('active');
-}
-
-// دالة التطوير (يتم ربطها مع Firebase لاحقاً أو تحديث القيم محلياً)
-function upgradeSkill(skillType, currencyType) {
-    console.slog  // للتجربة
-    alert("جاري تطوير " + skillType + " باستخدام " + currencyType);
-    
-    // يمكنك هنا إضافة منطق تحديث القيم عبر Firebase Firestore مباشرة
-    // مثال: 
-    // updateDatabase(skillType, currencyType);
-}
+// تفعيل أزرار التطوير الداخلية ومنع إغلاق القائمة عند الضغط عليها
+document.querySelectorAll('.btn-upgrade-action').forEach(btn => {
+    btn.addEventListener('click', function(event) {
+        event.stopPropagation(); // منع انتقال النقرة للبطاقة الرئيسية
+        const skill = this.getAttribute('data-skill');
+        const currency = this.getAttribute('data-currency');
+        
+        console.log("جاري تطوير المهارة: " + skill + " باستخدام العملة: " + currency);
+        alert("جاري تطوير " + skill + " باستخدام " + currency);
+    });
+});
 </script>
 </div>
