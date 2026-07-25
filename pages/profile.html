@@ -44,7 +44,6 @@
     <!-- قوائم التطوير المنزلقة -->
     <div class="stats-upgrade-container" style="display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 600px; margin: 0 auto; padding-bottom: 50px;">
         
-        <!-- القوة القتالية -->
 <!-- القوة القتالية -->
 <div class="upgradeable-card stat-card-box" data-dropdown="strength-dropdown">
     <div class="card-header-main">
@@ -95,40 +94,4 @@
         </div>
     </div>
 </div>
-
-<script>
-// تفعيل الاستماع للأحداث برمجياً لضمان عدم ضياعها في الـ Modules
-document.querySelectorAll('.stat-card-box').forEach(card => {
-    card.addEventListener('click', function() {
-        const dropdownId = this.getAttribute('data-dropdown');
-        const dropdown = document.getElementById(dropdownId);
-        
-        // إغلاق باقي القوائم المنسدلة
-        document.querySelectorAll('.upgrade-dropdown').forEach(item => {
-            if (item.id !== dropdownId) {
-                item.style.display = 'none';
-            }
-        });
-
-        // تبديل العرض للقائمة الحالية
-        if (dropdown.style.display === 'none' || dropdown.style.display === '') {
-            dropdown.style.display = 'block';
-        } else {
-            dropdown.style.display = 'none';
-        }
-    });
-});
-
-// تفعيل أزرار التطوير الداخلية ومنع إغلاق القائمة عند الضغط عليها
-document.querySelectorAll('.btn-upgrade-action').forEach(btn => {
-    btn.addEventListener('click', function(event) {
-        event.stopPropagation(); // منع انتقال النقرة للبطاقة الرئيسية
-        const skill = this.getAttribute('data-skill');
-        const currency = this.getAttribute('data-currency');
-        
-        console.log("جاري تطوير المهارة: " + skill + " باستخدام العملة: " + currency);
-        alert("جاري تطوير " + skill + " باستخدام " + currency);
-    });
-});
-</script>
 </div>

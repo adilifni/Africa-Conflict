@@ -374,3 +374,47 @@ export function changePlayerName(newName) {
         name: trimmedName
     }).then(() => alert("تم تحديث الاسم بنجاح"));
 }
+
+
+// استماع عام لأي نقرة تحدث في المستند (يتجاوز مشاكل الحقن الديناميكي و الـ Modules)
+document.addEventListener('click', function(event) {
+    
+    // 1. التعامل مع الضغط على بطاقة لفتح/إغلاق القائمة المنسدلة
+    const cardBox = event.target.closest('.stat-card-box');
+    if (cardBox) {
+        const dropdownId = cardBox.getAttribute('data-dropdown');
+        const dropdown = document.getElementById(dropdownId);
+        
+        if (dropdown) {
+            // إغلاق أي قوائم أخرى مفتوحة
+            document.querySelectorAll('.upgrade-dropdown').forEach(item => {
+                if (item.id !== dropdownId) {
+                    item.style.display = 'none';
+                }
+            });
+
+            // تبديل الحالة للقائمة الحالية
+            if (dropdown.style.display === 'none' || dropdown.style.display === '') {
+                dropdown.style.display = 'block';
+            } else {
+                dropdown.style.display = 'none';
+            }
+        }
+        return;
+    }
+
+    // 2. التعامل مع الضغط على أزرار التطوير داخل القائمة
+    const upgradeBtn = event.target.closest('.btn-upgrade-action');
+    if (upgradeBtn) {
+        event.stopPropagation(); // منع إغلاق القائمة عند النقر على الزر
+        
+        const skill = upgradeBtn.getAttribute('data-skill');
+        const currency = upgradeBtn.getAttribute('data-currency');
+        
+        console.log("جاري تطوير المهارة: " + skill + " باستخدام العملة: " + currency);
+        alert("جاري تطوير " + skill + " باستخدام " + currency);
+        
+        // يمكنك هنا إضافة اتصالك بقاعدة بيانات Firebase لتحديث القيم مباشرة
+        return;
+    }
+});
