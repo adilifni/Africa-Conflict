@@ -1,4 +1,42 @@
 // ==========================================
+
+// دالة لإظهار دائرة التحميل
+function showLoader() {
+    const loader = document.getElementById('global-loader');
+    if (loader) {
+        loader.style.display = 'flex';
+    }
+}
+
+// دالة لإخفاء دائرة التحميل
+function hideLoader() {
+    const loader = document.getElementById('global-loader');
+    if (loader) {
+        loader.style.display = 'none';
+    }
+}
+
+
+async function loadProfileData() {
+    // 1. اظهار الدائرة فوراً قبل بدء جلب البيانات
+    showLoader();
+
+    try {
+        // محاكاة جلب البيانات من Firebase أو سيرفر خارجي
+        // await 
+        
+        // ... ضع كود جلب وتحديث بيانات البروفايل هنا ...
+
+    } catch (error) {
+        console.error("حدث خطأ أثناء التحميل:", error);
+    } finally {
+        // 2. إخفاء الدائرة فوراً سواء نجح التحميل أو حدث خطأ
+        hideLoader();
+    }
+}
+
+
+
 // 💬 نظام الشات النشط والسلايدر والتنقل (Router)
 // ==========================================
 
@@ -183,3 +221,4 @@ export function switchView(pageName) {
 
 // ربط الدالة بنافذة المتصفح لتعمل مباشرة عبر الأزرار الداخلية
 window.switchView = switchView;
+
