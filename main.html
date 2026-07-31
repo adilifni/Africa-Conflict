@@ -202,70 +202,76 @@
                 </div>
             </div>
 
-            <!-- قوائم التطوير المنزلقة -->
-            <div class="stats-upgrade-container" style="display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 600px; margin: 0 auto; padding-bottom: 10px;">
+            
+              
+            <!-- قوائم التطوير المنزلقة (الهيكل الجديد المتوافق مع game.js) -->
+            <div class="stats-upgrade-container" style="display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 600px; margin: 0 auto; padding-bottom: 50px;">
                 
                 <!-- القوة القتالية -->
-                <div class="stat-box" style="background: #1a1f26; border-radius: 12px; border: 1px solid #2d3748; overflow: hidden;">
-                    <div id="stat-power-header" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #fff;">
+                <div class="upgradeable-card stat-card-box" data-dropdown="stat-power-dropdown">
+                    <div class="card-header-main" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #fff;">
                         <span>💪 القوة القتالية</span>
-                        <span style="font-weight: bold; color: #e53e3e; font-size: 18px;" id="stat-power-val">0</span>
+                        <span id="stat-power-val" style="font-weight: bold; color: #e53e3e; font-size: 18px;">0</span>
                     </div>
-                    <div id="stat-power-dropdown" class="stat-dropdown" style="display: none; padding: 0 15px 15px 15px;">
+                    <div id="stat-power-dropdown" class="upgrade-dropdown" style="display: none; padding: 0 15px 15px 15px;">
                         <div style="padding: 10px 0; display: flex; flex-direction: column; gap: 10px;">
                             <p id="time-power" style="color: #a0aec0; margin: 0; font-size: 13px;">الوقت المستغرق: 5 دقائق</p>
                             <div id="actions-power" style="display: flex; gap: 10px;">
-                                <button onclick="startStatUpgrade('power', 'money')" style="flex: 1; background: #2b6cb0; color: #fff; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-power-money">100 مال</button>
-                                <button onclick="startStatUpgrade('power', 'gold')" style="flex: 1; background: #d69e2e; color: #fff; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-power-gold">5 ذهب</button>
+                                <button class="btn-upgrade-action" data-skill="power" data-currency="money" style="flex: 1; background: #2b6cb0; color: #fff; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold;">100 مال</button>
+                                <button class="btn-upgrade-action" data-skill="power" data-currency="gold" style="flex: 1; background: #d69e2e; color: #fff; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold;">5 ذهب</button>
                             </div>
                             <div id="timer-container-power" style="display: none; text-align: center; color: #fc8181; font-weight: bold; padding: 8px; background: #2d3748; border-radius: 6px; font-size: 14px;">
-                                ⏳ متبقي: <span id="timer-val-power">--:--</span>
+                                ⏳ <span id="timer-val-power">--:--</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- مستوى التعليم -->
-                <div class="stat-box" style="background: #1a1f26; border-radius: 12px; border: 1px solid #2d3748; overflow: hidden;">
-                    <div id="stat-education-header" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #fff;">
+                <div class="upgradeable-card stat-card-box" data-dropdown="stat-education-dropdown">
+                    <div class="card-header-main" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #fff;">
                         <span>📚 مستوى التعليم</span>
-                        <span style="font-weight: bold; color: #3182ce; font-size: 18px;" id="stat-education-val">0</span>
+                        <span id="stat-education-val" style="font-weight: bold; color: #3182ce; font-size: 18px;">0</span>
                     </div>
-                    <div id="stat-education-dropdown" class="stat-dropdown" style="display: none; padding: 0 15px 15px 15px;">
+                    <div id="stat-education-dropdown" class="upgrade-dropdown" style="display: none; padding: 0 15px 15px 15px;">
                         <div style="padding: 10px 0; display: flex; flex-direction: column; gap: 10px;">
                             <p id="time-education" style="color: #a0aec0; margin: 0; font-size: 13px;">الوقت المستغرق: 10 دقائق</p>
                             <div id="actions-education" style="display: flex; gap: 10px;">
-                                <button onclick="startStatUpgrade('education', 'money')" style="flex: 1; background: #2b6cb0; color: #fff; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-education-money">200 مال</button>
-                                <button onclick="startStatUpgrade('education', 'gold')" style="flex: 1; background: #d69e2e; color: #fff; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-education-gold">10 ذهب</button>
+                                <button class="btn-upgrade-action" data-skill="education" data-currency="money" style="flex: 1; background: #2b6cb0; color: #fff; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold;">200 مال</button>
+                                <button class="btn-upgrade-action" data-skill="education" data-currency="gold" style="flex: 1; background: #d69e2e; color: #fff; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold;">10 ذهب</button>
                             </div>
                             <div id="timer-container-education" style="display: none; text-align: center; color: #fc8181; font-weight: bold; padding: 8px; background: #2d3748; border-radius: 6px; font-size: 14px;">
-                                ⏳ متبقي: <span id="timer-val-education">--:--</span>
+                                ⏳ <span id="timer-val-education">--:--</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- مستوى الطاقة -->
-                <div class="stat-box" style="background: #1a1f26; border-radius: 12px; border: 1px solid #2d3748; overflow: hidden;">
-                    <div id="stat-energy-header" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #fff;">
+                <div class="upgradeable-card stat-card-box" data-dropdown="stat-energy-dropdown">
+                    <div class="card-header-main" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #fff;">
                         <span>⚡ مستوى الطاقة</span>
-                        <span style="font-weight: bold; color: #38a169; font-size: 18px;" id="stat-energy-val">0</span>
+                        <span id="stat-energy-val" style="font-weight: bold; color: #38a169; font-size: 18px;">0</span>
                     </div>
-                    <div id="stat-energy-dropdown" class="stat-dropdown" style="display: none; padding: 0 15px 15px 15px;">
+                    <div id="stat-energy-dropdown" class="upgrade-dropdown" style="display: none; padding: 0 15px 15px 15px;">
                         <div style="padding: 10px 0; display: flex; flex-direction: column; gap: 10px;">
                             <p id="time-energy" style="color: #a0aec0; margin: 0; font-size: 13px;">الوقت المستغرق: 3 دقائق</p>
                             <div id="actions-energy" style="display: flex; gap: 10px;">
-                                <button onclick="startStatUpgrade('energy', 'money')" style="flex: 1; background: #2b6cb0; color: #fff; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-energy-money">50 مال</button>
-                                <button onclick="startStatUpgrade('energy', 'gold')" style="flex: 1; background: #d69e2e; color: #fff; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold;" id="cost-energy-gold">2 ذهب</button>
+                                <button class="btn-upgrade-action" data-skill="energy" data-currency="money" style="flex: 1; background: #2b6cb0; color: #fff; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold;">50 مال</button>
+                                <button class="btn-upgrade-action" data-skill="energy" data-currency="gold" style="flex: 1; background: #d69e2e; color: #fff; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold;">2 ذهب</button>
                             </div>
                             <div id="timer-container-energy" style="display: none; text-align: center; color: #fc8181; font-weight: bold; padding: 8px; background: #2d3748; border-radius: 6px; font-size: 14px;">
-                                ⏳ متبقي: <span id="timer-val-energy">--:--</span>
+                                ⏳ <span id="timer-val-energy">--:--</span>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+              
+                    
+                
+                        
 
         <!-- واجهة العمل (Work View) -->
         <div id="view-work" class="game-view" style="display: none;">
