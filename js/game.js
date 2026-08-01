@@ -44,12 +44,12 @@ export function initGameSystem() {
                         if (profileImg) profileImg.src = data.avatarUrl || user.photoURL || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + userUid;
                         
                         const profileMoneyVal = document.getElementById('profile-money-val');
-                        if (profileMoneyVal) profileMoneyVal.textContent = data.money || 0;
+                        if (profileMoneyVal) profileMoneyVal.textContent = data.money ?? 0;
 
                         const profileGoldVal = document.getElementById('profile-gold-val');
-                        if (profileGoldVal) profileGoldVal.textContent = data.gold || 0;
+                        if (profileGoldVal) profileGoldVal.textContent = data.gold ?? 0;
 
-                        updateXPProgressBar(data.experience || 1);
+                        updateXPProgressBar(data.experience ?? 1);
 
                         const currentLoc = data.current_location || "morocco";
                         updateCountryBlockOnScreen(currentLoc);
@@ -60,17 +60,18 @@ export function initGameSystem() {
                             nationalityText.textContent = africanCountries[nation]?.name || "لم تحدد";
                         }
 
+                        // ✅ تم استبدال || بـ ?? حتى لا تختفي قيمة 0 الحقيقية القادمة من قاعدة البيانات
                         if (document.getElementById('stat-power-val')) {
-                            document.getElementById('stat-power-val').textContent = data.power || 10;
+                            document.getElementById('stat-power-val').textContent = data.power ?? 10;
                         }
                         if (document.getElementById('stat-education-val')) {
-                            document.getElementById('stat-education-val').textContent = data.education || 1;
+                            document.getElementById('stat-education-val').textContent = data.education ?? 1;
                         }
                         if (document.getElementById('stat-energy-val')) {
-                            document.getElementById('stat-energy-val').textContent = data.energy || 100;
+                            document.getElementById('stat-energy-val').textContent = data.energy ?? 100;
                         }
                         if (document.getElementById('stat-energy-level-val')) {
-                            document.getElementById('stat-energy-level-val').textContent = data.energy || 100;
+                            document.getElementById('stat-energy-level-val').textContent = data.energy ?? 100;
                         }
 
                         checkActiveTraining(data);
@@ -226,7 +227,7 @@ export function startStatUpgrade(statName, currencyType) {
         return;
     }
 
-    const currentStatLevel = localPlayerData[statName] || 0;
+    const currentStatLevel = localPlayerData[statName] ?? 0;
     const moneyCost = (currentStatLevel + 1) * 1000;
     const goldCost = (currentStatLevel + 1) * 5;
     
@@ -237,10 +238,10 @@ export function startStatUpgrade(statName, currencyType) {
     const updates = {};
 
     if (currencyType === 'money') {
-        if ((localPlayerData.money || 0) < moneyCost) { return alert("🔴 لا تملك المال الكافي!"); }
+        if ((localPlayerData.money ?? 0) < moneyCost) { return alert("🔴 لا تملك المال الكافي!"); }
         updates['money'] = firebase.firestore.FieldValue.increment(-moneyCost);
     } else if (currencyType === 'gold') {
-        if ((localPlayerData.gold || 0) < goldCost) { return alert("🔴 لا تملك الذهب الكافي!"); }
+        if ((localPlayerData.gold ?? 0) < goldCost) { return alert("🔴 لا تملك الذهب الكافي!"); }
         updates['gold'] = firebase.firestore.FieldValue.increment(-goldCost);
         timeInSeconds = Math.floor(timeInSeconds / 2); 
     }
@@ -411,10 +412,8 @@ document.addEventListener('click', function(event) {
         const skill = upgradeBtn.getAttribute('data-skill');
         const currency = upgradeBtn.getAttribute('data-currency');
         
-        console.log("جاري تطوير المهارة: " + skill + " باستخدام العملة: " + currency);
-        alert("جاري تطوير " + skill + " باستخدام " + currency);
-        
-        // يمكنك هنا إضافة اتصالك بقاعدة بيانات Firebase لتحديث القيم مباشرة
+        // ✅ ربط الزر فعلياً بدالة startStatUpgrade الحقيقية بدل الـ alert التجريبي
+        startStatUpgrade(skill, currency);
         return;
     }
 });
