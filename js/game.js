@@ -22,6 +22,26 @@ const TIME_BASE_MINUTES = 3;    // الوقت اللازم لترقية المس
 const TIME_EXPONENT     = 1.55; // معدل تسارع الوقت مع ارتفاع المستوى
 const COST_EXPONENT     = 1.5;  // معدل تسارع السعر مع ارتفاع المستوى
 
+// ==========================================
+// ⚙️ إعدادات نظام العمل والمصانع (Work System)
+// ==========================================
+const WORK_ENERGY_COST = 10;          // تكلفة كل عملية عمل من مخزون مشروب الطاقة
+const WORK_ENERGY_REGEN_AMOUNT = 10;  // كمية الاسترجاع في كل دورة
+const WORK_ENERGY_REGEN_MINUTES = 10; // كل كم دقيقة يسترجع مشروب الطاقة
+
+// سعة مخزون مشروب الطاقة: 100 أساس + 5 عن كل 50 مستوى من مستوى الطاقة
+function getWorkEnergyCap(energyLevel) {
+    const lvl = energyLevel ?? 1;
+    return 100 + Math.floor(lvl / 50) * 5;
+}
+
+let currentFactoriesCache = [];
+let unsubscribeCountryResources = null;
+let unsubscribeFactoriesList = null;
+let lastSubscribedWorkLocation = null;
+let selectedFactoryFile = null;
+let editingFactoryId = null;
+
 // المستوى الحالي للمهارة (عداد مستقل عن القيمة المعروضة للمهارة نفسها)
 function getStatLevel(data, statName) {
     return data[`${statName}Level`] ?? 1;
@@ -106,6 +126,7 @@ export function initGameSystem() {
                         refreshUpgradeCards(data);
 
                         checkActiveTraining(data);
+                        handleWorkViewUpdate(data);
                     });
 
                     db.collection('players').doc(userUid).update({
@@ -142,6 +163,10 @@ export function initGameSystem() {
             window.travelToCountry = travelToCountry;
             window.changePlayerName = changePlayerName;
             window.saveProfileChanges = saveProfileChanges;
+            window.doWork = doWork;
+            window.openFactoryModal = openFactoryModal;
+            window.closeFactoryModal = closeFactoryModal;
+            window.saveFactory = saveFactory;
 
         } else {
             setTimeout(waitForFirebase, 100);
@@ -314,7 +339,8 @@ export function startStatUpgrade(statName, currencyType) {
     const finishTime = Date.now() + (timeInSeconds * 1000);
     updates['activeTraining'] = {
         stat: statName,
-        finishAt: finishTime
+        finishAt: finishTime,
+        nextLevel: currentLevel + 1
     };
 
     if (trainingInterval) clearInterval(trainingInterval);
@@ -371,7 +397,7 @@ function checkActiveTraining(data) {
             
             if (!isUpgradingNow) {
                 isUpgradingNow = true; 
-                completeUpgrade(activeStat);
+                completeUpgrade(activeStat, data.activeTraining.nextLevel);
             }
         } else {
             if (timerVal) {
@@ -381,16 +407,25 @@ function checkActiveTraining(data) {
     }, 1000);
 }
 
-function completeUpgrade(statName) {
+function completeUpgrade(statName, nextLevel) {
     const user = firebase.auth().currentUser;
     if (!user) return;
 
     const db = firebase.firestore();
-    db.collection('players').doc(user.uid).update({
+    const updates = {
         [statName]: firebase.firestore.FieldValue.increment(1),
-        [`${statName}Level`]: firebase.firestore.FieldValue.increment(1),
-        activeTraining: null 
-    }).then(() => {
+        activeTraining: null
+    };
+
+    // ضبط المستوى بقيمة صريحة (وليس increment) حتى لا يتأثر بغياب الحقل في مستندات قديمة
+    if (Number.isFinite(nextLevel)) {
+        updates[`${statName}Level`] = nextLevel;
+    } else {
+        // توافق احتياطي في حال عدم توفر nextLevel لأي سبب
+        updates[`${statName}Level`] = firebase.firestore.FieldValue.increment(1);
+    }
+
+    db.collection('players').doc(user.uid).update(updates).then(() => {
         isUpgradingNow = false; 
         const label = STAT_CONFIG[statName]?.label || statName;
         alert(`🎉 تهانينا! تم ترقية ${label} بنجاح.`);
@@ -398,6 +433,333 @@ function completeUpgrade(statName) {
         isUpgradingNow = false;
         console.error("خطأ أثناء إنهاء الترقية:", err);
     });
+}
+
+// ==========================================
+// 💼 نظام العمل والمصانع
+// ==========================================
+function handleWorkViewUpdate(data) {
+    const countryKey = data.current_location || "morocco";
+
+    if (countryKey !== lastSubscribedWorkLocation) {
+        lastSubscribedWorkLocation = countryKey;
+        subscribeCountryResources(countryKey);
+        subscribeFactoriesList(countryKey);
+    }
+
+    refreshSelectedFactoryDisplay(data);
+    refreshWorkEnergyDisplay(data);
+    maybeRegenWorkEnergy(data);
+}
+
+function subscribeCountryResources(countryKey) {
+    if (unsubscribeCountryResources) unsubscribeCountryResources();
+
+    const nameEl = document.getElementById('work-country-name');
+    if (nameEl) nameEl.textContent = africanCountries[countryKey]?.name || "الدولة";
+
+    unsubscribeCountryResources = firebase.firestore().collection('countries').doc(countryKey)
+        .onSnapshot((doc) => {
+            const resData = doc.exists ? doc.data() : {};
+            setText('res-gold', resData.gold ?? 0);
+            setText('res-oil', resData.oil ?? 0);
+            setText('res-wheat', resData.wheat ?? 0);
+            setText('res-diamond', resData.diamond ?? 0);
+            setText('res-iron', resData.iron ?? 0);
+        }, (err) => console.error("خطأ في جلب موارد الدولة:", err));
+}
+
+function subscribeFactoriesList(countryKey) {
+    if (unsubscribeFactoriesList) unsubscribeFactoriesList();
+
+    unsubscribeFactoriesList = firebase.firestore().collection('factories')
+        .where('countryKey', '==', countryKey)
+        .onSnapshot((snapshot) => {
+            currentFactoriesCache = [];
+            snapshot.forEach(doc => currentFactoriesCache.push({ id: doc.id, ...doc.data() }));
+            renderFactoriesList();
+            if (localPlayerData) refreshSelectedFactoryDisplay(localPlayerData);
+        }, (err) => console.error("خطأ في جلب المصانع:", err));
+}
+
+function setText(elementId, value) {
+    const el = document.getElementById(elementId);
+    if (el) el.textContent = value;
+}
+
+function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+function renderFactoriesList() {
+    const container = document.getElementById('factories-list-container');
+    if (!container) return;
+
+    if (currentFactoriesCache.length === 0) {
+        container.innerHTML = '<p style="color:#718096;font-size:13px;text-align:center;margin:10px 0;">لا توجد مصانع بعد في هذه الدولة</p>';
+        return;
+    }
+
+    container.innerHTML = '';
+    const currentUid = firebase.auth().currentUser?.uid;
+
+    currentFactoriesCache.forEach(factory => {
+        const isMine = factory.ownerUid === currentUid;
+        const card = document.createElement('div');
+        card.style.cssText = 'display:flex;align-items:center;gap:10px;background:#0f1620;border:1px solid #2d3748;border-radius:10px;padding:10px;';
+
+        const imgHtml = factory.imageUrl
+            ? `<img src="${factory.imageUrl}" style="width:45px;height:45px;border-radius:8px;object-fit:cover;flex-shrink:0;">`
+            : `<div style="width:45px;height:45px;border-radius:8px;background:#2d3748;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">🏭</div>`;
+
+        card.innerHTML = `
+            ${imgHtml}
+            <div style="flex:1; min-width:0;">
+                <div style="color:#fff;font-weight:bold;font-size:14px;">${escapeHtml(factory.name || 'مصنع بدون اسم')}</div>
+                <div style="color:#a0aec0;font-size:12px;">المستوى ${factory.level ?? 1} · 💵 ${factory.wage ?? 0} / عملية</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;">
+                <button class="btn-select-factory" data-factory-id="${factory.id}" style="background:#3182ce;color:#fff;border:none;padding:6px 12px;border-radius:6px;font-size:12px;cursor:pointer;">اختيار</button>
+                ${isMine ? `<button class="btn-edit-factory" data-factory-id="${factory.id}" style="background:#2d3748;color:#fff;border:none;padding:6px 12px;border-radius:6px;font-size:12px;cursor:pointer;">تعديل</button>` : ''}
+            </div>
+        `;
+        container.appendChild(card);
+    });
+
+    container.querySelectorAll('.btn-select-factory').forEach(btn => {
+        btn.addEventListener('click', () => selectFactory(btn.getAttribute('data-factory-id')));
+    });
+    container.querySelectorAll('.btn-edit-factory').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const factory = currentFactoriesCache.find(f => f.id === btn.getAttribute('data-factory-id'));
+            if (factory) openFactoryModal(factory);
+        });
+    });
+}
+
+function selectFactory(factoryId) {
+    const user = firebase.auth().currentUser;
+    if (!user) return;
+
+    firebase.firestore().collection('players').doc(user.uid).update({
+        selectedFactoryId: factoryId
+    }).catch(err => console.error(err));
+}
+
+function refreshSelectedFactoryDisplay(data) {
+    const nameEl = document.getElementById('selected-factory-name');
+    const wageEl = document.getElementById('selected-factory-wage');
+    const imgEl = document.getElementById('selected-factory-img');
+    if (!nameEl || !wageEl || !imgEl) return;
+
+    const factory = currentFactoriesCache.find(f => f.id === data.selectedFactoryId);
+    if (!factory) {
+        nameEl.textContent = "لم يتم اختيار مصنع";
+        wageEl.textContent = "اختر مصنعاً من القائمة أدناه";
+        imgEl.style.display = 'none';
+        return;
+    }
+
+    nameEl.textContent = factory.name || "مصنع";
+    wageEl.textContent = `💵 أجرة العمل: ${factory.wage ?? 0} · المستوى ${factory.level ?? 1}`;
+    if (factory.imageUrl) {
+        imgEl.src = factory.imageUrl;
+        imgEl.style.display = 'block';
+    } else {
+        imgEl.style.display = 'none';
+    }
+}
+
+function refreshWorkEnergyDisplay(data) {
+    const cap = getWorkEnergyCap(data.energyLevel);
+    const current = Math.max(0, Math.min(data.workEnergy ?? cap, cap));
+
+    setText('work-energy-text', `${current} / ${cap}`);
+    const barEl = document.getElementById('work-energy-bar');
+    if (barEl) barEl.style.width = `${(current / cap) * 100}%`;
+
+    const btn = document.getElementById('btn-work-now');
+    if (btn) {
+        const notEnough = current < WORK_ENERGY_COST || !data.selectedFactoryId;
+        btn.disabled = notEnough;
+        btn.style.opacity = notEnough ? '0.5' : '1';
+        btn.style.cursor = notEnough ? 'not-allowed' : 'pointer';
+    }
+
+    const regenTextEl = document.getElementById('work-energy-regen-text');
+    if (regenTextEl) {
+        if (current >= cap) {
+            regenTextEl.textContent = "المخزون ممتلئ";
+        } else {
+            const last = data.workEnergyLastUpdate || Date.now();
+            const cycleMs = WORK_ENERGY_REGEN_MINUTES * 60000;
+            const elapsedInCycle = (Date.now() - last) % cycleMs;
+            const msLeft = cycleMs - elapsedInCycle;
+            const minutesLeft = Math.max(1, Math.ceil(msLeft / 60000));
+            regenTextEl.textContent = `⏳ +${WORK_ENERGY_REGEN_AMOUNT} خلال ${minutesLeft} دقيقة`;
+        }
+    }
+}
+
+function maybeRegenWorkEnergy(data) {
+    const user = firebase.auth().currentUser;
+    if (!user) return;
+
+    const cap = getWorkEnergyCap(data.energyLevel);
+
+    // تهيئة الحقل لأول مرة لأي لاعب لا يملكه أصلاً
+    if (data.workEnergy === undefined || data.workEnergyLastUpdate === undefined) {
+        firebase.firestore().collection('players').doc(user.uid).update({
+            workEnergy: data.workEnergy ?? cap,
+            workEnergyLastUpdate: Date.now()
+        }).catch(err => console.error(err));
+        return;
+    }
+
+    if (data.workEnergy >= cap) return;
+
+    const now = Date.now();
+    const cycleMs = WORK_ENERGY_REGEN_MINUTES * 60000;
+    const ticks = Math.floor((now - data.workEnergyLastUpdate) / cycleMs);
+
+    if (ticks > 0) {
+        const newValue = Math.min(cap, data.workEnergy + ticks * WORK_ENERGY_REGEN_AMOUNT);
+        const newLast = data.workEnergyLastUpdate + ticks * cycleMs;
+
+        firebase.firestore().collection('players').doc(user.uid).update({
+            workEnergy: newValue,
+            workEnergyLastUpdate: newLast
+        }).catch(err => console.error(err));
+    }
+}
+
+function doWork() {
+    const user = firebase.auth().currentUser;
+    if (!user || !localPlayerData) return;
+
+    const factory = currentFactoriesCache.find(f => f.id === localPlayerData.selectedFactoryId);
+    if (!factory) { alert("⚠️ اختر مصنعاً أولاً من القائمة"); return; }
+
+    const cap = getWorkEnergyCap(localPlayerData.energyLevel);
+    const current = localPlayerData.workEnergy ?? cap;
+    if (current < WORK_ENERGY_COST) { alert("🔴 لا يوجد مشروب طاقة كافٍ! انتظر حتى يتجدد المخزون."); return; }
+
+    const wage = factory.wage || 0;
+
+    firebase.firestore().collection('players').doc(user.uid).update({
+        workEnergy: firebase.firestore.FieldValue.increment(-WORK_ENERGY_COST),
+        money: firebase.firestore.FieldValue.increment(wage)
+    }).then(() => {
+        alert(`💰 عملت في ${factory.name} وحصلت على ${wage} مال!`);
+    }).catch(err => console.error(err));
+}
+
+// نافذة إنشاء / تعديل مصنع
+function openFactoryModal(existingFactory) {
+    const modal = document.getElementById('factory-modal');
+    const title = document.getElementById('factory-modal-title');
+    const nameInput = document.getElementById('factory-name-input');
+    const wageInput = document.getElementById('factory-wage-input');
+    const previewImg = document.getElementById('factory-preview-img');
+    const errorEl = document.getElementById('factory-modal-error');
+
+    selectedFactoryFile = null;
+    editingFactoryId = existingFactory ? existingFactory.id : null;
+
+    if (errorEl) errorEl.textContent = '';
+    if (title) title.textContent = existingFactory ? "تعديل المصنع" : "إنشاء مصنع جديد";
+    if (nameInput) nameInput.value = existingFactory?.name || '';
+    if (wageInput) wageInput.value = existingFactory?.wage || '';
+    if (previewImg) previewImg.src = existingFactory?.imageUrl || '';
+
+    if (modal) modal.style.display = 'flex';
+}
+
+function closeFactoryModal() {
+    const modal = document.getElementById('factory-modal');
+    if (modal) modal.style.display = 'none';
+    selectedFactoryFile = null;
+    editingFactoryId = null;
+    const fileInput = document.getElementById('factory-file-input');
+    if (fileInput) fileInput.value = '';
+}
+
+function handleFactoryFileSelect(event) {
+    const file = event.target.files[0];
+    const errorEl = document.getElementById('factory-modal-error');
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+        if (errorEl) errorEl.textContent = 'الرجاء اختيار ملف صورة صالح';
+        return;
+    }
+    if (file.size > 3 * 1024 * 1024) {
+        if (errorEl) errorEl.textContent = 'حجم الصورة كبير جداً (الحد الأقصى 3MB)';
+        return;
+    }
+
+    if (errorEl) errorEl.textContent = '';
+    selectedFactoryFile = file;
+
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+        const previewImg = document.getElementById('factory-preview-img');
+        if (previewImg) previewImg.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+async function saveFactory() {
+    const nameInput = document.getElementById('factory-name-input');
+    const wageInput = document.getElementById('factory-wage-input');
+    const errorEl = document.getElementById('factory-modal-error');
+    const saveBtn = document.getElementById('save-factory-btn');
+
+    const name = nameInput ? nameInput.value.trim() : '';
+    const wage = wageInput ? parseInt(wageInput.value, 10) : NaN;
+
+    if (name === '') { if (errorEl) errorEl.textContent = 'اسم المصنع مطلوب'; return; }
+    if (!Number.isFinite(wage) || wage <= 0) { if (errorEl) errorEl.textContent = 'أدخل أجرة عمل صحيحة'; return; }
+
+    const user = firebase.auth().currentUser;
+    if (!user || !localPlayerData) { if (errorEl) errorEl.textContent = 'حدث خطأ، أعد تحميل الصفحة'; return; }
+
+    if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'جاري الحفظ...'; }
+    if (errorEl) errorEl.textContent = '';
+
+    try {
+        const db = firebase.firestore();
+        const countryKey = localPlayerData.current_location || "morocco";
+        let imageUrl = null;
+
+        if (selectedFactoryFile) {
+            const ext = (selectedFactoryFile.name.split('.').pop() || 'jpg').toLowerCase();
+            const path = `factories/${editingFactoryId || (user.uid + '_' + Date.now())}.${ext}`;
+            const storageRef = firebase.storage().ref(path);
+            await storageRef.put(selectedFactoryFile);
+            imageUrl = await storageRef.getDownloadURL();
+        }
+
+        const payload = { name, wage, countryKey, ownerUid: user.uid };
+        if (imageUrl) payload.imageUrl = imageUrl;
+
+        if (editingFactoryId) {
+            await db.collection('factories').doc(editingFactoryId).update(payload);
+        } else {
+            payload.level = 1;
+            payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+            await db.collection('factories').add(payload);
+        }
+
+        closeFactoryModal();
+    } catch (err) {
+        console.error(err);
+        if (errorEl) errorEl.textContent = 'فشل الحفظ، حاول مرة أخرى';
+    } finally {
+        if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'حفظ'; }
+    }
 }
 
 function updateStatsOnScreen(totalPlayers, onlinePlayers, countryPop = totalPlayers, countryOnline = onlinePlayers) {
@@ -473,6 +835,18 @@ export function changePlayerName(newName) {
     }).then(() => alert("تم تحديث الاسم بنجاح"));
 }
 
+
+// ربط حقل رفع صورة المصنع (يعمل مباشرة لأن العنصر موجود في الصفحة عند تحميل هذا الموديول)
+const factoryFileInputEl = document.getElementById('factory-file-input');
+if (factoryFileInputEl) factoryFileInputEl.addEventListener('change', handleFactoryFileSelect);
+
+// فحص دوري كل 30 ثانية لتحديث عرض مشروب الطاقة واسترجاعه تلقائياً حتى دون أي تغيير آخر في البيانات
+setInterval(() => {
+    if (localPlayerData) {
+        refreshWorkEnergyDisplay(localPlayerData);
+        maybeRegenWorkEnergy(localPlayerData);
+    }
+}, 30000);
 
 // استماع عام لأي نقرة تحدث في المستند (يتجاوز مشاكل الحقن الديناميكي و الـ Modules)
 document.addEventListener('click', function(event) {
