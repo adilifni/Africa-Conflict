@@ -295,10 +295,96 @@
         </div>
 
         <!-- واجهة العمل (Work View) -->
-        <div id="view-work" class="game-view" style="display: none;">
-            <div class="page-inner-card">
-                <div class="page-title-banner">💼 قطاع العمل والإنتاج المالي</div>
-                <p style="text-align: center; color: #8b949e; padding: 20px;">يمكنك هنا البحث عن وظائف، العمل لتجميع الأموال، والمساهمة في بناء بنية تحتية مستدامة للدولة.</p>
+        <div id="view-work" class="game-view" style="display: none; flex-direction: column; gap: 15px;">
+
+            <!-- بلوك 1: موارد الدولة -->
+            <div class="card" style="background:#1a1f26;border-radius:12px;padding:15px;border:1px solid #2d3748;">
+                <div style="color:#fff;font-weight:bold;margin-bottom:12px;font-size:15px;">📦 موارد <span id="work-country-name">الدولة</span></div>
+                <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;text-align:center;">
+                    <div>
+                        <div style="font-size:20px;">🪙</div>
+                        <div id="res-gold" style="color:#ffd700;font-weight:bold;font-size:13px;">0</div>
+                        <div style="color:#a0aec0;font-size:11px;">ذهب</div>
+                    </div>
+                    <div>
+                        <div style="font-size:20px;">🛢️</div>
+                        <div id="res-oil" style="color:#cbd5e0;font-weight:bold;font-size:13px;">0</div>
+                        <div style="color:#a0aec0;font-size:11px;">نفط</div>
+                    </div>
+                    <div>
+                        <div style="font-size:20px;">🌾</div>
+                        <div id="res-wheat" style="color:#d69e2e;font-weight:bold;font-size:13px;">0</div>
+                        <div style="color:#a0aec0;font-size:11px;">قمح</div>
+                    </div>
+                    <div>
+                        <div style="font-size:20px;">💎</div>
+                        <div id="res-diamond" style="color:#63b3ed;font-weight:bold;font-size:13px;">0</div>
+                        <div style="color:#a0aec0;font-size:11px;">ماس</div>
+                    </div>
+                    <div>
+                        <div style="font-size:20px;">⚙️</div>
+                        <div id="res-iron" style="color:#a0aec0;font-weight:bold;font-size:13px;">0</div>
+                        <div style="color:#a0aec0;font-size:11px;">حديد</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- بلوك 2: المصنع المختار + زر العمل + مشروب الطاقة -->
+            <div class="card" style="background:#1a1f26;border-radius:12px;padding:15px;border:1px solid #2d3748;">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:15px;">
+                    <img id="selected-factory-img" src="" alt="" style="width:55px;height:55px;border-radius:10px;object-fit:cover;background:#2d3748;display:none;">
+                    <div style="flex:1;">
+                        <div id="selected-factory-name" style="color:#fff;font-weight:bold;font-size:15px;">لم يتم اختيار مصنع</div>
+                        <div id="selected-factory-wage" style="color:#a0aec0;font-size:12px;margin-top:2px;">اختر مصنعاً من القائمة أدناه</div>
+                    </div>
+                </div>
+
+                <button id="btn-work-now" onclick="doWork()" style="width:100%;background:#38a169;color:#fff;border:none;padding:14px;border-radius:8px;font-weight:bold;font-size:16px;cursor:pointer;">🛠️ اعمل الآن</button>
+
+                <div style="margin-top:15px;">
+                    <div style="display:flex;justify-content:space-between;color:#cbd5e0;font-size:13px;margin-bottom:5px;">
+                        <span>🥤 مشروب الطاقة</span>
+                        <span id="work-energy-text">0 / 100</span>
+                    </div>
+                    <div style="width:100%;height:10px;background:#2d3748;border-radius:5px;overflow:hidden;">
+                        <div id="work-energy-bar" style="width:0%;height:100%;background:linear-gradient(90deg,#38a169,#68d391);transition:width .4s ease;"></div>
+                    </div>
+                    <div id="work-energy-regen-text" style="color:#718096;font-size:11px;margin-top:5px;"></div>
+                </div>
+            </div>
+
+            <!-- بلوك 3: مصانع الدولة -->
+            <div class="card" style="background:#1a1f26;border-radius:12px;padding:15px;border:1px solid #2d3748;">
+                <div style="color:#fff;font-weight:bold;margin-bottom:12px;font-size:15px;">🏭 مصانع الدولة</div>
+                <div id="factories-list-container" style="display:flex;flex-direction:column;gap:10px;">
+                    <p style="color:#718096;font-size:13px;text-align:center;margin:10px 0;">جاري تحميل المصانع...</p>
+                </div>
+            </div>
+
+            <!-- بلوك 4: إنشاء مصنع جديد -->
+            <button onclick="openFactoryModal()" style="background:#2b6cb0;color:#fff;border:none;padding:14px;border-radius:10px;font-weight:bold;font-size:15px;cursor:pointer;">➕ إنشاء مصنع جديد</button>
+
+        </div>
+
+        <!-- نافذة إنشاء / تعديل مصنع -->
+        <div id="factory-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:9998;justify-content:center;align-items:center;padding:20px;box-sizing:border-box;">
+            <div style="background:#1a1f26;border:1px solid #2d3748;border-radius:14px;padding:25px 20px;width:100%;max-width:360px;text-align:center;">
+                <h3 id="factory-modal-title" style="color:#fff;margin:0 0 20px 0;font-size:18px;">إنشاء مصنع جديد</h3>
+
+                <div style="position:relative;width:90px;height:90px;margin:0 auto 15px auto;">
+                    <img id="factory-preview-img" src="" alt="" style="width:90px;height:90px;border-radius:10px;object-fit:cover;background:#2d3748;">
+                    <label for="factory-file-input" style="position:absolute;bottom:-5px;right:-5px;background:#3182ce;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;border:2px solid #1a1f26;font-size:13px;">📷</label>
+                    <input type="file" id="factory-file-input" accept="image/*" style="display:none;">
+                </div>
+
+                <input type="text" id="factory-name-input" placeholder="اسم المصنع" maxlength="30" style="width:100%;box-sizing:border-box;background:#0f1620;border:1px solid #2d3748;color:#fff;padding:10px 12px;border-radius:8px;font-size:15px;margin-bottom:10px;text-align:center;">
+                <input type="number" id="factory-wage-input" placeholder="أجرة العمل" min="1" style="width:100%;box-sizing:border-box;background:#0f1620;border:1px solid #2d3748;color:#fff;padding:10px 12px;border-radius:8px;font-size:15px;margin-bottom:8px;text-align:center;">
+                <p id="factory-modal-error" style="color:#fc8181;font-size:12px;min-height:16px;margin:0 0 10px 0;"></p>
+
+                <div style="display:flex;gap:10px;">
+                    <button onclick="closeFactoryModal()" style="flex:1;background:#2d3748;color:#fff;border:none;padding:12px;border-radius:8px;cursor:pointer;font-weight:bold;">إلغاء</button>
+                    <button id="save-factory-btn" onclick="saveFactory()" style="flex:1;background:#3182ce;color:#fff;border:none;padding:12px;border-radius:8px;cursor:pointer;font-weight:bold;">حفظ</button>
+                </div>
             </div>
         </div>
 
