@@ -8,6 +8,35 @@ let localPlayerData = null;
 let trainingInterval = null; 
 let isUpgradingNow = false;  
 
+// ==========================================
+// ⚙️ إعدادات نظام التطوير المتصاعد (Upgrade Engine)
+// عدّل هذه الثوابت وحدها لضبط سرعة/تكلفة اللعبة بالكامل
+// ==========================================
+const STAT_CONFIG = {
+    power:     { baseMoney: 100, baseGold: 5,  label: '💪 القوة القتالية' },
+    education: { baseMoney: 200, baseGold: 10, label: '📚 مستوى التعليم' },
+    energy:    { baseMoney: 50,  baseGold: 2,  label: '⚡ مستوى الطاقة' }
+};
+
+const TIME_BASE_MINUTES = 3;    // الوقت اللازم لترقية المستوى 1 (بالمال)
+const TIME_EXPONENT     = 1.55; // معدل تسارع الوقت مع ارتفاع المستوى
+const COST_EXPONENT     = 1.5;  // معدل تسارع السعر مع ارتفاع المستوى
+
+// المستوى الحالي للمهارة (عداد مستقل عن القيمة المعروضة للمهارة نفسها)
+function getStatLevel(data, statName) {
+    return data[`${statName}Level`] ?? 1;
+}
+
+// حساب الوقت اللازم بالثواني للترقية عبر المال
+function calcUpgradeTimeSeconds(level) {
+    return Math.round(TIME_BASE_MINUTES * 60 * Math.pow(level, TIME_EXPONENT));
+}
+
+// حساب السعر (مال أو ذهب) حسب المستوى الحالي
+function calcUpgradeCost(level, baseAmount) {
+    return Math.round(baseAmount * Math.pow(level, COST_EXPONENT));
+}
+
 export function initGameSystem() {
     const userNameSpan = document.getElementById('user-name');
     if (!userNameSpan) return;
@@ -60,7 +89,6 @@ export function initGameSystem() {
                             nationalityText.textContent = africanCountries[nation]?.name || "لم تحدد";
                         }
 
-                        // ✅ تم استبدال || بـ ?? حتى لا تختفي قيمة 0 الحقيقية القادمة من قاعدة البيانات
                         if (document.getElementById('stat-power-val')) {
                             document.getElementById('stat-power-val').textContent = data.power ?? 10;
                         }
@@ -73,6 +101,9 @@ export function initGameSystem() {
                         if (document.getElementById('stat-energy-level-val')) {
                             document.getElementById('stat-energy-level-val').textContent = data.energy ?? 100;
                         }
+
+                        // تحديث أسعار وأزمنة الترقية المعروضة بناءً على المستوى الحالي لكل مهارة
+                        refreshUpgradeCards(data);
 
                         checkActiveTraining(data);
                     });
@@ -193,7 +224,10 @@ function createNewPlayerProfile(user) {
         nationality: "morocco",
         power: 10,          
         education: 1,       
-        energy: 100,        
+        energy: 100,
+        powerLevel: 1,
+        educationLevel: 1,
+        energyLevel: 1,
         money: 1000, 
         gold: 23230,      
         activeTraining: null 
@@ -219,31 +253,61 @@ function updateXPProgressBar(totalXP) {
     if (progressText) progressText.textContent = `${Math.floor(totalXP)} / ${xpForNextLevel} XP`;
 }
 
+// تحديث نصوص الأزرار وزمن كل مهارة بناءً على مستواها الحالي
+function refreshUpgradeCards(data) {
+    Object.keys(STAT_CONFIG).forEach(statName => {
+        const config = STAT_CONFIG[statName];
+        const level = getStatLevel(data, statName);
+
+        const moneyCost = calcUpgradeCost(level, config.baseMoney);
+        const goldCost = calcUpgradeCost(level, config.baseGold);
+        const moneyTimeSec = calcUpgradeTimeSeconds(level);
+        const goldTimeSec = Math.round(moneyTimeSec / 2);
+
+        const moneyBtn = document.querySelector(`.btn-upgrade-action[data-skill="${statName}"][data-currency="money"]`);
+        const goldBtn = document.querySelector(`.btn-upgrade-action[data-skill="${statName}"][data-currency="gold"]`);
+        const timeLabel = document.getElementById(`time-${statName}`);
+
+        // الوقت الآن داخل نص الزر نفسه حتى يقارن اللاعب بسهولة بين خيار المال والذهب
+        if (moneyBtn) moneyBtn.innerHTML = `${moneyCost} مال<br><span style="font-size:11px; font-weight:normal; opacity:0.85;">⏱ ${formatTimeShort(moneyTimeSec * 1000)}</span>`;
+        if (goldBtn) goldBtn.innerHTML = `${goldCost} ذهب<br><span style="font-size:11px; font-weight:normal; opacity:0.85;">⏱ ${formatTimeShort(goldTimeSec * 1000)}</span>`;
+        if (timeLabel) {
+            timeLabel.textContent = `المستوى ${level} ⬅ ${level + 1}`;
+        }
+    });
+}
+
 export function startStatUpgrade(statName, currencyType) {
     if (!localPlayerData) return;
+    const config = STAT_CONFIG[statName];
+    if (!config) return;
 
     if (localPlayerData.activeTraining) {
-        alert("⚠️ هناك عملية تطوير جارية بالفعل! انتظر حتى تنتهي.");
+        alert("⚠️ هناك عملية تطوير جارية بالفعل! انتظر حتى تنتهي قبل تطوير مهارة أخرى.");
         return;
     }
 
-    const currentStatLevel = localPlayerData[statName] ?? 0;
-    const moneyCost = (currentStatLevel + 1) * 1000;
-    const goldCost = (currentStatLevel + 1) * 5;
-    
-    let timeInSeconds = Math.floor(Math.pow(currentStatLevel + 1, 1.5) * 60);
+    const currentLevel = getStatLevel(localPlayerData, statName);
+    const moneyCost = calcUpgradeCost(currentLevel, config.baseMoney);
+    const goldCost = calcUpgradeCost(currentLevel, config.baseGold);
+    const moneyTimeSec = calcUpgradeTimeSeconds(currentLevel);
+    const goldTimeSec = Math.round(moneyTimeSec / 2);
 
     const user = firebase.auth().currentUser;
     const db = firebase.firestore();
     const updates = {};
+    let timeInSeconds;
 
     if (currencyType === 'money') {
         if ((localPlayerData.money ?? 0) < moneyCost) { return alert("🔴 لا تملك المال الكافي!"); }
         updates['money'] = firebase.firestore.FieldValue.increment(-moneyCost);
+        timeInSeconds = moneyTimeSec;
     } else if (currencyType === 'gold') {
         if ((localPlayerData.gold ?? 0) < goldCost) { return alert("🔴 لا تملك الذهب الكافي!"); }
         updates['gold'] = firebase.firestore.FieldValue.increment(-goldCost);
-        timeInSeconds = Math.floor(timeInSeconds / 2); 
+        timeInSeconds = goldTimeSec;
+    } else {
+        return;
     }
 
     const finishTime = Date.now() + (timeInSeconds * 1000);
@@ -256,39 +320,45 @@ export function startStatUpgrade(statName, currencyType) {
     isUpgradingNow = false; 
 
     db.collection('players').doc(user.uid).update(updates)
-        .then(() => alert(`⏳ بدأ تطوير مهارة ${statName} الآن...`))
+        .then(() => alert(`⏳ بدأ تطوير مهارة ${config.label} الآن... (${formatTimeShort(timeInSeconds * 1000)})`))
         .catch(err => console.error(err));
 }
 
 function checkActiveTraining(data) {
-    const stats = ['power', 'education', 'energy'];
-    
+    const stats = Object.keys(STAT_CONFIG);
+    const hasActiveTraining = !!data.activeTraining;
+    const activeStat = data.activeTraining ? data.activeTraining.stat : null;
+
     stats.forEach(stat => {
         const btnContainer = document.getElementById(`actions-${stat}`);
         const timerContainer = document.getElementById(`timer-container-${stat}`);
-        if (btnContainer) btnContainer.style.display = 'flex';
-        if (timerContainer) timerContainer.style.display = 'none';
+        const isThisStatActive = hasActiveTraining && activeStat === stat;
+
+        if (timerContainer) timerContainer.style.display = isThisStatActive ? 'block' : 'none';
+        if (btnContainer) btnContainer.style.display = isThisStatActive ? 'none' : 'flex';
+
+        // تعطيل أزرار المهارات الأخرى بصرياً أثناء وجود تطوير جارٍ في مهارة مختلفة
+        const moneyBtn = document.querySelector(`.btn-upgrade-action[data-skill="${stat}"][data-currency="money"]`);
+        const goldBtn = document.querySelector(`.btn-upgrade-action[data-skill="${stat}"][data-currency="gold"]`);
+        const shouldDisable = hasActiveTraining && !isThisStatActive;
+
+        [moneyBtn, goldBtn].forEach(btn => {
+            if (!btn) return;
+            btn.disabled = shouldDisable;
+            btn.style.opacity = shouldDisable ? '0.4' : '1';
+            btn.style.cursor = shouldDisable ? 'not-allowed' : 'pointer';
+        });
     });
 
     if (trainingInterval) clearInterval(trainingInterval);
 
-    if (!data.activeTraining) {
+    if (!hasActiveTraining) {
         isUpgradingNow = false;
         return;
     }
 
-    const activeStat = data.activeTraining.stat;
-    const btnContainer = document.getElementById(`actions-${activeStat}`);
     const timerContainer = document.getElementById(`timer-container-${activeStat}`);
     const timerVal = document.getElementById(`timer-val-${activeStat}`);
-    const activeDropdown = document.getElementById(`stat-${activeStat}-dropdown`);
-
-    if (btnContainer) btnContainer.style.display = 'none';
-    if (timerContainer) timerContainer.style.display = 'block';
-    
-    if (activeDropdown && activeDropdown.style.maxHeight !== "0px" && activeDropdown.style.maxHeight !== "") {
-        activeDropdown.style.maxHeight = activeDropdown.scrollHeight + "px";
-    }
 
     trainingInterval = setInterval(() => {
         const now = Date.now();
@@ -297,7 +367,6 @@ function checkActiveTraining(data) {
         if (timeLeft <= 0) {
             clearInterval(trainingInterval);
             if (timerContainer) timerContainer.style.display = 'none';
-            if (btnContainer) btnContainer.style.display = 'flex';
             
             if (!isUpgradingNow) {
                 isUpgradingNow = true; 
@@ -318,10 +387,12 @@ function completeUpgrade(statName) {
     const db = firebase.firestore();
     db.collection('players').doc(user.uid).update({
         [statName]: firebase.firestore.FieldValue.increment(1),
+        [`${statName}Level`]: firebase.firestore.FieldValue.increment(1),
         activeTraining: null 
     }).then(() => {
         isUpgradingNow = false; 
-        alert(`🎉 تهانينا! تم ترقية المهارة بنجاح.`);
+        const label = STAT_CONFIG[statName]?.label || statName;
+        alert(`🎉 تهانينا! تم ترقية ${label} بنجاح.`);
     }).catch(err => {
         isUpgradingNow = false;
         console.error("خطأ أثناء إنهاء الترقية:", err);
@@ -379,10 +450,28 @@ export function changePlayerName(newName) {
 
 // استماع عام لأي نقرة تحدث في المستند (يتجاوز مشاكل الحقن الديناميكي و الـ Modules)
 document.addEventListener('click', function(event) {
-    
-    // 1. التعامل مع الضغط على بطاقة لفتح/إغلاق القائمة المنسدلة
-    const cardBox = event.target.closest('.stat-card-box');
-    if (cardBox) {
+
+    // 1. التعامل مع الضغط على أزرار التطوير (يجب فحصها أولاً لأنها متداخلة داخل البطاقة نفسها،
+    //    وإلا فإن فحص البطاقة يعترض الحدث ويقفل/يفتح القائمة فقط بدل تشغيل الترقية)
+    const upgradeBtn = event.target.closest('.btn-upgrade-action');
+    if (upgradeBtn) {
+        event.stopPropagation(); // منع فتح/إغلاق القائمة عند النقر على الزر
+        if (upgradeBtn.disabled) return; // زر معطّل بسبب تطوير جارٍ في مهارة أخرى
+
+        const skill = upgradeBtn.getAttribute('data-skill');
+        const currency = upgradeBtn.getAttribute('data-currency');
+        
+        startStatUpgrade(skill, currency);
+        return;
+    }
+
+    // 2. التعامل مع الضغط على رأس البطاقة لفتح/إغلاق القائمة المنسدلة فقط
+    //    (نفحص .card-header-main تحديداً وليس البطاقة كلها، حتى لا نعترض ضغطات الأزرار الداخلية)
+    const cardHeader = event.target.closest('.card-header-main');
+    if (cardHeader) {
+        const cardBox = cardHeader.closest('.stat-card-box');
+        if (!cardBox) return;
+
         const dropdownId = cardBox.getAttribute('data-dropdown');
         const dropdown = document.getElementById(dropdownId);
         
@@ -401,19 +490,6 @@ document.addEventListener('click', function(event) {
                 dropdown.style.display = 'none';
             }
         }
-        return;
-    }
-
-    // 2. التعامل مع الضغط على أزرار التطوير داخل القائمة
-    const upgradeBtn = event.target.closest('.btn-upgrade-action');
-    if (upgradeBtn) {
-        event.stopPropagation(); // منع إغلاق القائمة عند النقر على الزر
-        
-        const skill = upgradeBtn.getAttribute('data-skill');
-        const currency = upgradeBtn.getAttribute('data-currency');
-        
-        // ✅ ربط الزر فعلياً بدالة startStatUpgrade الحقيقية بدل الـ alert التجريبي
-        startStatUpgrade(skill, currency);
         return;
     }
 });
