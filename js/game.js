@@ -70,7 +70,7 @@ export function initGameSystem() {
                         if (profileNameDisp) profileNameDisp.textContent = playerName || "قائد مجهول";
 
                         const profileImg = document.getElementById('profile-avatar');
-                        if (profileImg) profileImg.src = data.avatarUrl || user.photoURL || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + userUid;
+                        if (profileImg) profileImg.src = data.photo || data.avatarUrl || user.photoURL || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + userUid;
                         
                         const profileMoneyVal = document.getElementById('profile-money-val');
                         if (profileMoneyVal) profileMoneyVal.textContent = data.money ?? 0;
@@ -141,6 +141,7 @@ export function initGameSystem() {
             window.startStatUpgrade = startStatUpgrade;
             window.travelToCountry = travelToCountry;
             window.changePlayerName = changePlayerName;
+            window.saveProfileChanges = saveProfileChanges;
 
         } else {
             setTimeout(waitForFirebase, 100);
@@ -433,6 +434,31 @@ export function travelToCountry(targetCountryKey) {
     })
     .then(() => alert(`✈️ تم السفر بنجاح إلى ${africanCountries[targetCountryKey].name}!`))
     .catch(err => console.error(err));
+}
+
+// حفظ تعديلات البروفايل: الاسم الجديد + رفع صورة جديدة (إن وُجدت) إلى Firebase Storage
+export async function saveProfileChanges(newName, avatarFile) {
+    const user = firebase.auth().currentUser;
+    if (!user) throw new Error("المستخدم غير مسجل الدخول");
+
+    const updates = {};
+    const trimmedName = (newName || "").trim();
+    if (trimmedName !== "") {
+        updates.name = trimmedName;
+    }
+
+    if (avatarFile) {
+        const fileExtension = (avatarFile.name.split('.').pop() || 'jpg').toLowerCase();
+        const storageRef = firebase.storage().ref(`avatars/${user.uid}.${fileExtension}`);
+        await storageRef.put(avatarFile);
+        const downloadUrl = await storageRef.getDownloadURL();
+        updates.photo = downloadUrl;
+        updates.avatarUrl = downloadUrl; // للحفاظ على التوافق مع أي كود قديم يقرأ هذا الحقل
+    }
+
+    if (Object.keys(updates).length === 0) return;
+
+    await firebase.firestore().collection('players').doc(user.uid).update(updates);
 }
 
 export function changePlayerName(newName) {
