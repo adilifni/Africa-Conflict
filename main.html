@@ -8,7 +8,6 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
 
     <!-- كود التهيئة الخاص بك config -->
     <script>
@@ -378,8 +377,32 @@
                 </div>
 
                 <input type="text" id="factory-name-input" placeholder="اسم المصنع" maxlength="30" style="width:100%;box-sizing:border-box;background:#0f1620;border:1px solid #2d3748;color:#fff;padding:10px 12px;border-radius:8px;font-size:15px;margin-bottom:10px;text-align:center;">
+
+                <select id="factory-type-input" style="width:100%;box-sizing:border-box;background:#0f1620;border:1px solid #2d3748;color:#fff;padding:10px 12px;border-radius:8px;font-size:15px;margin-bottom:10px;text-align:center;">
+                    <option value="">-- اختر نوع المصنع (المورد المنتج) --</option>
+                    <option value="gold">🪙 ذهب</option>
+                    <option value="iron">⚙️ حديد</option>
+                    <option value="wheat">🌾 قمح</option>
+                    <option value="diamond">💎 ماس</option>
+                </select>
+
                 <input type="number" id="factory-wage-input" placeholder="أجرة العمل" min="1" style="width:100%;box-sizing:border-box;background:#0f1620;border:1px solid #2d3748;color:#fff;padding:10px 12px;border-radius:8px;font-size:15px;margin-bottom:8px;text-align:center;">
                 <p id="factory-modal-error" style="color:#fc8181;font-size:12px;min-height:16px;margin:0 0 10px 0;"></p>
+
+                <!-- رصيد الأجور (يظهر فقط عند تعديل مصنع موجود) -->
+                <div id="factory-balance-section" style="display:none;background:#0f1620;border:1px solid #2d3748;border-radius:8px;padding:10px;margin-bottom:10px;text-align:right;">
+                    <div style="color:#a0aec0;font-size:13px;margin-bottom:8px;">💰 رصيد صندوق الأجور: <span id="factory-balance-value" style="color:#38a169;font-weight:bold;">0</span></div>
+                    <div style="display:flex;gap:8px;">
+                        <input type="number" id="factory-balance-amount-input" placeholder="المبلغ" min="1" style="flex:1;box-sizing:border-box;background:#1a1f26;border:1px solid #2d3748;color:#fff;padding:8px;border-radius:6px;font-size:13px;text-align:center;">
+                        <button onclick="addFactoryBalance()" style="background:#38a169;color:#fff;border:none;padding:8px 12px;border-radius:6px;font-size:13px;cursor:pointer;font-weight:bold;white-space:nowrap;">➕ إضافة</button>
+                    </div>
+                </div>
+
+                <!-- قائمة العمال (تظهر فقط عند تعديل مصنع موجود) -->
+                <div id="factory-workers-section" style="display:none;background:#0f1620;border:1px solid #2d3748;border-radius:8px;padding:10px;margin-bottom:10px;text-align:right;">
+                    <div style="color:#a0aec0;font-size:13px;margin-bottom:5px;">👥 العمال:</div>
+                    <div id="factory-workers-list" style="color:#cbd5e0;font-size:13px;">لا يوجد عمال حالياً</div>
+                </div>
 
                 <div style="display:flex;gap:10px;">
                     <button onclick="closeFactoryModal()" style="flex:1;background:#2d3748;color:#fff;border:none;padding:12px;border-radius:8px;cursor:pointer;font-weight:bold;">إلغاء</button>
