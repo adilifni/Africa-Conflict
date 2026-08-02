@@ -23,6 +23,43 @@ const TIME_EXPONENT     = 1.55; // معدل تسارع الوقت مع ارتف�
 const COST_EXPONENT     = 1.5;  // معدل تسارع السعر مع ارتفاع المستوى
 
 // ==========================================
+// ☁️ رفع الصور عبر Cloudinary (بديل Firebase Storage - لا يتطلب خطة Blaze)
+// ==========================================
+const CLOUDINARY_CLOUD_NAME = 'ضع_اسم_حسابك_هنا';       // مثال: 'dxyzabc12'
+const CLOUDINARY_UPLOAD_PRESET = 'ضع_اسم_البريست_هنا';   // مثال: 'africa_conflict_uploads'
+
+async function uploadImageToCloudinary(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+    try {
+        const response = await fetch(
+            `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+            { method: 'POST', body: formData, signal: controller.signal }
+        );
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+            const errBody = await response.json().catch(() => null);
+            throw new Error(errBody?.error?.message || 'فشل رفع الصورة إلى Cloudinary');
+        }
+
+        const data = await response.json();
+        return data.secure_url;
+    } catch (err) {
+        clearTimeout(timeoutId);
+        if (err.name === 'AbortError') {
+            throw new Error('انتهت مهلة رفع الصورة، تحقق من اتصالك بالإنترنت');
+        }
+        throw err;
+    }
+}
+
+// ==========================================
 // ⚙️ إعدادات نظام العمل والمصانع (Work System)
 // ==========================================
 const WORK_ENERGY_COST = 10;          // تكلفة كل عملية عمل من مخزون مشروب الطاقة
@@ -110,16 +147,16 @@ export function initGameSystem() {
                         }
 
                         if (document.getElementById('stat-power-val')) {
-                            document.getElementById('stat-power-val').textContent = data.power ?? 10;
+                            document.getElementById('stat-power-val').textContent = data.power ?? 1;
                         }
                         if (document.getElementById('stat-education-val')) {
                             document.getElementById('stat-education-val').textContent = data.education ?? 1;
                         }
                         if (document.getElementById('stat-energy-val')) {
-                            document.getElementById('stat-energy-val').textContent = data.energy ?? 100;
+                            document.getElementById('stat-energy-val').textContent = data.energy ?? 1;
                         }
                         if (document.getElementById('stat-energy-level-val')) {
-                            document.getElementById('stat-energy-level-val').textContent = data.energy ?? 100;
+                            document.getElementById('stat-energy-level-val').textContent = data.energy ?? 1;
                         }
 
                         // تحديث أسعار وأزمنة الترقية المعروضة بناءً على المستوى الحالي لكل مهارة
@@ -248,9 +285,9 @@ function createNewPlayerProfile(user) {
         current_location: "morocco",
         residence_country: "morocco",
         nationality: "morocco",
-        power: 10,          
-        education: 1,       
-        energy: 100,
+        power: 1,
+        education: 1,
+        energy: 1,
         powerLevel: 1,
         educationLevel: 1,
         energyLevel: 1,
@@ -735,11 +772,7 @@ async function saveFactory() {
         let imageUrl = null;
 
         if (selectedFactoryFile) {
-            const ext = (selectedFactoryFile.name.split('.').pop() || 'jpg').toLowerCase();
-            const path = `factories/${editingFactoryId || (user.uid + '_' + Date.now())}.${ext}`;
-            const storageRef = firebase.storage().ref(path);
-            await storageRef.put(selectedFactoryFile);
-            imageUrl = await storageRef.getDownloadURL();
+            imageUrl = await uploadImageToCloudinary(selectedFactoryFile);
         }
 
         const payload = { name, wage, countryKey, ownerUid: user.uid };
@@ -755,8 +788,8 @@ async function saveFactory() {
 
         closeFactoryModal();
     } catch (err) {
-        console.error(err);
-        if (errorEl) errorEl.textContent = 'فشل الحفظ، حاول مرة أخرى';
+        console.error("خطأ أثناء حفظ المصنع:", err);
+        if (errorEl) errorEl.textContent = `فشل الحفظ: ${err.message || err.code || 'خطأ غير معروف'}`;
     } finally {
         if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'حفظ'; }
     }
@@ -810,10 +843,7 @@ export async function saveProfileChanges(newName, avatarFile) {
     }
 
     if (avatarFile) {
-        const fileExtension = (avatarFile.name.split('.').pop() || 'jpg').toLowerCase();
-        const storageRef = firebase.storage().ref(`avatars/${user.uid}.${fileExtension}`);
-        await storageRef.put(avatarFile);
-        const downloadUrl = await storageRef.getDownloadURL();
+        const downloadUrl = await uploadImageToCloudinary(avatarFile);
         updates.photo = downloadUrl;
         updates.avatarUrl = downloadUrl; // للحفاظ على التوافق مع أي كود قديم يقرأ هذا الحقل
     }
