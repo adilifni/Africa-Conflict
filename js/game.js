@@ -62,9 +62,9 @@ async function uploadImageToCloudinary(file) {
 // ==========================================
 // ⚙️ إعدادات نظام العمل والمصانع (Work System)
 // ==========================================
-const WORK_ENERGY_COST = 10;          // تكلفة كل عملية عمل من مخزون مشروب الطاقة
 const WORK_ENERGY_REGEN_AMOUNT = 10;  // كمية الاسترجاع في كل دورة
 const WORK_ENERGY_REGEN_MINUTES = 10; // كل كم دقيقة يسترجع مشروب الطاقة
+const MIN_ENERGY_TO_WORK = 10;        // الحد الأدنى من الطاقة اللازم لتنفيذ عملية عمل واحدة
 
 // سعة مخزون مشروب الطاقة: 100 أساس + 5 عن كل 50 مستوى من مستوى الطاقة
 function getWorkEnergyCap(energyLevel) {
@@ -72,7 +72,7 @@ function getWorkEnergyCap(energyLevel) {
     return 100 + Math.floor(lvl / 50) * 5;
 }
 
-// أنواع الموارد المتاحة لاختيار نوع المصنع عند الإنشاء
+// أنواع الموارد المتاحة لاختيار نوع المصنع عند الإنشاء (لا يمكن تغييرها بعد الإنشاء)
 const RESOURCE_TYPES = {
     gold:    { label: 'ذهب',  icon: '🪙' },
     iron:    { label: 'حديد', icon: '⚙️' },
@@ -80,13 +80,30 @@ const RESOURCE_TYPES = {
     diamond: { label: 'ماس',  icon: '💎' }
 };
 
-const WORK_BATCH_SIZE = 10;      // عدد الضغطات التراكمية قبل حصول المصنع على دفعة موارد
-const WORK_BATCH_BASE_AMOUNT = 10; // كمية الدفعة الأساسية عند المستوى 1
+// تكلفة فتح مصنع جديد (ثابتة بغض النظر عن نوع المصنع المختار) — تُخصم من محفظة اللاعب الشخصية
+const FACTORY_OPEN_COST = { gold: 50, iron: 100, money: 1000, oil: 2000 };
 
-// كل مستوى للمصنع يزيد نصيبه من الدفعة الجماعية بنسبة 10%
-function getFactoryBatchAmount(level) {
+// نصيب اللاعب من ضغطة العمل: كل 10 طاقة تُستهلك = 1 وحدة مورد (الضغطة تستهلك كل الطاقة الحالية دفعة واحدة)
+function getPlayerWorkYield(energyAmount) {
+    return Math.floor(energyAmount / 10);
+}
+
+// معدل إنتاج المصنع نفسه لكل 100 طاقة متراكمة من كل العمال: يزيد وحدة واحدة كل 10 مستويات
+function getFactoryRatePer100Energy(level) {
     const lvl = level ?? 1;
-    return Math.round(WORK_BATCH_BASE_AMOUNT * (1 + (lvl - 1) * 0.10));
+    return Math.floor(lvl / 10) + 1;
+}
+
+// تكلفة تطوير المصنع مستوى واحد (من نفس نوع مورد المصنع، من محفظة صاحب المصنع الشخصية)
+function getFactoryUpgradeCost(level) {
+    const lvl = level ?? 1;
+    return 50 * lvl;
+}
+
+// سعر بيع المصنع المقترح (يزيد كل ما ارتفع المستوى) — يُستخدم لاحقاً في صفحة البيع
+function getFactorySalePrice(level) {
+    const lvl = level ?? 1;
+    return 500 * lvl;
 }
 
 let currentFactoriesCache = [];
@@ -222,6 +239,10 @@ export function initGameSystem() {
             window.closeFactoryModal = closeFactoryModal;
             window.saveFactory = saveFactory;
             window.addFactoryBalance = addFactoryBalance;
+            window.upgradeFactory = upgradeFactory;
+            window.withdrawFactoryStock = withdrawFactoryStock;
+            window.sellFactory = sellFactory;
+            window.closeFactoryPermanently = closeFactoryPermanently;
 
         } else {
             setTimeout(waitForFirebase, 100);
@@ -504,7 +525,17 @@ function handleWorkViewUpdate(data) {
 
     refreshSelectedFactoryDisplay(data);
     refreshWorkEnergyDisplay(data);
+    refreshPlayerResourcesDisplay(data);
     maybeRegenWorkEnergy(data);
+}
+
+// عرض موارد اللاعب الشخصية (بلوك جديد)
+function refreshPlayerResourcesDisplay(data) {
+    setText('player-res-gold', data.gold ?? 0);
+    setText('player-res-oil', data.oil ?? 0);
+    setText('player-res-wheat', data.wheat ?? 0);
+    setText('player-res-diamond', data.diamond ?? 0);
+    setText('player-res-iron', data.iron ?? 0);
 }
 
 function subscribeCountryResources(countryKey) {
@@ -668,10 +699,15 @@ function refreshWorkEnergyDisplay(data) {
 
     const btn = document.getElementById('btn-work-now');
     if (btn) {
-        const notEnough = current < WORK_ENERGY_COST || !data.selectedFactoryId;
+        const notEnough = current < MIN_ENERGY_TO_WORK || !data.selectedFactoryId;
         btn.disabled = notEnough;
         btn.style.opacity = notEnough ? '0.5' : '1';
         btn.style.cursor = notEnough ? 'not-allowed' : 'pointer';
+
+        const expectedYield = getPlayerWorkYield(current);
+        btn.textContent = notEnough
+            ? '🛠️ اعمل الآن'
+            : `🛠️ اعمل الآن (يستهلك كل الطاقة ← ${expectedYield} مورد)`;
     }
 
     const regenTextEl = document.getElementById('work-energy-regen-text');
@@ -733,8 +769,9 @@ async function doWork() {
     if (!resourceConfig) { alert("⚠️ نوع مورد المصنع غير محدد، تواصل مع صاحب المصنع لتعديله"); return; }
 
     const cap = getWorkEnergyCap(localPlayerData.energyLevel);
-    if ((localPlayerData.workEnergy ?? cap) < WORK_ENERGY_COST) {
-        alert("🔴 لا يوجد مشروب طاقة كافٍ! انتظر حتى يتجدد المخزون.");
+    const currentEnergy = localPlayerData.workEnergy ?? cap;
+    if (currentEnergy < MIN_ENERGY_TO_WORK) {
+        alert(`🔴 تحتاج ${MIN_ENERGY_TO_WORK} طاقة على الأقل للعمل! انتظر حتى يتجدد المخزون.`);
         return;
     }
 
@@ -756,13 +793,16 @@ async function doWork() {
             const countryData = countryDoc.exists ? countryDoc.data() : {};
 
             const playerEnergyCap = getWorkEnergyCap(playerData.energyLevel);
-            const playerEnergy = playerData.workEnergy ?? playerEnergyCap;
-            if (playerEnergy < WORK_ENERGY_COST) {
-                throw new Error("لا يوجد مشروب طاقة كافٍ! انتظر حتى يتجدد المخزون.");
+            const spentEnergy = playerData.workEnergy ?? playerEnergyCap;
+            if (spentEnergy < MIN_ENERGY_TO_WORK) {
+                throw new Error(`تحتاج ${MIN_ENERGY_TO_WORK} طاقة على الأقل للعمل!`);
             }
 
+            // نصيب اللاعب: كل 10 طاقة = 1 وحدة مورد، والضغطة تستهلك كل الطاقة الحالية دفعة واحدة
+            const playerYield = getPlayerWorkYield(spentEnergy);
+
             const countryStock = countryData[resourceType] ?? 0;
-            if (countryStock < 1) {
+            if (countryStock < playerYield) {
                 throw new Error(`لا يوجد مخزون كافٍ من ${resourceConfig.label} في الدولة حالياً`);
             }
 
@@ -771,42 +811,46 @@ async function doWork() {
             const factoryBalance = factoryData.balance ?? 0;
             const wagePaid = (wage > 0 && factoryBalance >= wage) ? wage : 0;
 
-            // منطق الدفعة الجماعية: كل 10 ضغطات تراكمية يحصل المصنع على نصيب إضافي
-            let countryDeduction = 1; // نصيب العامل نفسه
+            // إنتاج المصنع نفسه: يتراكم بالطاقة المُستهلكة، ويُصرف كل 100 طاقة تراكمية
             let factoryGain = 0;
-            let newCounter = (factoryData.workCounter ?? 0) + 1;
+            let newAccumulated = (factoryData.energyAccumulated ?? 0) + spentEnergy;
+            const chunks = Math.floor(newAccumulated / 100);
 
-            if (newCounter >= WORK_BATCH_SIZE) {
-                const batchAmount = getFactoryBatchAmount(factoryData.level ?? 1);
-                const availableForBatch = Math.max(0, countryStock - 1);
-                factoryGain = Math.min(batchAmount, availableForBatch);
-                countryDeduction += factoryGain;
-                newCounter = 0;
+            if (chunks > 0) {
+                const ratePer100 = getFactoryRatePer100Energy(factoryData.level ?? 1);
+                const potentialGain = chunks * ratePer100;
+                const availableForFactory = Math.max(0, countryStock - playerYield);
+                factoryGain = Math.min(potentialGain, availableForFactory);
+                newAccumulated = newAccumulated % 100;
             }
+
+            const countryDeduction = playerYield + factoryGain;
 
             transaction.update(countryRef, {
                 [resourceType]: firebase.firestore.FieldValue.increment(-countryDeduction)
             });
 
-            const factoryUpdates = { workCounter: newCounter };
+            const factoryUpdates = { energyAccumulated: newAccumulated };
             if (wagePaid > 0) factoryUpdates.balance = firebase.firestore.FieldValue.increment(-wagePaid);
             if (factoryGain > 0) factoryUpdates.stock = firebase.firestore.FieldValue.increment(factoryGain);
             transaction.update(factoryRef, factoryUpdates);
 
             const playerUpdates = {
-                workEnergy: firebase.firestore.FieldValue.increment(-WORK_ENERGY_COST),
-                [resourceType]: firebase.firestore.FieldValue.increment(1)
+                workEnergy: 0 // الضغطة تستهلك كل الطاقة الحالية دفعة واحدة
             };
+            if (playerYield > 0) playerUpdates[resourceType] = firebase.firestore.FieldValue.increment(playerYield);
             if (wagePaid > 0) playerUpdates.money = firebase.firestore.FieldValue.increment(wagePaid);
             transaction.update(playerRef, playerUpdates);
 
-            return { wagePaid, factoryGain };
+            return { playerYield, wagePaid, factoryGain };
         });
 
-        let msg = `${resourceConfig.icon} حصلت على 1 ${resourceConfig.label}`;
+        let msg = result.playerYield > 0
+            ? `${resourceConfig.icon} حصلت على ${result.playerYield} ${resourceConfig.label}`
+            : `لم تحصل على موارد (الطاقة غير كافية لإنتاج وحدة كاملة)`;
         if (result.wagePaid > 0) msg += ` + 💵 ${result.wagePaid} مال أجرة`;
         else if (factory.wage > 0) msg += `\n⚠️ المصنع بدون رصيد كافٍ لدفع الأجرة هذه المرة`;
-        if (result.factoryGain > 0) msg += `\n🏭 المصنع حصل على ${result.factoryGain} ${resourceConfig.label} إضافية (دفعة كل ${WORK_BATCH_SIZE} ضغطات)`;
+        if (result.factoryGain > 0) msg += `\n🏭 المصنع حصل على ${result.factoryGain} ${resourceConfig.label} إضافية (إنتاج تراكمي)`;
         alert(msg);
     } catch (err) {
         console.error("خطأ أثناء العمل:", err);
@@ -827,6 +871,12 @@ function openFactoryModal(existingFactory) {
     const balanceVal = document.getElementById('factory-balance-value');
     const workersSection = document.getElementById('factory-workers-section');
     const workersList = document.getElementById('factory-workers-list');
+    const ownerActionsSection = document.getElementById('factory-owner-actions-section');
+    const upgradeBtn = document.getElementById('factory-upgrade-btn');
+    const withdrawBtn = document.getElementById('factory-withdraw-btn');
+    const sellBtn = document.getElementById('factory-sell-btn');
+    const closeFactoryBtn = document.getElementById('factory-close-btn');
+    const openCostNote = document.getElementById('factory-open-cost-note');
 
     selectedFactoryFile = null;
     editingFactoryId = existingFactory ? existingFactory.id : null;
@@ -835,13 +885,21 @@ function openFactoryModal(existingFactory) {
     if (title) title.textContent = existingFactory ? "تعديل المصنع" : "إنشاء مصنع جديد";
     if (nameInput) nameInput.value = existingFactory?.name || '';
     if (wageInput) wageInput.value = existingFactory?.wage || '';
-    if (typeInput) typeInput.value = existingFactory?.resourceType || '';
     if (previewImg) previewImg.src = existingFactory?.imageUrl || '';
 
-    // قسم رصيد الأجور وقائمة العمال يظهران فقط عند تعديل مصنع موجود فعلاً
+    // نوع المصنع: يُختار فقط عند الإنشاء، ويُقفل نهائياً بعد ذلك
+    if (typeInput) {
+        typeInput.value = existingFactory?.resourceType || '';
+        typeInput.disabled = !!existingFactory;
+    }
+    if (openCostNote) {
+        openCostNote.style.display = existingFactory ? 'none' : 'block';
+    }
+
     const showOwnerTools = !!existingFactory;
     if (balanceSection) balanceSection.style.display = showOwnerTools ? 'block' : 'none';
     if (workersSection) workersSection.style.display = showOwnerTools ? 'block' : 'none';
+    if (ownerActionsSection) ownerActionsSection.style.display = showOwnerTools ? 'flex' : 'none';
 
     if (showOwnerTools) {
         if (balanceVal) balanceVal.textContent = existingFactory.balance ?? 0;
@@ -852,6 +910,14 @@ function openFactoryModal(existingFactory) {
                 ? workers.map(w => w.name).join('، ')
                 : 'لا يوجد عمال حالياً';
         }
+
+        const level = existingFactory.level ?? 1;
+        const resInfo = RESOURCE_TYPES[existingFactory.resourceType];
+        const upgradeCost = getFactoryUpgradeCost(level);
+        if (upgradeBtn) upgradeBtn.textContent = `⬆️ تطوير المصنع (يكلف ${upgradeCost} ${resInfo?.label || ''} من محفظتك)`;
+        if (withdrawBtn) withdrawBtn.textContent = `📤 سحب المخزون (${existingFactory.stock ?? 0} ${resInfo?.label || ''})`;
+        if (sellBtn) sellBtn.textContent = `💰 بيع المصنع (السعر المقترح: ${getFactorySalePrice(level)} مال)`;
+        if (closeFactoryBtn) closeFactoryBtn.style.display = 'block';
     }
 
     if (modal) modal.style.display = 'flex';
@@ -864,6 +930,8 @@ function closeFactoryModal() {
     editingFactoryId = null;
     const fileInput = document.getElementById('factory-file-input');
     if (fileInput) fileInput.value = '';
+    const typeInput = document.getElementById('factory-type-input');
+    if (typeInput) typeInput.disabled = false;
 }
 
 function handleFactoryFileSelect(event) {
@@ -903,8 +971,7 @@ async function saveFactory() {
     const resourceType = typeInput ? typeInput.value : '';
 
     if (name === '') { if (errorEl) errorEl.textContent = 'اسم المصنع مطلوب'; return; }
-    if (!Number.isFinite(wage) || wage <= 0) { if (errorEl) errorEl.textContent = 'أدخل أجرة عمل صحيحة'; return; }
-    if (!RESOURCE_TYPES[resourceType]) { if (errorEl) errorEl.textContent = 'اختر نوع المصنع (نوع المورد الذي ينتجه)'; return; }
+    if (!Number.isFinite(wage) || wage <= 0) { if (errorEl) errorEl.textContent = 'أدخل أجرة عمل صحيحة (راتب العمال)'; return; }
 
     const user = firebase.auth().currentUser;
     if (!user || !localPlayerData) { if (errorEl) errorEl.textContent = 'حدث خطأ، أعد تحميل الصفحة'; return; }
@@ -914,26 +981,61 @@ async function saveFactory() {
 
     try {
         const db = firebase.firestore();
-        const countryKey = localPlayerData.current_location || "morocco";
         let imageUrl = null;
 
         if (selectedFactoryFile) {
             imageUrl = await uploadImageToCloudinary(selectedFactoryFile);
         }
 
-        const payload = { name, wage, resourceType, countryKey, ownerUid: user.uid };
-        if (imageUrl) payload.imageUrl = imageUrl;
-
         if (editingFactoryId) {
+            // تعديل مصنع موجود: الاسم، الأجرة، الصورة فقط — نوع المصنع مقفل ولا يُرسل إطلاقاً
+            const payload = { name, wage };
+            if (imageUrl) payload.imageUrl = imageUrl;
             await db.collection('factories').doc(editingFactoryId).update(payload);
         } else {
-            payload.level = 1;
-            payload.balance = 0;
-            payload.stock = 0;
-            payload.workCounter = 0;
-            payload.workers = [];
-            payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-            await db.collection('factories').add(payload);
+            // إنشاء مصنع جديد: يتطلب اختيار نوع + توفر تكلفة الفتح كاملة في محفظة اللاعب
+            if (!RESOURCE_TYPES[resourceType]) {
+                throw new Error('اختر نوع المصنع (نوع المورد الذي ينتجه)');
+            }
+
+            const wallet = {
+                gold: localPlayerData.gold ?? 0,
+                iron: localPlayerData.iron ?? 0,
+                money: localPlayerData.money ?? 0,
+                oil: localPlayerData.oil ?? 0
+            };
+            const missing = Object.entries(FACTORY_OPEN_COST)
+                .filter(([res, cost]) => wallet[res] < cost)
+                .map(([res, cost]) => `${cost} ${res === 'money' ? 'مال' : RESOURCE_TYPES[res]?.label || res}`);
+
+            if (missing.length > 0) {
+                throw new Error(`لا تملك موارد كافية لفتح مصنع، ناقصك: ${missing.join('، ')}`);
+            }
+
+            const countryKey = localPlayerData.current_location || "morocco";
+            const newFactoryRef = db.collection('factories').doc();
+            const batch = db.batch();
+
+            batch.set(newFactoryRef, {
+                name, wage, resourceType, countryKey,
+                ownerUid: user.uid,
+                imageUrl: imageUrl || null,
+                level: 1,
+                balance: 0,
+                stock: 0,
+                energyAccumulated: 0,
+                workers: [],
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            batch.update(db.collection('players').doc(user.uid), {
+                gold: firebase.firestore.FieldValue.increment(-FACTORY_OPEN_COST.gold),
+                iron: firebase.firestore.FieldValue.increment(-FACTORY_OPEN_COST.iron),
+                money: firebase.firestore.FieldValue.increment(-FACTORY_OPEN_COST.money),
+                oil: firebase.firestore.FieldValue.increment(-FACTORY_OPEN_COST.oil)
+            });
+
+            await batch.commit();
         }
 
         closeFactoryModal();
@@ -982,6 +1084,129 @@ async function addFactoryBalance() {
     } catch (err) {
         console.error("خطأ أثناء إضافة رصيد المصنع:", err);
         if (errorEl) errorEl.textContent = 'فشلت إضافة الرصيد، حاول مرة أخرى';
+    }
+}
+
+// تطوير مستوى المصنع: يكلف موارد من نفس نوع المصنع، تُخصم من محفظة صاحب المصنع الشخصية
+async function upgradeFactory() {
+    const errorEl = document.getElementById('factory-modal-error');
+    const user = firebase.auth().currentUser;
+    if (!user || !editingFactoryId || !localPlayerData) return;
+
+    const factory = currentFactoriesCache.find(f => f.id === editingFactoryId);
+    if (!factory) return;
+
+    const resourceType = factory.resourceType;
+    const resInfo = RESOURCE_TYPES[resourceType];
+    const currentLevel = factory.level ?? 1;
+    const cost = getFactoryUpgradeCost(currentLevel);
+
+    if ((localPlayerData[resourceType] ?? 0) < cost) {
+        if (errorEl) errorEl.textContent = `لا تملك ${cost} ${resInfo?.label || ''} كافية لتطوير المصنع`;
+        return;
+    }
+
+    try {
+        const db = firebase.firestore();
+        const batch = db.batch();
+        batch.update(db.collection('players').doc(user.uid), {
+            [resourceType]: firebase.firestore.FieldValue.increment(-cost)
+        });
+        batch.update(db.collection('factories').doc(editingFactoryId), {
+            level: firebase.firestore.FieldValue.increment(1)
+        });
+        await batch.commit();
+
+        alert(`⬆️ تم تطوير المصنع إلى المستوى ${currentLevel + 1}!`);
+        closeFactoryModal();
+    } catch (err) {
+        console.error("خطأ أثناء تطوير المصنع:", err);
+        if (errorEl) errorEl.textContent = 'فشل التطوير، حاول مرة أخرى';
+    }
+}
+
+// سحب كامل مخزون المصنع إلى محفظة صاحب المصنع الشخصية
+async function withdrawFactoryStock() {
+    const errorEl = document.getElementById('factory-modal-error');
+    const user = firebase.auth().currentUser;
+    if (!user || !editingFactoryId) return;
+
+    const factory = currentFactoriesCache.find(f => f.id === editingFactoryId);
+    if (!factory) return;
+
+    const stock = factory.stock ?? 0;
+    if (stock <= 0) {
+        if (errorEl) errorEl.textContent = 'لا يوجد مخزون لسحبه حالياً';
+        return;
+    }
+
+    const resourceType = factory.resourceType;
+    const resInfo = RESOURCE_TYPES[resourceType];
+
+    try {
+        const db = firebase.firestore();
+        const batch = db.batch();
+        batch.update(db.collection('players').doc(user.uid), {
+            [resourceType]: firebase.firestore.FieldValue.increment(stock)
+        });
+        batch.update(db.collection('factories').doc(editingFactoryId), {
+            stock: 0
+        });
+        await batch.commit();
+
+        alert(`📤 تم سحب ${stock} ${resInfo?.label || ''} إلى محفظتك الشخصية`);
+        closeFactoryModal();
+    } catch (err) {
+        console.error("خطأ أثناء سحب المخزون:", err);
+        if (errorEl) errorEl.textContent = 'فشل السحب، حاول مرة أخرى';
+    }
+}
+
+// عرض المصنع للبيع (سيتم استخدامه لاحقاً في صفحة سوق البيع)
+async function sellFactory() {
+    const errorEl = document.getElementById('factory-modal-error');
+    if (!editingFactoryId) return;
+
+    const factory = currentFactoriesCache.find(f => f.id === editingFactoryId);
+    if (!factory) return;
+
+    const alreadyForSale = !!factory.forSale;
+    const salePrice = getFactorySalePrice(factory.level ?? 1);
+
+    const confirmMsg = alreadyForSale
+        ? 'المصنع معروض للبيع حالياً. هل تريد إلغاء العرض؟'
+        : `سيتم عرض المصنع للبيع بسعر ${salePrice} مال (ستُضاف صفحة البيع قريباً). هل تريد المتابعة؟`;
+
+    if (!confirm(confirmMsg)) return;
+
+    try {
+        await firebase.firestore().collection('factories').doc(editingFactoryId).update({
+            forSale: !alreadyForSale,
+            salePrice: alreadyForSale ? null : salePrice
+        });
+        alert(alreadyForSale ? '✅ تم إلغاء عرض البيع' : '✅ تم عرض المصنع للبيع بنجاح');
+        closeFactoryModal();
+    } catch (err) {
+        console.error("خطأ أثناء عرض المصنع للبيع:", err);
+        if (errorEl) errorEl.textContent = 'فشلت العملية، حاول مرة أخرى';
+    }
+}
+
+// إغلاق المصنع وحذفه نهائياً
+async function closeFactoryPermanently() {
+    if (!editingFactoryId) return;
+
+    if (!confirm('⚠️ هذا الإجراء نهائي ولا يمكن التراجع عنه! سيتم حذف المصنع بكل بياناته (المخزون، الرصيد، العمال). هل أنت متأكد؟')) {
+        return;
+    }
+
+    try {
+        await firebase.firestore().collection('factories').doc(editingFactoryId).delete();
+        alert('🗑️ تم إغلاق المصنع نهائياً');
+        closeFactoryModal();
+    } catch (err) {
+        console.error("خطأ أثناء إغلاق المصنع:", err);
+        alert('فشل إغلاق المصنع، حاول مرة أخرى');
     }
 }
 
