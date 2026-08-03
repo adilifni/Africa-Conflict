@@ -328,6 +328,38 @@
                 </div>
             </div>
 
+            <!-- بلوك: موارد اللاعب الشخصية -->
+            <div class="card" style="background:#1a1f26;border-radius:12px;padding:15px;border:1px solid #2d3748;">
+                <div style="color:#fff;font-weight:bold;margin-bottom:12px;font-size:15px;">🎒 محفظتي من الموارد</div>
+                <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;text-align:center;">
+                    <div>
+                        <div style="font-size:20px;">🪙</div>
+                        <div id="player-res-gold" style="color:#ffd700;font-weight:bold;font-size:13px;">0</div>
+                        <div style="color:#a0aec0;font-size:11px;">ذهب</div>
+                    </div>
+                    <div>
+                        <div style="font-size:20px;">🛢️</div>
+                        <div id="player-res-oil" style="color:#cbd5e0;font-weight:bold;font-size:13px;">0</div>
+                        <div style="color:#a0aec0;font-size:11px;">نفط</div>
+                    </div>
+                    <div>
+                        <div style="font-size:20px;">🌾</div>
+                        <div id="player-res-wheat" style="color:#d69e2e;font-weight:bold;font-size:13px;">0</div>
+                        <div style="color:#a0aec0;font-size:11px;">قمح</div>
+                    </div>
+                    <div>
+                        <div style="font-size:20px;">💎</div>
+                        <div id="player-res-diamond" style="color:#63b3ed;font-weight:bold;font-size:13px;">0</div>
+                        <div style="color:#a0aec0;font-size:11px;">ماس</div>
+                    </div>
+                    <div>
+                        <div style="font-size:20px;">⚙️</div>
+                        <div id="player-res-iron" style="color:#a0aec0;font-weight:bold;font-size:13px;">0</div>
+                        <div style="color:#a0aec0;font-size:11px;">حديد</div>
+                    </div>
+                </div>
+            </div>
+
             <!-- بلوك 2: المصنع المختار + زر العمل + مشروب الطاقة -->
             <div class="card" style="background:#1a1f26;border-radius:12px;padding:15px;border:1px solid #2d3748;">
                 <div style="display:flex;align-items:center;gap:12px;margin-bottom:15px;">
@@ -378,15 +410,16 @@
 
                 <input type="text" id="factory-name-input" placeholder="اسم المصنع" maxlength="30" style="width:100%;box-sizing:border-box;background:#0f1620;border:1px solid #2d3748;color:#fff;padding:10px 12px;border-radius:8px;font-size:15px;margin-bottom:10px;text-align:center;">
 
-                <select id="factory-type-input" style="width:100%;box-sizing:border-box;background:#0f1620;border:1px solid #2d3748;color:#fff;padding:10px 12px;border-radius:8px;font-size:15px;margin-bottom:10px;text-align:center;">
+                <select id="factory-type-input" style="width:100%;box-sizing:border-box;background:#0f1620;border:1px solid #2d3748;color:#fff;padding:10px 12px;border-radius:8px;font-size:15px;margin-bottom:6px;text-align:center;">
                     <option value="">-- اختر نوع المصنع (المورد المنتج) --</option>
                     <option value="gold">🪙 ذهب</option>
                     <option value="iron">⚙️ حديد</option>
                     <option value="wheat">🌾 قمح</option>
                     <option value="diamond">💎 ماس</option>
                 </select>
+                <p id="factory-open-cost-note" style="color:#718096;font-size:11px;margin:0 0 10px 0;">⚠️ نوع المصنع لا يمكن تغييره بعد الإنشاء. تكلفة الفتح: 50 ذهب + 100 حديد + 1000 مال + 2000 نفط</p>
 
-                <input type="number" id="factory-wage-input" placeholder="أجرة العمل" min="1" style="width:100%;box-sizing:border-box;background:#0f1620;border:1px solid #2d3748;color:#fff;padding:10px 12px;border-radius:8px;font-size:15px;margin-bottom:8px;text-align:center;">
+                <input type="number" id="factory-wage-input" placeholder="أجرة العمل (راتب العمال)" min="1" style="width:100%;box-sizing:border-box;background:#0f1620;border:1px solid #2d3748;color:#fff;padding:10px 12px;border-radius:8px;font-size:15px;margin-bottom:8px;text-align:center;">
                 <p id="factory-modal-error" style="color:#fc8181;font-size:12px;min-height:16px;margin:0 0 10px 0;"></p>
 
                 <!-- رصيد الأجور (يظهر فقط عند تعديل مصنع موجود) -->
@@ -402,6 +435,14 @@
                 <div id="factory-workers-section" style="display:none;background:#0f1620;border:1px solid #2d3748;border-radius:8px;padding:10px;margin-bottom:10px;text-align:right;">
                     <div style="color:#a0aec0;font-size:13px;margin-bottom:5px;">👥 العمال:</div>
                     <div id="factory-workers-list" style="color:#cbd5e0;font-size:13px;">لا يوجد عمال حالياً</div>
+                </div>
+
+                <!-- أزرار إدارة المصنع (تظهر فقط عند التعديل، لصاحب المصنع) -->
+                <div id="factory-owner-actions-section" style="display:none;flex-direction:column;gap:8px;margin-bottom:10px;">
+                    <button id="factory-upgrade-btn" onclick="upgradeFactory()" style="background:#805ad5;color:#fff;border:none;padding:10px;border-radius:8px;cursor:pointer;font-weight:bold;font-size:13px;">⬆️ تطوير المصنع</button>
+                    <button id="factory-withdraw-btn" onclick="withdrawFactoryStock()" style="background:#2b6cb0;color:#fff;border:none;padding:10px;border-radius:8px;cursor:pointer;font-weight:bold;font-size:13px;">📤 سحب المخزون</button>
+                    <button id="factory-sell-btn" onclick="sellFactory()" style="background:#d69e2e;color:#fff;border:none;padding:10px;border-radius:8px;cursor:pointer;font-weight:bold;font-size:13px;">💰 بيع المصنع</button>
+                    <button id="factory-close-btn" onclick="closeFactoryPermanently()" style="display:none;background:#742a2a;color:#fff;border:none;padding:10px;border-radius:8px;cursor:pointer;font-weight:bold;font-size:13px;">🗑️ إغلاق المصنع نهائياً</button>
                 </div>
 
                 <div style="display:flex;gap:10px;">
