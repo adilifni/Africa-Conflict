@@ -75,22 +75,30 @@ function checkAndCreateUserAccount(user) {
                 email: user.email,
                 photo: user.photoURL || "",
                 createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+
+                // ⚠️ هذه القيم يجب أن تطابق createNewPlayerProfile() في game.js تماماً
+                // حتى لا يتكرر تضارب القيم الافتراضية بين الملفين مستقبلاً
+                power: 1,
+                education: 1,
+                energy: 1,
+                powerLevel: 1,
+                educationLevel: 1,
+                energyLevel: 1,
+                experience: 1,
                 level: 1,
-                energy: 100,
+
                 money: 5000,
                 gold: 5,
                 oil: 20,
                 wheat: 50,
-                // 🚀 الحقول التي كانت ناقصة يجب إضافتها هنا كقيم افتراضية:
-                 power: 0,
-                 education: 0,
-                 experience: 0,
-                 activeTraining: null,
-                residence_country: "morocco", 
-                current_location: "morocco",   
+
+                activeTraining: null,
+                residence_country: "morocco",
+                current_location: "morocco",
+                nationality: "morocco",
                 has_party: false,
                 party_id: "",
-                factories_list: [1]            
+                factories_list: [1]
             }).then(() => {
                 redirectToMainGame();
             }).catch((err) => {
