@@ -547,6 +547,16 @@ function subscribeFactoriesList(countryKey) {
             snapshot.forEach(doc => currentFactoriesCache.push({ id: doc.id, ...doc.data() }));
             renderFactoriesList();
             if (localPlayerData) refreshSelectedFactoryDisplay(localPlayerData);
+
+            // تحديث عدد المصانع المعروض في صفحة العمل والصفحة الرئيسية
+            const count = currentFactoriesCache.length;
+            setText('work-factories-count', count);
+            setText('country-factories-count', count);
+
+            // تحديث الحقل الحقيقي بمستند الدولة (بدل الحقل الثابت القديم غير المُحدَّث)
+            firebase.firestore().collection('countries').doc(countryKey)
+                .update({ factories: count })
+                .catch(() => { /* تجاهل الخطأ لو المستخدم غير مسجل دخول بعد أو صلاحية الكتابة غير متاحة */ });
         }, (err) => console.error("خطأ في جلب المصانع:", err));
 }
 
