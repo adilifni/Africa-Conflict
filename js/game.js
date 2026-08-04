@@ -838,7 +838,11 @@ async function doWork() {
             const playerUpdates = {
                 workEnergy: 0 // الضغطة تستهلك كل الطاقة الحالية دفعة واحدة
             };
-            if (playerYield > 0) playerUpdates[resourceType] = firebase.firestore.FieldValue.increment(playerYield);
+            if (playerYield > 0) {
+                playerUpdates[resourceType] = firebase.firestore.FieldValue.increment(playerYield);
+                // كل 10 طاقة مُستهلكة = 1 نقطة خبرة (نفس نسبة إنتاج المورد تماماً)
+                playerUpdates.experience = firebase.firestore.FieldValue.increment(playerYield);
+            }
             if (wagePaid > 0) playerUpdates.money = firebase.firestore.FieldValue.increment(wagePaid);
             transaction.update(playerRef, playerUpdates);
 
@@ -846,7 +850,7 @@ async function doWork() {
         });
 
         let msg = result.playerYield > 0
-            ? `${resourceConfig.icon} حصلت على ${result.playerYield} ${resourceConfig.label}`
+            ? `${resourceConfig.icon} حصلت على ${result.playerYield} ${resourceConfig.label} + ⭐ ${result.playerYield} XP`
             : `لم تحصل على موارد (الطاقة غير كافية لإنتاج وحدة كاملة)`;
         if (result.wagePaid > 0) msg += ` + 💵 ${result.wagePaid} مال أجرة`;
         else if (factory.wage > 0) msg += `\n⚠️ المصنع بدون رصيد كافٍ لدفع الأجرة هذه المرة`;
