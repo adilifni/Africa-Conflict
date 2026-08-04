@@ -142,7 +142,10 @@ export function initGameSystem() {
                     
                     db.collection('players').doc(userUid).onSnapshot((doc) => {
                         if (!doc.exists) {
-                            createNewPlayerProfile(user);
+                            // لا يُفترض حدوث هذا أبداً: auth.js هو المصدر الوحيد لإنشاء مستند اللاعب،
+                            // ويشتغل قبل وصول المستخدم لهذه الصفحة أصلاً. لو ظهرت هذه الرسالة بالـ Console،
+                            // فهذا يعني وجود مشكلة حقيقية (مثلاً حذف يدوي للمستند أثناء الجلسة).
+                            console.warn("مستند اللاعب غير موجود! تأكد أن auth.js أنشأه بنجاح قبل الدخول لهذه الصفحة.");
                             return;
                         }
 
@@ -313,27 +316,6 @@ function startLiveCounters(playerCountry, playerRegion) {
         if (cPop) cPop.textContent = countryPopulation;
         if (cOnline) cOnline.textContent = countryOnline;
     });
-}
-
-function createNewPlayerProfile(user) {
-    const db = firebase.firestore();
-    db.collection('players').doc(user.uid).set({
-        name: user.displayName || "قائد جديد",
-        avatarUrl: user.photoURL || '',
-        experience: 1,      
-        current_location: "morocco",
-        residence_country: "morocco",
-        nationality: "morocco",
-        power: 1,
-        education: 1,
-        energy: 1,
-        powerLevel: 1,
-        educationLevel: 1,
-        energyLevel: 1,
-        money: 1000, 
-        gold: 23230,      
-        activeTraining: null 
-    }, { merge: true });
 }
 
 function updateXPProgressBar(totalXP) {
