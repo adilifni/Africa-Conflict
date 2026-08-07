@@ -106,6 +106,16 @@ function getFactorySalePrice(level) {
     return 500 * lvl;
 }
 
+// ==========================================
+// 🛒 إعدادات السوق العالمي
+// ==========================================
+// نسبة الضريبة الافتراضية لو الدولة لسه ما حددت نسبتها الخاصة (عبر البرلمان مستقبلاً)
+const DEFAULT_MARKET_TAX_RATE = 0.05; // 5%
+
+let currentMarketListingsCache = [];
+let unsubscribeMarketListings = null;
+let activeBuyListingId = null;
+
 let currentFactoriesCache = [];
 let unsubscribeCountryResources = null;
 let unsubscribeFactoriesList = null;
@@ -246,6 +256,13 @@ export function initGameSystem() {
             window.withdrawFactoryStock = withdrawFactoryStock;
             window.sellFactory = sellFactory;
             window.closeFactoryPermanently = closeFactoryPermanently;
+            window.openCreateListingModal = openCreateListingModal;
+            window.closeCreateListingModal = closeCreateListingModal;
+            window.submitCreateListing = submitCreateListing;
+            window.cancelMarketListing = cancelMarketListing;
+            window.openBuyModal = openBuyModal;
+            window.closeBuyModal = closeBuyModal;
+            window.confirmBuyListing = confirmBuyListing;
 
         } else {
             setTimeout(waitForFirebase, 100);
@@ -505,9 +522,14 @@ function handleWorkViewUpdate(data) {
         subscribeFactoriesList(countryKey);
     }
 
+    if (!unsubscribeMarketListings) {
+        subscribeMarketListings();
+    }
+
     refreshSelectedFactoryDisplay(data);
     refreshWorkEnergyDisplay(data);
     refreshPlayerResourcesDisplay(data);
+    renderMyMarketListings();
     maybeRegenWorkEnergy(data);
 }
 
@@ -1203,6 +1225,322 @@ async function closeFactoryPermanently() {
     } catch (err) {
         console.error("خطأ أثناء إغلاق المصنع:", err);
         alert('فشل إغلاق المصنع، حاول مرة أخرى');
+    }
+}
+
+// ==========================================
+// 🛒 نظام السوق العالمي (بيع وشراء الموارد بين اللاعبين)
+// ==========================================
+
+// اشتراك عالمي واحد (بدون تقييد بدولة) — يعمل مرة واحدة فقط طوال الجلسة
+function subscribeMarketListings() {
+    unsubscribeMarketListings = firebase.firestore().collection('market_listings')
+        .where('status', '==', 'active')
+        .onSnapshot((snapshot) => {
+            currentMarketListingsCache = [];
+            snapshot.forEach(doc => currentMarketListingsCache.push({ id: doc.id, ...doc.data() }));
+            renderMarketListings();
+            renderMyMarketListings();
+        }, (err) => console.error("خطأ في جلب إعلانات السوق:", err));
+}
+
+function renderMarketListings() {
+    const container = document.getElementById('market-listings-container');
+    if (!container) return;
+
+    const user = firebase.auth().currentUser;
+    const othersListings = currentMarketListingsCache.filter(l => l.sellerUid !== user?.uid);
+
+    if (othersListings.length === 0) {
+        container.innerHTML = '<p style="color:#718096;font-size:13px;text-align:center;margin:10px 0;">لا توجد إعلانات بيع نشطة حالياً</p>';
+        return;
+    }
+
+    // ترتيب حسب الأرخص أولاً
+    const sorted = [...othersListings].sort((a, b) => a.pricePerUnit - b.pricePerUnit);
+
+    container.innerHTML = '';
+    sorted.forEach(listing => {
+        const resInfo = RESOURCE_TYPES[listing.resourceType];
+        const totalCost = listing.quantity * listing.pricePerUnit;
+        const card = document.createElement('div');
+        card.style.cssText = 'display:flex;align-items:center;gap:10px;background:#0f1620;border:1px solid #2d3748;border-radius:10px;padding:10px;';
+        card.innerHTML = `
+            <div style="font-size:26px;flex-shrink:0;">${resInfo?.icon || '📦'}</div>
+            <div style="flex:1;min-width:0;">
+                <div style="color:#fff;font-weight:bold;font-size:14px;">${escapeHtml(listing.sellerName || 'لاعب')}</div>
+                <div style="color:#a0aec0;font-size:12px;">${listing.quantity} ${resInfo?.label || ''} · 💵 ${listing.pricePerUnit}/وحدة</div>
+                <div style="color:#718096;font-size:11px;">الإجمالي: ${totalCost} مال</div>
+            </div>
+            <button class="btn-buy-listing" data-listing-id="${listing.id}" style="background:#38a169;color:#fff;border:none;padding:8px 14px;border-radius:6px;font-size:13px;cursor:pointer;font-weight:bold;flex-shrink:0;">شراء</button>
+        `;
+        container.appendChild(card);
+    });
+
+    container.querySelectorAll('.btn-buy-listing').forEach(btn => {
+        btn.addEventListener('click', () => openBuyModal(btn.getAttribute('data-listing-id')));
+    });
+}
+
+function renderMyMarketListings() {
+    const container = document.getElementById('my-listings-container');
+    if (!container) return;
+
+    const user = firebase.auth().currentUser;
+    if (!user) return;
+
+    const mine = currentMarketListingsCache.filter(l => l.sellerUid === user.uid);
+
+    if (mine.length === 0) {
+        container.innerHTML = '<p style="color:#718096;font-size:13px;text-align:center;margin:10px 0;">لا توجد إعلانات نشطة لك حالياً</p>';
+        return;
+    }
+
+    container.innerHTML = '';
+    mine.forEach(listing => {
+        const resInfo = RESOURCE_TYPES[listing.resourceType];
+        const soldPortion = listing.originalQuantity - listing.quantity;
+        const card = document.createElement('div');
+        card.style.cssText = 'display:flex;align-items:center;gap:10px;background:#0f1620;border:1px solid #2d3748;border-radius:10px;padding:10px;';
+        card.innerHTML = `
+            <div style="font-size:26px;flex-shrink:0;">${resInfo?.icon || '📦'}</div>
+            <div style="flex:1;min-width:0;">
+                <div style="color:#fff;font-weight:bold;font-size:14px;">${listing.quantity} ${resInfo?.label || ''} متبقية</div>
+                <div style="color:#a0aec0;font-size:12px;">💵 ${listing.pricePerUnit}/وحدة · بيع ${soldPortion} من ${listing.originalQuantity}</div>
+            </div>
+            <button class="btn-cancel-listing" data-listing-id="${listing.id}" style="background:#742a2a;color:#fff;border:none;padding:8px 14px;border-radius:6px;font-size:13px;cursor:pointer;font-weight:bold;flex-shrink:0;">إلغاء</button>
+        `;
+        container.appendChild(card);
+    });
+
+    container.querySelectorAll('.btn-cancel-listing').forEach(btn => {
+        btn.addEventListener('click', () => cancelMarketListing(btn.getAttribute('data-listing-id')));
+    });
+}
+
+// فتح نافذة نشر إعلان بيع جديد
+function openCreateListingModal() {
+    const modal = document.getElementById('listing-modal');
+    const errorEl = document.getElementById('listing-modal-error');
+    const resourceInput = document.getElementById('listing-resource-input');
+    const qtyInput = document.getElementById('listing-quantity-input');
+    const priceInput = document.getElementById('listing-price-input');
+
+    if (errorEl) errorEl.textContent = '';
+    if (resourceInput) resourceInput.value = '';
+    if (qtyInput) qtyInput.value = '';
+    if (priceInput) priceInput.value = '';
+
+    if (modal) modal.style.display = 'flex';
+}
+
+function closeCreateListingModal() {
+    const modal = document.getElementById('listing-modal');
+    if (modal) modal.style.display = 'none';
+}
+
+async function submitCreateListing() {
+    const errorEl = document.getElementById('listing-modal-error');
+    const submitBtn = document.getElementById('submit-listing-btn');
+    const resourceType = document.getElementById('listing-resource-input')?.value;
+    const quantity = parseInt(document.getElementById('listing-quantity-input')?.value, 10);
+    const pricePerUnit = parseInt(document.getElementById('listing-price-input')?.value, 10);
+
+    if (!RESOURCE_TYPES[resourceType]) { if (errorEl) errorEl.textContent = 'اختر نوع المورد'; return; }
+    if (!Number.isFinite(quantity) || quantity <= 0) { if (errorEl) errorEl.textContent = 'أدخل كمية صحيحة'; return; }
+    if (!Number.isFinite(pricePerUnit) || pricePerUnit <= 0) { if (errorEl) errorEl.textContent = 'أدخل سعراً صحيحاً لكل وحدة'; return; }
+
+    const user = firebase.auth().currentUser;
+    if (!user || !localPlayerData) { if (errorEl) errorEl.textContent = 'حدث خطأ، أعد تحميل الصفحة'; return; }
+
+    if ((localPlayerData[resourceType] ?? 0) < quantity) {
+        if (errorEl) errorEl.textContent = `لا تملك ${quantity} ${RESOURCE_TYPES[resourceType].label} كافية في محفظتك`;
+        return;
+    }
+
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'جاري النشر...'; }
+    if (errorEl) errorEl.textContent = '';
+
+    try {
+        const db = firebase.firestore();
+        const batch = db.batch();
+
+        // خصم الكمية فوراً من محفظة البائع (Escrow) لمنع نشر كمية أكبر من رصيده الفعلي
+        batch.update(db.collection('players').doc(user.uid), {
+            [resourceType]: firebase.firestore.FieldValue.increment(-quantity)
+        });
+
+        const newListingRef = db.collection('market_listings').doc();
+        batch.set(newListingRef, {
+            sellerUid: user.uid,
+            sellerName: (localPlayerData.name || 'لاعب').trim(),
+            sellerCountryKey: localPlayerData.current_location || "morocco",
+            resourceType,
+            quantity,
+            originalQuantity: quantity,
+            pricePerUnit,
+            status: 'active',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        await batch.commit();
+        closeCreateListingModal();
+    } catch (err) {
+        console.error("خطأ أثناء نشر الإعلان:", err);
+        if (errorEl) errorEl.textContent = 'فشل النشر، حاول مرة أخرى';
+    } finally {
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'نشر الإعلان'; }
+    }
+}
+
+// إلغاء إعلان وإعادة الكمية المتبقية لمحفظة البائع
+async function cancelMarketListing(listingId) {
+    const user = firebase.auth().currentUser;
+    if (!user) return;
+    if (!confirm('هل تريد إلغاء هذا الإعلان؟ سيتم إرجاع الكمية المتبقية لمحفظتك.')) return;
+
+    const db = firebase.firestore();
+    const listingRef = db.collection('market_listings').doc(listingId);
+
+    try {
+        await db.runTransaction(async (transaction) => {
+            const listingDoc = await transaction.get(listingRef);
+            if (!listingDoc.exists) throw new Error('الإعلان غير موجود');
+
+            const listing = listingDoc.data();
+            if (listing.sellerUid !== user.uid) throw new Error('هذا الإعلان ليس ملكك');
+            if (listing.status !== 'active') throw new Error('الإعلان غير نشط أصلاً');
+
+            transaction.update(listingRef, { status: 'cancelled' });
+            if (listing.quantity > 0) {
+                transaction.update(db.collection('players').doc(user.uid), {
+                    [listing.resourceType]: firebase.firestore.FieldValue.increment(listing.quantity)
+                });
+            }
+        });
+    } catch (err) {
+        console.error("خطأ أثناء إلغاء الإعلان:", err);
+        alert(`🔴 ${err.message || 'فشل الإلغاء، حاول مرة أخرى'}`);
+    }
+}
+
+// فتح نافذة الشراء لإعلان معيّن
+function openBuyModal(listingId) {
+    const listing = currentMarketListingsCache.find(l => l.id === listingId);
+    if (!listing) return;
+
+    activeBuyListingId = listingId;
+
+    const modal = document.getElementById('buy-modal');
+    const infoEl = document.getElementById('buy-modal-info');
+    const qtyInput = document.getElementById('buy-quantity-input');
+    const errorEl = document.getElementById('buy-modal-error');
+
+    const resInfo = RESOURCE_TYPES[listing.resourceType];
+    if (infoEl) {
+        infoEl.innerHTML = `
+            البائع: <b>${escapeHtml(listing.sellerName || 'لاعب')}</b><br>
+            المورد: ${resInfo?.icon || ''} ${resInfo?.label || ''}<br>
+            الكمية المتاحة: ${listing.quantity}<br>
+            السعر: ${listing.pricePerUnit} مال / وحدة
+        `;
+    }
+    if (qtyInput) { qtyInput.value = ''; qtyInput.max = listing.quantity; }
+    if (errorEl) errorEl.textContent = '';
+
+    if (modal) modal.style.display = 'flex';
+}
+
+function closeBuyModal() {
+    const modal = document.getElementById('buy-modal');
+    if (modal) modal.style.display = 'none';
+    activeBuyListingId = null;
+}
+
+// تنفيذ عملية الشراء داخل معاملة واحدة تلمس 4 مستندات: الإعلان، المشتري، البائع، دولة البائع (للضريبة)
+async function confirmBuyListing() {
+    if (!activeBuyListingId) return;
+
+    const errorEl = document.getElementById('buy-modal-error');
+    const confirmBtn = document.getElementById('confirm-buy-btn');
+    const purchaseQty = parseInt(document.getElementById('buy-quantity-input')?.value, 10);
+
+    if (!Number.isFinite(purchaseQty) || purchaseQty <= 0) {
+        if (errorEl) errorEl.textContent = 'أدخل كمية صحيحة';
+        return;
+    }
+
+    const user = firebase.auth().currentUser;
+    if (!user) return;
+
+    if (confirmBtn) { confirmBtn.disabled = true; confirmBtn.textContent = 'جاري الشراء...'; }
+    if (errorEl) errorEl.textContent = '';
+
+    const db = firebase.firestore();
+    const listingRef = db.collection('market_listings').doc(activeBuyListingId);
+    const buyerRef = db.collection('players').doc(user.uid);
+
+    try {
+        const result = await db.runTransaction(async (transaction) => {
+            const listingDoc = await transaction.get(listingRef);
+            if (!listingDoc.exists) throw new Error('الإعلان لم يعد متاحاً');
+
+            const listing = listingDoc.data();
+            if (listing.status !== 'active') throw new Error('الإعلان لم يعد نشطاً');
+            if (listing.sellerUid === user.uid) throw new Error('لا يمكنك الشراء من إعلانك الخاص');
+            if (purchaseQty > listing.quantity) throw new Error(`الكمية المتاحة فقط ${listing.quantity}`);
+
+            const sellerRef = db.collection('players').doc(listing.sellerUid);
+            const sellerCountryRef = db.collection('countries').doc(listing.sellerCountryKey || "morocco");
+
+            const [buyerDoc, sellerCountryDoc] = await Promise.all([
+                transaction.get(buyerRef),
+                transaction.get(sellerCountryRef)
+            ]);
+
+            const buyerData = buyerDoc.data() || {};
+            const totalCost = purchaseQty * listing.pricePerUnit;
+
+            if ((buyerData.money ?? 0) < totalCost) throw new Error('لا تملك مالاً كافياً لإتمام الشراء');
+
+            const taxRate = sellerCountryDoc.exists && typeof sellerCountryDoc.data().marketTaxRate === 'number'
+                ? sellerCountryDoc.data().marketTaxRate
+                : DEFAULT_MARKET_TAX_RATE;
+            const taxAmount = Math.round(totalCost * taxRate);
+            const sellerReceives = totalCost - taxAmount;
+
+            const remainingQty = listing.quantity - purchaseQty;
+            transaction.update(listingRef, {
+                quantity: remainingQty,
+                status: remainingQty <= 0 ? 'sold_out' : 'active'
+            });
+
+            transaction.update(buyerRef, {
+                money: firebase.firestore.FieldValue.increment(-totalCost),
+                [listing.resourceType]: firebase.firestore.FieldValue.increment(purchaseQty)
+            });
+
+            transaction.update(sellerRef, {
+                money: firebase.firestore.FieldValue.increment(sellerReceives)
+            });
+
+            if (taxAmount > 0) {
+                transaction.update(sellerCountryRef, {
+                    treasury: firebase.firestore.FieldValue.increment(taxAmount)
+                });
+            }
+
+            return { totalCost, taxAmount, resourceType: listing.resourceType, purchaseQty };
+        });
+
+        const resInfo = RESOURCE_TYPES[result.resourceType];
+        alert(`✅ اشتريت ${result.purchaseQty} ${resInfo?.label || ''} بـ ${result.totalCost} مال (ضريبة الدولة: ${result.taxAmount})`);
+        closeBuyModal();
+    } catch (err) {
+        console.error("خطأ أثناء الشراء:", err);
+        if (errorEl) errorEl.textContent = err.message || 'فشلت عملية الشراء، حاول مرة أخرى';
+    } finally {
+        if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.textContent = 'تأكيد الشراء'; }
     }
 }
 
