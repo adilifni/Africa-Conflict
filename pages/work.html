@@ -2,7 +2,7 @@
 
     <!-- بلوك 1: موارد الدولة -->
     <div class="card" style="background:#1a1f26;border-radius:12px;padding:15px;border:1px solid #2d3748;">
-        <div style="color:#fff;font-weight:bold;margin-bottom:12px;font-size:15px;">📦 موارد <span id="work-country-name">الدولة</span></div>
+        <div style="color:#fff;font-weight:bold;margin-bottom:12px;font-size:15px;">📦 موارد <span id="work-country-name">الدولة</span> · 🏭 <span id="work-factories-count">0</span> مصنع</div>
         <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;text-align:center;">
             <div>
                 <div style="font-size:20px;">🪙</div>
@@ -27,6 +27,38 @@
             <div>
                 <div style="font-size:20px;">⚙️</div>
                 <div id="res-iron" style="color:#a0aec0;font-weight:bold;font-size:13px;">0</div>
+                <div style="color:#a0aec0;font-size:11px;">حديد</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- بلوك: موارد اللاعب الشخصية -->
+    <div class="card" style="background:#1a1f26;border-radius:12px;padding:15px;border:1px solid #2d3748;">
+        <div style="color:#fff;font-weight:bold;margin-bottom:12px;font-size:15px;">🎒 محفظتي من الموارد</div>
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;text-align:center;">
+            <div>
+                <div style="font-size:20px;">🪙</div>
+                <div id="player-res-gold" style="color:#ffd700;font-weight:bold;font-size:13px;">0</div>
+                <div style="color:#a0aec0;font-size:11px;">ذهب</div>
+            </div>
+            <div>
+                <div style="font-size:20px;">🛢️</div>
+                <div id="player-res-oil" style="color:#cbd5e0;font-weight:bold;font-size:13px;">0</div>
+                <div style="color:#a0aec0;font-size:11px;">نفط</div>
+            </div>
+            <div>
+                <div style="font-size:20px;">🌾</div>
+                <div id="player-res-wheat" style="color:#d69e2e;font-weight:bold;font-size:13px;">0</div>
+                <div style="color:#a0aec0;font-size:11px;">قمح</div>
+            </div>
+            <div>
+                <div style="font-size:20px;">💎</div>
+                <div id="player-res-diamond" style="color:#63b3ed;font-weight:bold;font-size:13px;">0</div>
+                <div style="color:#a0aec0;font-size:11px;">ماس</div>
+            </div>
+            <div>
+                <div style="font-size:20px;">⚙️</div>
+                <div id="player-res-iron" style="color:#a0aec0;font-weight:bold;font-size:13px;">0</div>
                 <div style="color:#a0aec0;font-size:11px;">حديد</div>
             </div>
         </div>
@@ -67,11 +99,69 @@
     <!-- بلوك 4: إنشاء مصنع جديد -->
     <button onclick="openFactoryModal()" style="background:#2b6cb0;color:#fff;border:none;padding:14px;border-radius:10px;font-weight:bold;font-size:15px;cursor:pointer;">➕ إنشاء مصنع جديد</button>
 
+    <!-- بلوك 5: السوق العالمي -->
+    <div class="card" style="background:#1a1f26;border-radius:12px;padding:15px;border:1px solid #2d3748;">
+        <div style="color:#fff;font-weight:bold;margin-bottom:12px;font-size:15px;">🛒 سوق الموارد العالمي</div>
+        <div id="market-listings-container" style="display:flex;flex-direction:column;gap:10px;">
+            <p style="color:#718096;font-size:13px;text-align:center;margin:10px 0;">جاري تحميل السوق...</p>
+        </div>
+    </div>
+
+    <!-- بلوك 6: إعلاناتي في السوق -->
+    <div class="card" style="background:#1a1f26;border-radius:12px;padding:15px;border:1px solid #2d3748;">
+        <div style="color:#fff;font-weight:bold;margin-bottom:12px;font-size:15px;">📋 إعلاناتي في السوق</div>
+        <div id="my-listings-container" style="display:flex;flex-direction:column;gap:10px;margin-bottom:12px;">
+            <p style="color:#718096;font-size:13px;text-align:center;margin:10px 0;">جاري التحميل...</p>
+        </div>
+        <button onclick="openCreateListingModal()" style="width:100%;background:#805ad5;color:#fff;border:none;padding:12px;border-radius:8px;font-weight:bold;font-size:14px;cursor:pointer;">➕ نشر إعلان بيع جديد</button>
+    </div>
+
+</div>
+
+<!-- نافذة نشر إعلان بيع جديد -->
+<div id="listing-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:9998;justify-content:center;align-items:center;padding:20px;box-sizing:border-box;">
+    <div style="background:#1a1f26;border:1px solid #2d3748;border-radius:14px;padding:25px 20px;width:100%;max-width:360px;max-height:85vh;overflow-y:auto;text-align:center;">
+        <h3 style="color:#fff;margin:0 0 20px 0;font-size:18px;">نشر إعلان بيع</h3>
+
+        <select id="listing-resource-input" style="width:100%;box-sizing:border-box;background:#0f1620;border:1px solid #2d3748;color:#fff;padding:10px 12px;border-radius:8px;font-size:15px;margin-bottom:10px;text-align:center;">
+            <option value="">-- اختر المورد --</option>
+            <option value="gold">🪙 ذهب</option>
+            <option value="iron">⚙️ حديد</option>
+            <option value="wheat">🌾 قمح</option>
+            <option value="diamond">💎 ماس</option>
+        </select>
+
+        <input type="number" id="listing-quantity-input" placeholder="الكمية" min="1" style="width:100%;box-sizing:border-box;background:#0f1620;border:1px solid #2d3748;color:#fff;padding:10px 12px;border-radius:8px;font-size:15px;margin-bottom:10px;text-align:center;">
+        <input type="number" id="listing-price-input" placeholder="السعر لكل وحدة (مال)" min="1" style="width:100%;box-sizing:border-box;background:#0f1620;border:1px solid #2d3748;color:#fff;padding:10px 12px;border-radius:8px;font-size:15px;margin-bottom:8px;text-align:center;">
+        <p id="listing-modal-error" style="color:#fc8181;font-size:12px;min-height:16px;margin:0 0 10px 0;"></p>
+
+        <div style="display:flex;gap:10px;">
+            <button onclick="closeCreateListingModal()" style="flex:1;background:#2d3748;color:#fff;border:none;padding:12px;border-radius:8px;cursor:pointer;font-weight:bold;">إلغاء</button>
+            <button id="submit-listing-btn" onclick="submitCreateListing()" style="flex:1;background:#805ad5;color:#fff;border:none;padding:12px;border-radius:8px;cursor:pointer;font-weight:bold;">نشر الإعلان</button>
+        </div>
+    </div>
+</div>
+
+<!-- نافذة الشراء -->
+<div id="buy-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:9998;justify-content:center;align-items:center;padding:20px;box-sizing:border-box;">
+    <div style="background:#1a1f26;border:1px solid #2d3748;border-radius:14px;padding:25px 20px;width:100%;max-width:360px;max-height:85vh;overflow-y:auto;text-align:center;">
+        <h3 style="color:#fff;margin:0 0 15px 0;font-size:18px;">تأكيد الشراء</h3>
+
+        <div id="buy-modal-info" style="color:#cbd5e0;font-size:13px;line-height:1.8;background:#0f1620;border:1px solid #2d3748;border-radius:8px;padding:12px;margin-bottom:12px;text-align:right;"></div>
+
+        <input type="number" id="buy-quantity-input" placeholder="الكمية المطلوبة" min="1" style="width:100%;box-sizing:border-box;background:#0f1620;border:1px solid #2d3748;color:#fff;padding:10px 12px;border-radius:8px;font-size:15px;margin-bottom:8px;text-align:center;">
+        <p id="buy-modal-error" style="color:#fc8181;font-size:12px;min-height:16px;margin:0 0 10px 0;"></p>
+
+        <div style="display:flex;gap:10px;">
+            <button onclick="closeBuyModal()" style="flex:1;background:#2d3748;color:#fff;border:none;padding:12px;border-radius:8px;cursor:pointer;font-weight:bold;">إلغاء</button>
+            <button id="confirm-buy-btn" onclick="confirmBuyListing()" style="flex:1;background:#38a169;color:#fff;border:none;padding:12px;border-radius:8px;cursor:pointer;font-weight:bold;">تأكيد الشراء</button>
+        </div>
+    </div>
 </div>
 
 <!-- نافذة إنشاء / تعديل مصنع -->
 <div id="factory-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:9998;justify-content:center;align-items:center;padding:20px;box-sizing:border-box;">
-    <div style="background:#1a1f26;border:1px solid #2d3748;border-radius:14px;padding:25px 20px;width:100%;max-width:360px;text-align:center;">
+    <div style="background:#1a1f26;border:1px solid #2d3748;border-radius:14px;padding:25px 20px;width:100%;max-width:360px;max-height:85vh;overflow-y:auto;text-align:center;">
         <h3 id="factory-modal-title" style="color:#fff;margin:0 0 20px 0;font-size:18px;">إنشاء مصنع جديد</h3>
 
         <div style="position:relative;width:90px;height:90px;margin:0 auto 15px auto;">
@@ -81,8 +171,41 @@
         </div>
 
         <input type="text" id="factory-name-input" placeholder="اسم المصنع" maxlength="30" style="width:100%;box-sizing:border-box;background:#0f1620;border:1px solid #2d3748;color:#fff;padding:10px 12px;border-radius:8px;font-size:15px;margin-bottom:10px;text-align:center;">
-        <input type="number" id="factory-wage-input" placeholder="أجرة العمل" min="1" style="width:100%;box-sizing:border-box;background:#0f1620;border:1px solid #2d3748;color:#fff;padding:10px 12px;border-radius:8px;font-size:15px;margin-bottom:8px;text-align:center;">
+
+        <select id="factory-type-input" style="width:100%;box-sizing:border-box;background:#0f1620;border:1px solid #2d3748;color:#fff;padding:10px 12px;border-radius:8px;font-size:15px;margin-bottom:6px;text-align:center;">
+            <option value="">-- اختر نوع المصنع (المورد المنتج) --</option>
+            <option value="gold">🪙 ذهب</option>
+            <option value="iron">⚙️ حديد</option>
+            <option value="wheat">🌾 قمح</option>
+            <option value="diamond">💎 ماس</option>
+        </select>
+        <p id="factory-open-cost-note" style="color:#718096;font-size:11px;margin:0 0 10px 0;">⚠️ نوع المصنع لا يمكن تغييره بعد الإنشاء. تكلفة الفتح: 50 ذهب + 100 حديد + 1000 مال + 2000 نفط</p>
+
+        <input type="number" id="factory-wage-input" placeholder="أجرة العمل (راتب العمال)" min="1" style="width:100%;box-sizing:border-box;background:#0f1620;border:1px solid #2d3748;color:#fff;padding:10px 12px;border-radius:8px;font-size:15px;margin-bottom:8px;text-align:center;">
         <p id="factory-modal-error" style="color:#fc8181;font-size:12px;min-height:16px;margin:0 0 10px 0;"></p>
+
+        <!-- رصيد الأجور (يظهر فقط عند تعديل مصنع موجود) -->
+        <div id="factory-balance-section" style="display:none;background:#0f1620;border:1px solid #2d3748;border-radius:8px;padding:10px;margin-bottom:10px;text-align:right;">
+            <div style="color:#a0aec0;font-size:13px;margin-bottom:8px;">💰 رصيد صندوق الأجور: <span id="factory-balance-value" style="color:#38a169;font-weight:bold;">0</span></div>
+            <div style="display:flex;gap:8px;">
+                <input type="number" id="factory-balance-amount-input" placeholder="المبلغ" min="1" style="flex:1;box-sizing:border-box;background:#1a1f26;border:1px solid #2d3748;color:#fff;padding:8px;border-radius:6px;font-size:13px;text-align:center;">
+                <button onclick="addFactoryBalance()" style="background:#38a169;color:#fff;border:none;padding:8px 12px;border-radius:6px;font-size:13px;cursor:pointer;font-weight:bold;white-space:nowrap;">➕ إضافة</button>
+            </div>
+        </div>
+
+        <!-- قائمة العمال (تظهر فقط عند تعديل مصنع موجود) -->
+        <div id="factory-workers-section" style="display:none;background:#0f1620;border:1px solid #2d3748;border-radius:8px;padding:10px;margin-bottom:10px;text-align:right;">
+            <div style="color:#a0aec0;font-size:13px;margin-bottom:5px;">👥 العمال:</div>
+            <div id="factory-workers-list" style="color:#cbd5e0;font-size:13px;">لا يوجد عمال حالياً</div>
+        </div>
+
+        <!-- أزرار إدارة المصنع (تظهر فقط عند التعديل، لصاحب المصنع) -->
+        <div id="factory-owner-actions-section" style="display:none;flex-direction:column;gap:8px;margin-bottom:10px;">
+            <button id="factory-upgrade-btn" onclick="upgradeFactory()" style="background:#805ad5;color:#fff;border:none;padding:10px;border-radius:8px;cursor:pointer;font-weight:bold;font-size:13px;">⬆️ تطوير المصنع</button>
+            <button id="factory-withdraw-btn" onclick="withdrawFactoryStock()" style="background:#2b6cb0;color:#fff;border:none;padding:10px;border-radius:8px;cursor:pointer;font-weight:bold;font-size:13px;">📤 سحب المخزون</button>
+            <button id="factory-sell-btn" onclick="sellFactory()" style="background:#d69e2e;color:#fff;border:none;padding:10px;border-radius:8px;cursor:pointer;font-weight:bold;font-size:13px;">💰 بيع المصنع</button>
+            <button id="factory-close-btn" onclick="closeFactoryPermanently()" style="display:none;background:#742a2a;color:#fff;border:none;padding:10px;border-radius:8px;cursor:pointer;font-weight:bold;font-size:13px;">🗑️ إغلاق المصنع نهائياً</button>
+        </div>
 
         <div style="display:flex;gap:10px;">
             <button onclick="closeFactoryModal()" style="flex:1;background:#2d3748;color:#fff;border:none;padding:12px;border-radius:8px;cursor:pointer;font-weight:bold;">إلغاء</button>
