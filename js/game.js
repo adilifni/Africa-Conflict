@@ -1615,9 +1615,14 @@ export function changePlayerName(newName) {
 }
 
 
-// ربط حقل رفع صورة المصنع (يعمل مباشرة لأن العنصر موجود في الصفحة عند تحميل هذا الموديول)
-const factoryFileInputEl = document.getElementById('factory-file-input');
-if (factoryFileInputEl) factoryFileInputEl.addEventListener('change', handleFactoryFileSelect);
+// ربط حقل رفع صورة المصنع عبر Event Delegation (وليس ربطاً مباشراً)
+// لأن صفحة العمل الآن تُحقن ديناميكياً بعد تحميل هذا الموديول — الربط المباشر
+// كان سيفشل بصمت لأن العنصر ما يكون موجوداً بالـ DOM وقت تنفيذ هذا السطر
+document.addEventListener('change', (event) => {
+    if (event.target && event.target.id === 'factory-file-input') {
+        handleFactoryFileSelect(event);
+    }
+});
 
 // فحص دوري كل 30 ثانية لتحديث عرض مشروب الطاقة واسترجاعه تلقائياً حتى دون أي تغيير آخر في البيانات
 setInterval(() => {
