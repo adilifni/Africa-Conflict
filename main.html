@@ -296,13 +296,8 @@
         <!-- صفحة العمل: تُحمَّل ديناميكياً وقت التشغيل من pages/work.html (fetch + حقن HTML) -->
         <div id="work-page-container"></div>
 
-        <!-- واجهة الحروب (Wars View) -->
-        <div id="view-wars" class="game-view" style="display: none;">
-            <div class="page-inner-card">
-                <div class="page-title-banner">⚔️ الحروب والعمليات العسكرية</div>
-                <p style="text-align: center; color: #8b949e; padding: 20px;">استعرض جبهات النزاع المشتعلة، شارك في تدريبات الدفاع الشعبي، أو قد جيوشك لتحرير وتأمين قارتنا.</p>
-            </div>
-        </div>
+        <!-- صفحة الحروب: تُحمَّل ديناميكياً وقت التشغيل من pages/wars.html (fetch + حقن HTML) -->
+        <div id="wars-page-container"></div>
     </main>
 
     <!-- شريط التنقل السفلي الثابت بالترتيب الصحيح -->
@@ -451,9 +446,13 @@
             const loader = document.getElementById('global-loader');
             if (loader) loader.style.display = 'flex';
 
-            // لازم ننتظر حقن صفحة العمل بالكامل قبل تشغيل game.js
+            // لازم ننتظر حقن كل الصفحات الديناميكية بالكامل قبل تشغيل game.js
             // حتى لا يبحث عن عناصر (أزرار، حقول...) غير موجودة بعد بالـ DOM
-            await loadPageFragment('pages/work.html', 'work-page-container');
+            // التحميل بالتوازي (وليس بالتسلسل) لتسريع بدء التشغيل
+            await Promise.all([
+                loadPageFragment('pages/work.html', 'work-page-container'),
+                loadPageFragment('pages/wars.html', 'wars-page-container')
+            ]);
 
             if (loader) loader.style.display = 'none';
 
