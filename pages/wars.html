@@ -1,12 +1,65 @@
 <div id="view-wars" class="game-view" style="display: none; flex-direction: column; gap: 15px;">
 
-    <div class="card" style="background:#1a1f26;border-radius:12px;padding:20px;border:1px solid #2d3748;text-align:center;">
-        <div style="font-size:40px;margin-bottom:10px;">⚔️</div>
-        <div style="color:#fff;font-weight:bold;font-size:18px;margin-bottom:8px;">الحروب والعمليات العسكرية</div>
-        <p style="color:#8b949e;font-size:14px;line-height:1.6;margin:0;">
-            هذا القسم قيد الإنشاء حالياً. استعرض جبهات النزاع المشتعلة، شارك في تدريبات الدفاع الشعبي،
-            أو قد جيوشك لتحرير وتأمين قارتنا — قريباً.
-        </p>
+    <!-- بلوك 1: حرب دولتك الحالية -->
+    <div class="card" style="background:#1a1f26;border-radius:12px;padding:15px;border:1px solid #2d3748;">
+        <div style="color:#fff;font-weight:bold;margin-bottom:12px;font-size:15px;">🏛️ حرب دولتك الحالية</div>
+        <div id="country-war-container">
+            <p style="color:#718096;font-size:13px;text-align:center;margin:10px 0;">جاري التحميل...</p>
+        </div>
     </div>
 
+    <!-- بلوك 2: زر التدريب/القتال + طاقة القتال -->
+    <div class="card" style="background:#1a1f26;border-radius:12px;padding:15px;border:1px solid #2d3748;">
+        <button onclick="openTrainingModal()" style="width:100%;background:#742a2a;color:#fff;border:none;padding:14px;border-radius:8px;font-weight:bold;font-size:16px;cursor:pointer;margin-bottom:15px;">⚔️ التدريب / القتال</button>
+
+        <div style="display:flex;justify-content:space-between;color:#cbd5e0;font-size:13px;margin-bottom:5px;">
+            <span>🩸 طاقة القتال</span>
+            <span id="combat-energy-text">0 / 100</span>
+        </div>
+        <div style="width:100%;height:10px;background:#2d3748;border-radius:5px;overflow:hidden;">
+            <div id="combat-energy-bar" style="width:0%;height:100%;background:linear-gradient(90deg,#e53e3e,#fc8181);transition:width .4s ease;"></div>
+        </div>
+        <div id="combat-energy-regen-text" style="color:#718096;font-size:11px;margin-top:5px;"></div>
+    </div>
+
+    <!-- بلوك 3: كل الحروب النشطة بأفريقيا -->
+    <div class="card" style="background:#1a1f26;border-radius:12px;padding:15px;border:1px solid #2d3748;">
+        <div style="color:#fff;font-weight:bold;margin-bottom:12px;font-size:15px;">🌍 حروب القارة الحالية</div>
+        <div id="all-wars-container" style="display:flex;flex-direction:column;gap:10px;">
+            <p style="color:#718096;font-size:13px;text-align:center;margin:10px 0;">جاري التحميل...</p>
+        </div>
+    </div>
+
+    <!-- بلوك 4: سوق الأسلحة -->
+    <div class="card" style="background:#1a1f26;border-radius:12px;padding:15px;border:1px solid #2d3748;">
+        <div style="color:#fff;font-weight:bold;margin-bottom:12px;font-size:15px;">🛒 سوق الأسلحة</div>
+        <div id="weapons-market-container" style="display:flex;flex-direction:column;gap:10px;">
+            <p style="color:#718096;font-size:13px;text-align:center;margin:10px 0;">جاري التحميل...</p>
+        </div>
+    </div>
+
+</div>
+
+<!-- نافذة التدريب / القتال -->
+<div id="training-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:9998;justify-content:center;align-items:center;padding:20px;box-sizing:border-box;">
+    <div style="background:#1a1f26;border:1px solid #2d3748;border-radius:14px;padding:25px 20px;width:100%;max-width:360px;max-height:85vh;overflow-y:auto;text-align:center;">
+        <h3 style="color:#fff;margin:0 0 8px 0;font-size:18px;">⚔️ التدريب / القتال</h3>
+        <p id="training-context-note" style="color:#a0aec0;font-size:12px;margin:0 0 15px 0;"></p>
+
+        <!-- شريط تراكمي بلونين (مهاجم/مدافع) -->
+        <div style="width:100%;height:16px;background:#2d3748;border-radius:8px;overflow:hidden;display:flex;margin-bottom:8px;">
+            <div id="training-bar-attacker" style="width:50%;height:100%;background:#e53e3e;transition:width .4s ease;"></div>
+            <div id="training-bar-defender" style="width:50%;height:100%;background:#3182ce;transition:width .4s ease;"></div>
+        </div>
+
+        <!-- اختيار الدور -->
+        <div style="display:flex;gap:10px;margin-bottom:8px;">
+            <button class="btn-combat-role" data-role="attacker" onclick="selectCombatRole('attacker')" style="flex:1;background:#e53e3e;color:#fff;border:none;padding:12px;border-radius:8px;cursor:pointer;font-weight:bold;">⚔️ مهاجم</button>
+            <button class="btn-combat-role" data-role="defender" onclick="selectCombatRole('defender')" style="flex:1;background:#3182ce;color:#fff;border:none;padding:12px;border-radius:8px;cursor:pointer;font-weight:bold;">🛡️ مدافع</button>
+        </div>
+        <p id="training-role-note" style="color:#a0aec0;font-size:12px;margin:0 0 15px 0;">اختر دورك أولاً</p>
+
+        <button id="btn-execute-combat" onclick="executeCombatRound()" style="width:100%;background:#38a169;color:#fff;border:none;padding:14px;border-radius:8px;font-weight:bold;font-size:15px;cursor:pointer;margin-bottom:10px;">🎯 تنفيذ</button>
+        <button onclick="closeTrainingModal()" style="width:100%;background:#2d3748;color:#fff;border:none;padding:12px;border-radius:8px;cursor:pointer;font-weight:bold;">إغلاق</button>
+    </div>
 </div>
