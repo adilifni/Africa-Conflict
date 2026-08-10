@@ -59,7 +59,36 @@
         </div>
         <p id="training-role-note" style="color:#a0aec0;font-size:12px;margin:0 0 15px 0;">اختر دورك أولاً</p>
 
+        <!-- اختيار السلاح من مخزون اللاعب -->
+        <div style="text-align:right;margin-bottom:15px;">
+            <label style="color:#a0aec0;font-size:12px;display:block;margin-bottom:6px;">🔫 اختر السلاح (اختياري):</label>
+            <select id="training-weapon-select" onchange="onTrainingWeaponChange(this.value)" style="width:100%;box-sizing:border-box;background:#0f1620;border:1px solid #2d3748;color:#fff;padding:10px 12px;border-radius:8px;font-size:14px;text-align:center;">
+                <option value="none">✊ بدون سلاح</option>
+            </select>
+        </div>
+
         <button id="btn-execute-combat" onclick="executeCombatRound()" style="width:100%;background:#38a169;color:#fff;border:none;padding:14px;border-radius:8px;font-weight:bold;font-size:15px;cursor:pointer;margin-bottom:10px;">🎯 تنفيذ</button>
         <button onclick="closeTrainingModal()" style="width:100%;background:#2d3748;color:#fff;border:none;padding:12px;border-radius:8px;cursor:pointer;font-weight:bold;">إغلاق</button>
+    </div>
+</div>
+
+<!-- نافذة تفاصيل الحرب: ترتيب المشاركين حسب الضرر -->
+<div id="war-details-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:9998;justify-content:center;align-items:center;padding:20px;box-sizing:border-box;">
+    <div style="background:#1a1f26;border:1px solid #2d3748;border-radius:14px;padding:20px;width:100%;max-width:400px;max-height:85vh;overflow-y:auto;text-align:center;">
+        <h3 style="color:#fff;margin:0 0 5px 0;font-size:18px;">ترتيب المشاركين</h3>
+        <p id="war-details-countdown" style="color:#fc8181;font-weight:bold;font-size:13px;margin:0 0 15px 0;"></p>
+
+        <div style="display:flex;gap:10px;">
+            <div style="flex:1;">
+                <div id="war-details-attackers-title" style="color:#e53e3e;font-weight:bold;font-size:13px;margin-bottom:8px;">👊 المهاجمون</div>
+                <div id="war-details-attackers-list"></div>
+            </div>
+            <div style="flex:1;">
+                <div id="war-details-defenders-title" style="color:#3182ce;font-weight:bold;font-size:13px;margin-bottom:8px;">🛡️ المدافعون</div>
+                <div id="war-details-defenders-list"></div>
+            </div>
+        </div>
+
+        <button onclick="closeWarDetailsModal()" style="width:100%;background:#2d3748;color:#fff;border:none;padding:12px;border-radius:8px;cursor:pointer;font-weight:bold;margin-top:15px;">إغلاق</button>
     </div>
 </div>
