@@ -120,11 +120,30 @@ let activeBuyListingId = null;
 // ⚔️ إعدادات نظام الحروب والأسلحة
 // ==========================================
 const WAR_DURATION_HOURS = 24;
+const TRAINING_ROUND_DURATION_HOURS = 24; // جولة التدريب الخاصة بكل دولة تتجدد كل 24 ساعة
 const COMBAT_ENERGY_REGEN_AMOUNT = 10;
 const COMBAT_ENERGY_REGEN_MINUTES = 10;
 const MIN_ENERGY_TO_FIGHT = 10;
 const TRAINING_XP_PER_DAMAGE = 0.5;  // كل نقطة ضرر بالتدريب = 0.5 XP
 const WAR_XP_PER_DAMAGE = 0.6;       // كل نقطة ضرر بحرب حقيقية = 0.6 XP (أعلى شوي من التدريب)
+
+// شريط ثنائي اللون مشترك (أحمر=مهاجمين، أزرق=مدافعين) والأرقام تظهر داخل كل قسم مباشرة
+function renderTwoToneBarHtml(attackerValue, defenderValue) {
+    const total = attackerValue + defenderValue;
+    const pctA = total > 0 ? (attackerValue / total) * 100 : 50;
+    const pctB = 100 - pctA;
+
+    return `
+        <div style="width:100%;height:24px;background:#2d3748;border-radius:12px;overflow:hidden;display:flex;">
+            <div style="width:${pctA}%;height:100%;background:#e53e3e;display:flex;align-items:center;justify-content:center;transition:width .4s ease;overflow:hidden;">
+                <span style="color:#fff;font-size:12px;font-weight:bold;white-space:nowrap;">${attackerValue}</span>
+            </div>
+            <div style="width:${pctB}%;height:100%;background:#3182ce;display:flex;align-items:center;justify-content:center;transition:width .4s ease;overflow:hidden;">
+                <span style="color:#fff;font-size:12px;font-weight:bold;white-space:nowrap;">${defenderValue}</span>
+            </div>
+        </div>
+    `;
+}
 
 // كتالوج الأسلحة الثابت — كل ما زاد الضرر زاد السعر الأساسي
 const WEAPONS_CATALOG = [
@@ -179,8 +198,10 @@ let currentAllWarsCache = [];
 let unsubscribeAllWars = null;
 let lastSubscribedWarLocation = null;
 let selectedCombatRole = null; // 'attacker' | 'defender'
-let selectedCombatWeaponId = 'none'; // معرف السلاح المختار من مخزون اللاعب، أو 'none' للقتال بدون سلاح
-let trainingBarState = { attacker: 0, defender: 0 }; // تراكم بصري محلي للتدريب فقط (بدون حرب فعلية)
+let selectedCombatWeaponId = null; // معرف السلاح المختار من مخزون اللاعب (إلزامي، لا يوجد قتال بدون سلاح)
+let currentTrainingRound = null;   // جولة التدريب الدائمة الخاصة بدولة اللاعب الحالية
+let unsubscribeTrainingRound = null;
+let trainingRoundCountdownInterval = null;
 
 let currentFactoriesCache = [];
 let unsubscribeCountryResources = null;
@@ -1628,6 +1649,7 @@ function handleWarsViewUpdate(data) {
     if (countryKey !== lastSubscribedWarLocation) {
         lastSubscribedWarLocation = countryKey;
         subscribeCountryWar(countryKey);
+        subscribeTrainingRound(countryKey);
     }
 
     if (!unsubscribeAllWars) {
@@ -1637,6 +1659,69 @@ function handleWarsViewUpdate(data) {
     refreshCombatEnergyDisplay(data);
     maybeRegenCombatEnergy(data);
     renderWeaponsMarket(data);
+}
+
+// جولة التدريب الدائمة الخاصة بدولة اللاعب — مستند واحد لكل دولة، يتجدد تلقائياً كل 24 ساعة
+function subscribeTrainingRound(countryKey) {
+    if (unsubscribeTrainingRound) { unsubscribeTrainingRound(); unsubscribeTrainingRound = null; }
+
+    const roundRef = firebase.firestore().collection('training_rounds').doc(countryKey);
+
+    unsubscribeTrainingRound = roundRef.onSnapshot((doc) => {
+        if (!doc.exists) {
+            // أول جولة لهذه الدولة — ينشئها أول لاعب يفتح صفحة الحروب فيها
+            roundRef.set({
+                countryKey,
+                attackerDamage: 0,
+                defenderDamage: 0,
+                roundEndAt: Date.now() + TRAINING_ROUND_DURATION_HOURS * 60 * 60 * 1000
+            }).catch(err => console.error("خطأ أثناء إنشاء جولة التدريب:", err));
+            return;
+        }
+
+        currentTrainingRound = { id: doc.id, ...doc.data() };
+        maybeResetTrainingRound();
+        renderTrainingRoundBar();
+    }, (err) => console.error("خطأ في جلب جولة التدريب:", err));
+}
+
+// إعادة تدوير الجولة تلقائياً لما ينتهي وقتها (بمعاملة آمنة تمنع التصفير المزدوج من أكثر من لاعب بنفس اللحظة)
+async function maybeResetTrainingRound() {
+    if (!currentTrainingRound) return;
+    if (Date.now() < currentTrainingRound.roundEndAt) return;
+
+    const roundRef = firebase.firestore().collection('training_rounds').doc(currentTrainingRound.id);
+    try {
+        await firebase.firestore().runTransaction(async (transaction) => {
+            const doc = await transaction.get(roundRef);
+            const data = doc.data();
+            if (!data || Date.now() < data.roundEndAt) return; // لاعب ثاني سبقنا بالتصفير
+
+            transaction.update(roundRef, {
+                attackerDamage: 0,
+                defenderDamage: 0,
+                roundEndAt: Date.now() + TRAINING_ROUND_DURATION_HOURS * 60 * 60 * 1000
+            });
+        });
+    } catch (err) {
+        console.error("خطأ أثناء إعادة تدوير جولة التدريب:", err);
+    }
+}
+
+function renderTrainingRoundBar() {
+    const barContainer = document.getElementById('training-round-bar-container');
+    const countdownEl = document.getElementById('training-round-countdown');
+    if (!barContainer || !currentTrainingRound) return;
+
+    barContainer.innerHTML = renderTwoToneBarHtml(currentTrainingRound.attackerDamage || 0, currentTrainingRound.defenderDamage || 0);
+
+    if (trainingRoundCountdownInterval) clearInterval(trainingRoundCountdownInterval);
+    trainingRoundCountdownInterval = setInterval(() => {
+        if (!currentTrainingRound || !countdownEl) return;
+        const msLeft = Math.max(0, currentTrainingRound.roundEndAt - Date.now());
+        countdownEl.textContent = msLeft > 0 ? `⏳ جولة جديدة خلال ${formatTimeShort(msLeft)}` : "⏳ جاري بدء جولة جديدة...";
+        if (msLeft <= 0) { clearInterval(trainingRoundCountdownInterval); maybeResetTrainingRound(); }
+    }, 1000);
 }
 
 // اشتراك مزدوج (بلد كـ"دولة أ" أو "دولة ب") لأن Firestore ما يدعم OR مباشر بين حقلين
@@ -1697,10 +1782,6 @@ function renderCountryWarBlock(countryKey) {
 
 // بطاقة حرب موحّدة (تُستخدم ببلوك 1 وبلوك 3 معاً)
 function renderWarCardHtml(war, showOpenButton) {
-    const total = (war.countryADamage || 0) + (war.countryBDamage || 0);
-    const pctA = total > 0 ? (war.countryADamage / total) * 100 : 50;
-    const pctB = 100 - pctA;
-
     const endAt = war.endAt?.toMillis ? war.endAt.toMillis() : war.endAt;
     const msLeft = Math.max(0, (endAt || 0) - Date.now());
     const timeLeftText = msLeft > 0 ? formatTimeShort(msLeft) : "انتهت";
@@ -1713,21 +1794,19 @@ function renderWarCardHtml(war, showOpenButton) {
                     <div style="color:#fff;font-size:12px;font-weight:bold;">${escapeHtml(war.countryAName || war.countryA)}</div>
                 </div>
                 <div style="text-align:center;flex:1;">
-                    ${showOpenButton ? `<button onclick="openTrainingModal()" style="background:#742a2a;color:#fff;border:none;padding:8px 14px;border-radius:8px;font-weight:bold;font-size:13px;cursor:pointer;">⏳ ${timeLeftText}</button>` : `<div style="color:#fc8181;font-weight:bold;font-size:13px;">⏳ ${timeLeftText}</div>`}
+                    ${showOpenButton ? `<button onclick="openTrainingModal()" style="background:#742a2a;color:#fff;border:none;padding:8px 14px;border-radius:8px;font-weight:bold;font-size:13px;cursor:pointer;">⚔️ ادخل الحرب</button>` : ''}
                 </div>
                 <div style="text-align:center;flex:1;">
                     <div style="font-size:28px;">${war.countryBFlag || '🏳️'}</div>
                     <div style="color:#fff;font-size:12px;font-weight:bold;">${escapeHtml(war.countryBName || war.countryB)}</div>
                 </div>
             </div>
+            <div style="text-align:center;color:#fc8181;font-weight:bold;font-size:13px;margin-bottom:6px;">⏳ ${timeLeftText}</div>
             <div onclick="openWarDetailsModal('${war.id}')" style="cursor:pointer;" title="اضغط لعرض تفاصيل المشاركين">
-                <div style="width:100%;height:14px;background:#2d3748;border-radius:7px;overflow:hidden;display:flex;">
-                    <div style="width:${pctA}%;height:100%;background:#e53e3e;transition:width .4s ease;"></div>
-                    <div style="width:${pctB}%;height:100%;background:#3182ce;transition:width .4s ease;"></div>
-                </div>
+                ${renderTwoToneBarHtml(war.countryADamage || 0, war.countryBDamage || 0)}
                 <div style="display:flex;justify-content:space-between;margin-top:5px;color:#a0aec0;font-size:11px;">
-                    <span>👊 ضرر المهاجمين: ${war.countryADamage || 0}</span>
-                    <span>🛡️ ضرر المدافعين: ${war.countryBDamage || 0}</span>
+                    <span>👊 المهاجمون</span>
+                    <span>🛡️ المدافعون</span>
                 </div>
                 <div style="text-align:center;color:#4a5568;font-size:10px;margin-top:2px;">اضغط لعرض ترتيب المشاركين</div>
             </div>
@@ -1865,35 +1944,50 @@ async function declareWar() {
 // نافذة التدريب/القتال
 function openTrainingModal() {
     selectedCombatRole = null;
-    selectedCombatWeaponId = 'none';
-    trainingBarState = { attacker: 0, defender: 0 };
+    selectedCombatWeaponId = null;
 
     const modal = document.getElementById('training-modal');
     const roleNote = document.getElementById('training-role-note');
     const contextNote = document.getElementById('training-context-note');
     const weaponSelect = document.getElementById('training-weapon-select');
+    const executeBtn = document.getElementById('btn-execute-combat');
+    const weaponWarning = document.getElementById('training-no-weapon-warning');
 
     if (contextNote) {
         contextNote.textContent = currentCountryWar
             ? '⚔️ دولتك بحرب فعلية — ضررك الآن يُحتسب حقيقياً بنتيجة الحرب!'
-            : '🥋 وضع تدريب (لا توجد حرب فعلية) — الضرر تجريبي، بس تكسب XP فعلي';
+            : '🥋 وضع تدريب دائم لدولتك — الضرر يُحتسب بجولة التدريب، وتكسب XP فعلي';
     }
     if (roleNote) roleNote.textContent = 'اختر دورك أولاً';
 
+    const inventory = localPlayerData?.weaponInventory || {};
+    const ownedWeapons = WEAPONS_CATALOG.filter(w => (inventory[w.id] ?? 0) > 0);
+
     if (weaponSelect) {
-        const inventory = localPlayerData?.weaponInventory || {};
-        const optionsHtml = ['<option value="none">✊ بدون سلاح</option>'];
-        WEAPONS_CATALOG.forEach(weapon => {
-            const qty = inventory[weapon.id] ?? 0;
-            if (qty > 0) {
-                optionsHtml.push(`<option value="${weapon.id}">${weapon.icon} ${weapon.name} (متبقي ${qty} وحدة)</option>`);
-            }
-        });
-        weaponSelect.innerHTML = optionsHtml.join('');
-        selectedCombatWeaponId = 'none';
+        if (ownedWeapons.length === 0) {
+            weaponSelect.innerHTML = '<option value="">لا تملك أي سلاح</option>';
+            weaponSelect.disabled = true;
+        } else {
+            weaponSelect.disabled = false;
+            weaponSelect.innerHTML = ownedWeapons
+                .map(w => `<option value="${w.id}">${w.icon} ${w.name} (متبقي ${inventory[w.id]} وحدة)</option>`)
+                .join('');
+            selectedCombatWeaponId = ownedWeapons[0].id;
+        }
     }
 
-    updateTrainingBarDisplay();
+    // قفل القتال بالكامل لو اللاعب ما يملك أي سلاح إطلاقاً
+    const canFight = ownedWeapons.length > 0;
+    if (executeBtn) {
+        executeBtn.disabled = !canFight;
+        executeBtn.style.opacity = canFight ? '1' : '0.5';
+        executeBtn.style.cursor = canFight ? 'pointer' : 'not-allowed';
+    }
+    if (weaponWarning) {
+        weaponWarning.style.display = canFight ? 'none' : 'block';
+    }
+
+    renderTrainingRoundBar();
     refreshCombatEnergyDisplay(localPlayerData);
 
     if (modal) modal.style.display = 'flex';
@@ -1906,6 +2000,7 @@ function onTrainingWeaponChange(weaponId) {
 function closeTrainingModal() {
     const modal = document.getElementById('training-modal');
     if (modal) modal.style.display = 'none';
+    if (trainingRoundCountdownInterval) { clearInterval(trainingRoundCountdownInterval); trainingRoundCountdownInterval = null; }
 }
 
 function selectCombatRole(role) {
@@ -1919,18 +2014,9 @@ function selectCombatRole(role) {
     });
 }
 
-function updateTrainingBarDisplay() {
-    const barA = document.getElementById('training-bar-attacker');
-    const barB = document.getElementById('training-bar-defender');
-    const total = trainingBarState.attacker + trainingBarState.defender;
-    const pctA = total > 0 ? (trainingBarState.attacker / total) * 100 : 50;
-
-    if (barA) barA.style.width = `${pctA}%`;
-    if (barB) barB.style.width = `${100 - pctA}%`;
-}
-
 async function executeCombatRound() {
     if (!selectedCombatRole) { alert('⚠️ اختر دورك (مهاجم أو مدافع) أولاً'); return; }
+    if (!selectedCombatWeaponId) { alert('🔴 يجب اختيار سلاح من مخزونك لتتمكن من القتال! اشترِ سلاحاً أولاً من سوق الأسلحة'); return; }
 
     const user = firebase.auth().currentUser;
     if (!user || !localPlayerData) return;
@@ -1966,13 +2052,10 @@ async function executeCombatRound() {
 
                 const { damage, energyUnits } = calculateCombatDamage(playerData, spentEnergy, weaponId);
 
-                // التحقق من كفاية وحدات السلاح المختار قبل التنفيذ
-                if (weaponId !== 'none') {
-                    const availableUnits = (playerData.weaponInventory || {})[weaponId] ?? 0;
-                    if (availableUnits < energyUnits) {
-                        const weaponInfo = WEAPONS_CATALOG.find(w => w.id === weaponId);
-                        throw new Error(`لا تملك وحدات كافية من ${weaponInfo?.name || 'هذا السلاح'} (تحتاج ${energyUnits}، لديك ${availableUnits})`);
-                    }
+                const availableUnits = (playerData.weaponInventory || {})[weaponId] ?? 0;
+                if (availableUnits < energyUnits) {
+                    const weaponInfo = WEAPONS_CATALOG.find(w => w.id === weaponId);
+                    throw new Error(`لا تملك وحدات كافية من ${weaponInfo?.name || 'هذا السلاح'} (تحتاج ${energyUnits}، لديك ${availableUnits})`);
                 }
 
                 const xpGain = Math.round(damage * WAR_XP_PER_DAMAGE);
@@ -1990,20 +2073,21 @@ async function executeCombatRound() {
                     totalDamage: firebase.firestore.FieldValue.increment(damage)
                 }, { merge: true });
 
-                const playerUpdates = {
+                transaction.update(playerRef, {
                     combatEnergy: 0,
-                    experience: firebase.firestore.FieldValue.increment(xpGain)
-                };
-                if (weaponId !== 'none') {
-                    playerUpdates[`weaponInventory.${weaponId}`] = firebase.firestore.FieldValue.increment(-energyUnits);
-                }
-                transaction.update(playerRef, playerUpdates);
+                    experience: firebase.firestore.FieldValue.increment(xpGain),
+                    [`weaponInventory.${weaponId}`]: firebase.firestore.FieldValue.increment(-energyUnits)
+                });
 
                 return { damage, xpGain };
             });
 
             alert(`⚔️ ألحقت ${result.damage} نقطة ضرر بصف دولتك! + ⭐ ${result.xpGain} XP`);
         } else {
+            if (!currentTrainingRound) { alert('⚠️ جولة التدريب لسه ما جهزت، انتظر ثانية وحاول مجدداً'); return; }
+
+            const roundRef = db.collection('training_rounds').doc(currentTrainingRound.id);
+
             const result = await db.runTransaction(async (transaction) => {
                 const playerDoc = await transaction.get(playerRef);
                 const playerData = playerDoc.data() || {};
@@ -2013,30 +2097,27 @@ async function executeCombatRound() {
 
                 const { damage, energyUnits } = calculateCombatDamage(playerData, spentEnergy, weaponId);
 
-                if (weaponId !== 'none') {
-                    const availableUnits = (playerData.weaponInventory || {})[weaponId] ?? 0;
-                    if (availableUnits < energyUnits) {
-                        const weaponInfo = WEAPONS_CATALOG.find(w => w.id === weaponId);
-                        throw new Error(`لا تملك وحدات كافية من ${weaponInfo?.name || 'هذا السلاح'} (تحتاج ${energyUnits}، لديك ${availableUnits})`);
-                    }
+                const availableUnits = (playerData.weaponInventory || {})[weaponId] ?? 0;
+                if (availableUnits < energyUnits) {
+                    const weaponInfo = WEAPONS_CATALOG.find(w => w.id === weaponId);
+                    throw new Error(`لا تملك وحدات كافية من ${weaponInfo?.name || 'هذا السلاح'} (تحتاج ${energyUnits}، لديك ${availableUnits})`);
                 }
 
                 const xpGain = Math.round(damage * TRAINING_XP_PER_DAMAGE);
+                const damageField = selectedCombatRole === 'attacker' ? 'attackerDamage' : 'defenderDamage';
 
-                const playerUpdates = {
+                transaction.update(roundRef, {
+                    [damageField]: firebase.firestore.FieldValue.increment(damage)
+                });
+                transaction.update(playerRef, {
                     combatEnergy: 0,
-                    experience: firebase.firestore.FieldValue.increment(xpGain)
-                };
-                if (weaponId !== 'none') {
-                    playerUpdates[`weaponInventory.${weaponId}`] = firebase.firestore.FieldValue.increment(-energyUnits);
-                }
-                transaction.update(playerRef, playerUpdates);
+                    experience: firebase.firestore.FieldValue.increment(xpGain),
+                    [`weaponInventory.${weaponId}`]: firebase.firestore.FieldValue.increment(-energyUnits)
+                });
 
                 return { damage, xpGain };
             });
 
-            trainingBarState[selectedCombatRole] += result.damage;
-            updateTrainingBarDisplay();
             alert(`🥋 ضرر تدريبي: ${result.damage} + ⭐ ${result.xpGain} XP`);
         }
     } catch (err) {
@@ -2267,6 +2348,9 @@ setInterval(() => {
         maybeRegenWorkEnergy(localPlayerData);
         refreshCombatEnergyDisplay(localPlayerData);
         maybeRegenCombatEnergy(localPlayerData);
+    }
+    if (currentTrainingRound) {
+        maybeResetTrainingRound();
     }
 }, 30000);
 
