@@ -46,11 +46,11 @@
         <h3 style="color:#fff;margin:0 0 8px 0;font-size:18px;">⚔️ التدريب / القتال</h3>
         <p id="training-context-note" style="color:#a0aec0;font-size:12px;margin:0 0 15px 0;"></p>
 
-        <!-- شريط تراكمي بلونين (مهاجم/مدافع) -->
-        <div style="width:100%;height:16px;background:#2d3748;border-radius:8px;overflow:hidden;display:flex;margin-bottom:8px;">
-            <div id="training-bar-attacker" style="width:50%;height:100%;background:#e53e3e;transition:width .4s ease;"></div>
-            <div id="training-bar-defender" style="width:50%;height:100%;background:#3182ce;transition:width .4s ease;"></div>
-        </div>
+        <!-- عداد جولة التدريب فوق الشريط مباشرة -->
+        <p id="training-round-countdown" style="color:#fc8181;font-weight:bold;font-size:13px;margin:0 0 8px 0;"></p>
+
+        <!-- شريط جولة التدريب الدائم الخاص بدولة اللاعب (أحمر=مهاجمون / أزرق=مدافعون، والأرقام داخل كل قسم) -->
+        <div id="training-round-bar-container" style="margin-bottom:15px;"></div>
 
         <!-- اختيار الدور -->
         <div style="display:flex;gap:10px;margin-bottom:8px;">
@@ -59,11 +59,16 @@
         </div>
         <p id="training-role-note" style="color:#a0aec0;font-size:12px;margin:0 0 15px 0;">اختر دورك أولاً</p>
 
-        <!-- اختيار السلاح من مخزون اللاعب -->
+        <!-- تنبيه عدم امتلاك أي سلاح (يظهر فقط لو المخزون فارغ) -->
+        <p id="training-no-weapon-warning" style="display:none;color:#fc8181;font-size:12px;background:#2d1a1a;border:1px solid #742a2a;border-radius:8px;padding:10px;margin:0 0 15px 0;">
+            🔴 لا تملك أي سلاح! لازم تشتري سلاحاً من سوق الأسلحة بالأسفل قبل ما تقدر تقاتل.
+        </p>
+
+        <!-- اختيار السلاح من مخزون اللاعب — إلزامي، يعرض فقط الأسلحة اللي تملك وحدات منها -->
         <div style="text-align:right;margin-bottom:15px;">
-            <label style="color:#a0aec0;font-size:12px;display:block;margin-bottom:6px;">🔫 اختر السلاح (اختياري):</label>
+            <label style="color:#a0aec0;font-size:12px;display:block;margin-bottom:6px;">🔫 اختر السلاح:</label>
             <select id="training-weapon-select" onchange="onTrainingWeaponChange(this.value)" style="width:100%;box-sizing:border-box;background:#0f1620;border:1px solid #2d3748;color:#fff;padding:10px 12px;border-radius:8px;font-size:14px;text-align:center;">
-                <option value="none">✊ بدون سلاح</option>
+                <option value="">لا تملك أي سلاح</option>
             </select>
         </div>
 
