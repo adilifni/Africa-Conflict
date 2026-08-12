@@ -120,7 +120,13 @@ let activeBuyListingId = null;
 // ⚔️ إعدادات نظام الحروب والأسلحة
 // ==========================================
 const WAR_DURATION_HOURS = 24;
-const TRAINING_ROUND_DURATION_HOURS = 24; // جولة التدريب الخاصة بكل دولة تتجدد كل 24 ساعة
+const TRAINING_ROUND_DURATION_HOURS = 24; // جولة التدريب الخاصة بكل دولة تتجدد كل 24 ساعة، دائماً عند 00:00 غرينتش
+
+// يرجع توقيت منتصف الليل القادم بتوقيت غرينتش (00:00 UTC) — تبدأ عنده كل جولة تدريب جديدة
+function getNextUtcMidnightMs() {
+    const now = new Date();
+    return Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 0, 0, 0);
+}
 const COMBAT_ENERGY_REGEN_AMOUNT = 10;
 const COMBAT_ENERGY_REGEN_MINUTES = 10;
 const MIN_ENERGY_TO_FIGHT = 10;
@@ -171,8 +177,12 @@ function getWeaponPrice(basePrice, educationLevel) {
 }
 
 // حساب الضرر: (القوة + ضرر السلاح) × مضاعف مستوى اللاعب × مضاعف مستوى القوة القتالية × وحدات الطاقة المستهلكة
-function calculateCombatDamage(playerData, energySpent, weaponId) {
-    const energyUnits = Math.floor(energySpent / 10); // كل 10 طاقة = وحدة ضرر واحدة (ووحدة سلاح واحدة تُستهلك)
+function calculateCombatDamage(playerData, energySpent, weaponId, availableWeaponUnits) {
+    const rawEnergyUnits = Math.floor(energySpent / 10); // كل 10 طاقة = وحدة واحدة كحد أقصى نظري
+    if (rawEnergyUnits <= 0) return { damage: 0, energyUnits: 0 };
+
+    // الوحدات الفعلية المستخدمة = الأقل بين ما تسمح به الطاقة وما تملكه فعلياً من السلاح
+    const energyUnits = Math.max(0, Math.min(rawEnergyUnits, availableWeaponUnits ?? rawEnergyUnits));
     if (energyUnits <= 0) return { damage: 0, energyUnits: 0 };
 
     const power = playerData.power ?? 1;
@@ -1674,7 +1684,7 @@ function subscribeTrainingRound(countryKey) {
                 countryKey,
                 attackerDamage: 0,
                 defenderDamage: 0,
-                roundEndAt: Date.now() + TRAINING_ROUND_DURATION_HOURS * 60 * 60 * 1000
+                roundEndAt: getNextUtcMidnightMs()
             }).catch(err => console.error("خطأ أثناء إنشاء جولة التدريب:", err));
             return;
         }
@@ -1700,7 +1710,7 @@ async function maybeResetTrainingRound() {
             transaction.update(roundRef, {
                 attackerDamage: 0,
                 defenderDamage: 0,
-                roundEndAt: Date.now() + TRAINING_ROUND_DURATION_HOURS * 60 * 60 * 1000
+                roundEndAt: getNextUtcMidnightMs()
             });
         });
     } catch (err) {
@@ -2050,13 +2060,13 @@ async function executeCombatRound() {
                 const spentEnergy = playerData.combatEnergy ?? getCombatEnergyCap(playerData.powerLevel);
                 if (spentEnergy < MIN_ENERGY_TO_FIGHT) throw new Error(`تحتاج ${MIN_ENERGY_TO_FIGHT} طاقة قتال على الأقل`);
 
-                const { damage, energyUnits } = calculateCombatDamage(playerData, spentEnergy, weaponId);
-
                 const availableUnits = (playerData.weaponInventory || {})[weaponId] ?? 0;
-                if (availableUnits < energyUnits) {
+                if (availableUnits <= 0) {
                     const weaponInfo = WEAPONS_CATALOG.find(w => w.id === weaponId);
-                    throw new Error(`لا تملك وحدات كافية من ${weaponInfo?.name || 'هذا السلاح'} (تحتاج ${energyUnits}، لديك ${availableUnits})`);
+                    throw new Error(`لا تملك أي وحدات من ${weaponInfo?.name || 'هذا السلاح'} حالياً`);
                 }
+
+                const { damage, energyUnits } = calculateCombatDamage(playerData, spentEnergy, weaponId, availableUnits);
 
                 const xpGain = Math.round(damage * WAR_XP_PER_DAMAGE);
                 const myCountry = playerData.current_location || "morocco";
@@ -2095,13 +2105,13 @@ async function executeCombatRound() {
                 const spentEnergy = playerData.combatEnergy ?? getCombatEnergyCap(playerData.powerLevel);
                 if (spentEnergy < MIN_ENERGY_TO_FIGHT) throw new Error(`تحتاج ${MIN_ENERGY_TO_FIGHT} طاقة قتال على الأقل`);
 
-                const { damage, energyUnits } = calculateCombatDamage(playerData, spentEnergy, weaponId);
-
                 const availableUnits = (playerData.weaponInventory || {})[weaponId] ?? 0;
-                if (availableUnits < energyUnits) {
+                if (availableUnits <= 0) {
                     const weaponInfo = WEAPONS_CATALOG.find(w => w.id === weaponId);
-                    throw new Error(`لا تملك وحدات كافية من ${weaponInfo?.name || 'هذا السلاح'} (تحتاج ${energyUnits}، لديك ${availableUnits})`);
+                    throw new Error(`لا تملك أي وحدات من ${weaponInfo?.name || 'هذا السلاح'} حالياً`);
                 }
+
+                const { damage, energyUnits } = calculateCombatDamage(playerData, spentEnergy, weaponId, availableUnits);
 
                 const xpGain = Math.round(damage * TRAINING_XP_PER_DAMAGE);
                 const damageField = selectedCombatRole === 'attacker' ? 'attackerDamage' : 'defenderDamage';
