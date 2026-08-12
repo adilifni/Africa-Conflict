@@ -59,6 +59,8 @@ export function formatTimeShort(ms) {
     return timeString.join(' ') || "1s";
 }
 
+let unsubscribeChatMessages = null;
+
 export function setupChatSystem() {
     const sendBtn = document.getElementById('chat-send-btn');
     const chatInput = document.getElementById('chat-input-field');
@@ -66,20 +68,36 @@ export function setupChatSystem() {
 
     if (!sendBtn || !chatInput || !chatMessagesBox) return;
 
-    loadStoredMessages(chatMessagesBox);
+    // ننتظر جاهزية Firebase قبل الاشتراك بمجموعة الدردشة (نفس أسلوب game.js)
+    function waitForFirebaseChat() {
+        if (typeof firebase !== 'undefined' && firebase.firestore) {
+            subscribeToChatMessages(chatMessagesBox);
+        } else {
+            setTimeout(waitForFirebaseChat, 100);
+        }
+    }
+    waitForFirebaseChat();
 
     const handleSendMessage = () => {
         const textValue = chatInput.value.trim();
         if (textValue === '') return;
 
         const currentUserName = document.getElementById('user-name')?.textContent || 'لاعب مجهول';
-        const messageData = { sender: currentUserName, text: textValue, time: Date.now() };
+        const currentUser = typeof firebase !== 'undefined' && firebase.auth ? firebase.auth().currentUser : null;
 
-        saveMessageLocally(messageData);
-        renderSingleMessage(chatMessagesBox, messageData, true);
+        if (!currentUser) {
+            console.error("لا يمكن إرسال رسالة قبل تسجيل الدخول");
+            return;
+        }
+
+        firebase.firestore().collection('global_chat').add({
+            sender: currentUserName,
+            senderUid: currentUser.uid,
+            text: textValue,
+            time: firebase.firestore.FieldValue.serverTimestamp()
+        }).catch(err => console.error("خطأ أثناء إرسال الرسالة:", err));
 
         chatInput.value = '';
-        chatMessagesBox.scrollTop = chatMessagesBox.scrollHeight;
     };
 
     sendBtn.addEventListener('click', handleSendMessage);
@@ -88,26 +106,33 @@ export function setupChatSystem() {
     });
 }
 
-function saveMessageLocally(msg) {
-    let storedMessages = JSON.parse(localStorage.getItem('chat_messages_v1')) || [];
-    storedMessages.push(msg);
-    localStorage.setItem('chat_messages_v1', JSON.stringify(storedMessages));
-}
+// اشتراك حي بآخر 50 رسالة من الدردشة العامة المشتركة بين كل اللاعبين
+function subscribeToChatMessages(container) {
+    if (unsubscribeChatMessages) return; // تجنب اشتراك مكرر لو تم استدعاء الدالة أكثر من مرة
 
-function loadStoredMessages(container) {
-    let storedMessages = JSON.parse(localStorage.getItem('chat_messages_v1')) || [];
-    const currentTime = Date.now();
-    const twentyFourHours = 24 * 60 * 60 * 1000;
+    const twentyFourHoursMs = 24 * 60 * 60 * 1000;
 
-    const validMessages = storedMessages.filter(msg => (currentTime - msg.time) < twentyFourHours);
-    localStorage.setItem('chat_messages_v1', JSON.stringify(validMessages));
+    unsubscribeChatMessages = firebase.firestore()
+        .collection('global_chat')
+        .orderBy('time', 'asc')
+        .limitToLast(50)
+        .onSnapshot((snapshot) => {
+            container.innerHTML = '';
+            const currentPlayerName = document.getElementById('user-name')?.textContent || 'لاعب مجهول';
+            const now = Date.now();
 
-    container.innerHTML = '';
-    validMessages.forEach(msg => {
-        const currentPlayerName = document.getElementById('user-name')?.textContent || 'لاعب مجهول';
-        renderSingleMessage(container, msg, msg.sender === currentPlayerName);
-    });
-    container.scrollTop = container.scrollHeight;
+            snapshot.forEach((doc) => {
+                const msg = doc.data();
+                const msgTime = msg.time?.toMillis ? msg.time.toMillis() : (typeof msg.time === 'number' ? msg.time : now);
+
+                // إخفاء الرسائل الأقدم من 24 ساعة من العرض فقط (بدون حذفها من القاعدة)
+                if (now - msgTime > twentyFourHoursMs) return;
+
+                renderSingleMessage(container, { sender: msg.sender, text: msg.text, time: msgTime }, msg.sender === currentPlayerName);
+            });
+
+            container.scrollTop = container.scrollHeight;
+        }, (err) => console.error("خطأ أثناء جلب رسائل الدردشة:", err));
 }
 
 function renderSingleMessage(container, msg, isMe) {
@@ -221,4 +246,3 @@ export function switchView(pageName) {
 
 // ربط الدالة بنافذة المتصفح لتعمل مباشرة عبر الأزرار الداخلية
 window.switchView = switchView;
-
