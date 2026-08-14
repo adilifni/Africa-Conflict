@@ -23,6 +23,16 @@ const TIME_EXPONENT     = 1.55; // معدل تسارع الوقت مع ارتف�
 const COST_EXPONENT     = 1.5;  // معدل تسارع السعر مع ارتفاع المستوى
 
 // ==========================================
+// 🧬 نظام تأثير المهارات الموحّد (Skills Impact System)
+// ==========================================
+// مستوى اللاعب (XP): يؤثر على ضرر القتال وإنتاجية العمل معاً
+const LEVEL_BONUS_PER_LEVEL = 0.02; // +2% لكل مستوى لاعب، يُطبَّق على القتال والعمل
+
+// مستوى التعليم: معدلان منفصلان — إنتاجية العمل تزيد ببطء، خصم سعر السلاح يزيد بسرعة (×2)
+const EDUCATION_YIELD_BONUS_PER_LEVEL = 0.001; // +0.1% إنتاجية عمل لكل مستوى تعليم
+const MAX_EDUCATION_YIELD_BONUS = 1.0;         // سقف +100% (مضاعفة الإنتاج كحد أقصى)
+
+// ==========================================
 // ☁️ رفع الصور عبر Cloudinary (بديل Firebase Storage - لا يتطلب خطة Blaze)
 // ==========================================
 const CLOUDINARY_CLOUD_NAME = 'ضع_اسم_حسابك_هنا';       // مثال: 'dxyzabc12'
@@ -83,9 +93,22 @@ const RESOURCE_TYPES = {
 // تكلفة فتح مصنع جديد (ثابتة بغض النظر عن نوع المصنع المختار) — تُخصم من محفظة اللاعب الشخصية
 const FACTORY_OPEN_COST = { gold: 50, iron: 100, money: 1000, oil: 2000 };
 
-// نصيب اللاعب من ضغطة العمل: كل 10 طاقة تُستهلك = 1 وحدة مورد (الضغطة تستهلك كل الطاقة الحالية دفعة واحدة)
-function getPlayerWorkYield(energyAmount) {
-    return Math.floor(energyAmount / 10);
+// نصيب اللاعب من ضغطة العمل: كل 10 طاقة تُستهلك = 1 وحدة مورد أساسية، معدَّلة بمستوى اللاعب (XP) ومستوى التعليم
+// playerData: بيانات اللاعب الكاملة (لقراءة experience و educationLevel)
+// energyAmount: كمية الطاقة المستهلكة بهذه الضغطة
+function getPlayerWorkYield(playerData, energyAmount) {
+    const baseUnits = Math.floor(energyAmount / 10);
+    if (baseUnits <= 0) return 0;
+
+    // مضاعف مستوى اللاعب (XP) — نفس المعدل المستخدم بالقتال، مطبَّق هنا على الإنتاجية
+    const playerLevel = Math.floor(Math.sqrt((playerData?.experience ?? 1) / 100)) + 1;
+    const levelMultiplier = 1 + (playerLevel - 1) * LEVEL_BONUS_PER_LEVEL;
+
+    // مضاعف مستوى التعليم — ينمو ببطء (نصف سرعة خصم سعر السلاح)
+    const educationLevel = playerData?.educationLevel ?? 1;
+    const educationBonus = 1 + Math.min(MAX_EDUCATION_YIELD_BONUS, educationLevel * EDUCATION_YIELD_BONUS_PER_LEVEL);
+
+    return Math.floor(baseUnits * levelMultiplier * educationBonus);
 }
 
 // معدل إنتاج المصنع نفسه لكل 100 طاقة متراكمة من كل العمال: يزيد وحدة واحدة كل 10 مستويات
@@ -160,12 +183,14 @@ const WEAPONS_CATALOG = [
     { id: 'tank',    name: 'دبابة',       icon: '🛡️', damage: 200, basePrice: 20000 }
 ];
 
+// خصم سعر السلاح من التعليم ينمو بسرعة (ضعف سرعة مضاعف الإنتاجية أعلاه)
 const EDUCATION_PRICE_DISCOUNT_PER_LEVEL = 0.002; // 0.2% خصم لكل مستوى تعليم
 const MAX_EDUCATION_DISCOUNT = 0.5;               // سقف الخصم 50%
 
-// سعة مخزون طاقة القتال: نفس معادلة طاقة العمل، بس على أساس مستوى القوة القتالية
-function getCombatEnergyCap(powerLevel) {
-    const lvl = powerLevel ?? 1;
+// سعة مخزون طاقة القتال: نفس معادلة طاقة العمل بالضبط، وعلى أساس مستوى الطاقة (وليس القوة القتالية)
+// توحيد الطاقة: نفس المهارة (energyLevel) تتحكم بسعة طاقة العمل وطاقة القتال معاً
+function getCombatEnergyCap(energyLevel) {
+    const lvl = energyLevel ?? 1;
     return 100 + Math.floor(lvl / 50) * 5;
 }
 
@@ -176,7 +201,8 @@ function getWeaponPrice(basePrice, educationLevel) {
     return Math.round(basePrice * (1 - discount));
 }
 
-// حساب الضرر: (القوة + ضرر السلاح) × مضاعف مستوى اللاعب × مضاعف مستوى القوة القتالية × وحدات الطاقة المستهلكة
+// حساب الضرر: (القوة + ضرر السلاح) × مضاعف مستوى اللاعب × وحدات الطاقة المستهلكة
+// ملاحظة: القوة القتالية تؤثر فقط عبر قيمتها الخام (power) — لا يوجد مضاعف إضافي مرتبط بمستوى الطاقة بعد الآن
 function calculateCombatDamage(playerData, energySpent, weaponId, availableWeaponUnits) {
     const rawEnergyUnits = Math.floor(energySpent / 10); // كل 10 طاقة = وحدة واحدة كحد أقصى نظري
     if (rawEnergyUnits <= 0) return { damage: 0, energyUnits: 0 };
@@ -189,15 +215,12 @@ function calculateCombatDamage(playerData, energySpent, weaponId, availableWeapo
     const weapon = WEAPONS_CATALOG.find(w => w.id === weaponId);
     const weaponDamage = weapon?.damage ?? 0;
 
-    // نفس معادلة حساب مستوى اللاعب المستخدمة بشريط الـXP
+    // نفس معادلة حساب مستوى اللاعب المستخدمة بشريط الـXP، ومطبَّقة أيضاً على إنتاجية العمل
     const playerLevel = Math.floor(Math.sqrt((playerData.experience ?? 1) / 100)) + 1;
-    const levelMultiplier = 1 + (playerLevel - 1) * 0.02;
-
-    const powerLevel = playerData.powerLevel ?? 1;
-    const powerLevelBonus = 1 + Math.floor(powerLevel / 50) * 0.05;
+    const levelMultiplier = 1 + (playerLevel - 1) * LEVEL_BONUS_PER_LEVEL;
 
     const baseDamagePerUnit = power + weaponDamage;
-    const damage = Math.max(1, Math.round(energyUnits * baseDamagePerUnit * levelMultiplier * powerLevelBonus));
+    const damage = Math.max(1, Math.round(energyUnits * baseDamagePerUnit * levelMultiplier));
     return { damage, energyUnits };
 }
 
@@ -824,7 +847,8 @@ function refreshWorkEnergyDisplay(data) {
         btn.style.opacity = notEnough ? '0.5' : '1';
         btn.style.cursor = notEnough ? 'not-allowed' : 'pointer';
 
-        const expectedYield = getPlayerWorkYield(current);
+        // الناتج المتوقع الآن يعكس مضاعف مستوى اللاعب (XP) ومضاعف التعليم أيضاً، وليس فقط الطاقة
+        const expectedYield = getPlayerWorkYield(data, current);
         btn.textContent = notEnough
             ? '🛠️ اعمل الآن'
             : `🛠️ اعمل الآن (يستهلك كل الطاقة ← ${expectedYield} مورد)`;
@@ -918,8 +942,8 @@ async function doWork() {
                 throw new Error(`تحتاج ${MIN_ENERGY_TO_WORK} طاقة على الأقل للعمل!`);
             }
 
-            // نصيب اللاعب: كل 10 طاقة = 1 وحدة مورد، والضغطة تستهلك كل الطاقة الحالية دفعة واحدة
-            const playerYield = getPlayerWorkYield(spentEnergy);
+            // نصيب اللاعب: كل 10 طاقة = 1 وحدة مورد أساسية، معدَّلة بمستوى اللاعب (XP) ومستوى التعليم
+            const playerYield = getPlayerWorkYield(playerData, spentEnergy);
 
             const countryStock = countryData[resourceType] ?? 0;
             if (countryStock < playerYield) {
@@ -960,8 +984,8 @@ async function doWork() {
             };
             if (playerYield > 0) {
                 playerUpdates[resourceType] = firebase.firestore.FieldValue.increment(playerYield);
-                // كل 10 طاقة مُستهلكة = 1 نقطة خبرة (نفس نسبة إنتاج المورد تماماً)
-                playerUpdates.experience = firebase.firestore.FieldValue.increment(playerYield);
+                // كل 10 طاقة مُستهلكة = 1 نقطة خبرة (نفس نسبة إنتاج المورد الأساسية، قبل مضاعفات XP/التعليم)
+                playerUpdates.experience = firebase.firestore.FieldValue.increment(Math.floor(spentEnergy / 10));
             }
             if (wagePaid > 0) playerUpdates.money = firebase.firestore.FieldValue.increment(wagePaid);
             transaction.update(playerRef, playerUpdates);
@@ -970,7 +994,7 @@ async function doWork() {
         });
 
         let msg = result.playerYield > 0
-            ? `${resourceConfig.icon} حصلت على ${result.playerYield} ${resourceConfig.label} + ⭐ ${result.playerYield} XP`
+            ? `${resourceConfig.icon} حصلت على ${result.playerYield} ${resourceConfig.label}`
             : `لم تحصل على موارد (الطاقة غير كافية لإنتاج وحدة كاملة)`;
         if (result.wagePaid > 0) msg += ` + 💵 ${result.wagePaid} مال أجرة`;
         else if (factory.wage > 0) msg += `\n⚠️ المصنع بدون رصيد كافٍ لدفع الأجرة هذه المرة`;
@@ -2031,7 +2055,7 @@ async function executeCombatRound() {
     const user = firebase.auth().currentUser;
     if (!user || !localPlayerData) return;
 
-    const cap = getCombatEnergyCap(localPlayerData.powerLevel);
+    const cap = getCombatEnergyCap(localPlayerData.energyLevel);
     const currentEnergy = localPlayerData.combatEnergy ?? cap;
     if (currentEnergy < MIN_ENERGY_TO_FIGHT) {
         alert(`🔴 تحتاج ${MIN_ENERGY_TO_FIGHT} طاقة قتال على الأقل!`);
@@ -2057,7 +2081,7 @@ async function executeCombatRound() {
 
                 if (!warData || warData.status !== 'active') throw new Error('الحرب لم تعد نشطة');
 
-                const spentEnergy = playerData.combatEnergy ?? getCombatEnergyCap(playerData.powerLevel);
+                const spentEnergy = playerData.combatEnergy ?? getCombatEnergyCap(playerData.energyLevel);
                 if (spentEnergy < MIN_ENERGY_TO_FIGHT) throw new Error(`تحتاج ${MIN_ENERGY_TO_FIGHT} طاقة قتال على الأقل`);
 
                 const availableUnits = (playerData.weaponInventory || {})[weaponId] ?? 0;
@@ -2102,7 +2126,7 @@ async function executeCombatRound() {
                 const playerDoc = await transaction.get(playerRef);
                 const playerData = playerDoc.data() || {};
 
-                const spentEnergy = playerData.combatEnergy ?? getCombatEnergyCap(playerData.powerLevel);
+                const spentEnergy = playerData.combatEnergy ?? getCombatEnergyCap(playerData.energyLevel);
                 if (spentEnergy < MIN_ENERGY_TO_FIGHT) throw new Error(`تحتاج ${MIN_ENERGY_TO_FIGHT} طاقة قتال على الأقل`);
 
                 const availableUnits = (playerData.weaponInventory || {})[weaponId] ?? 0;
@@ -2138,7 +2162,7 @@ async function executeCombatRound() {
 
 function refreshCombatEnergyDisplay(data) {
     if (!data) return;
-    const cap = getCombatEnergyCap(data.powerLevel);
+    const cap = getCombatEnergyCap(data.energyLevel);
     const current = Math.max(0, Math.min(data.combatEnergy ?? cap, cap));
 
     setText('combat-energy-text', `${current} / ${cap}`);
@@ -2172,7 +2196,7 @@ function maybeRegenCombatEnergy(data) {
     const user = firebase.auth().currentUser;
     if (!user) return;
 
-    const cap = getCombatEnergyCap(data.powerLevel);
+    const cap = getCombatEnergyCap(data.energyLevel);
 
     if (data.combatEnergy === undefined || data.combatEnergyLastUpdate === undefined) {
         firebase.firestore().collection('players').doc(user.uid).update({
