@@ -2217,6 +2217,10 @@ async function executeCombatRound() {
                 const roundData = roundDoc.data();
                 if (!roundData) throw new Error('جولة التدريب غير موجودة، حاول مجدداً');
 
+                // إصلاح ذاتي: مستندات الجولات القديمة (قبل إضافة roundId) لا تملك هذا الحقل بعد —
+                // نولّد له قيمة الآن بدل انتظار إعادة التدوير القادمة كل 24 ساعة
+                const effectiveRoundId = roundData.roundId || generateRoundId();
+
                 const spentEnergy = playerData.combatEnergy ?? getCombatEnergyCap(playerData.energyLevel);
                 if (spentEnergy < MIN_ENERGY_TO_FIGHT) throw new Error(`تحتاج ${MIN_ENERGY_TO_FIGHT} طاقة قتال على الأقل`);
 
@@ -2234,17 +2238,18 @@ async function executeCombatRound() {
                 // إجمالي ضرر المشارك: يتراكم فقط إذا كان من نفس الجولة الحالية (roundId مطابق)،
                 // وإلا يبدأ من الصفر لأن مستنده يعود لجولة قديمة انتهت وتصفّرت
                 const existingParticipant = participantDoc.exists ? participantDoc.data() : null;
-                const isSameRound = existingParticipant && existingParticipant.roundId === roundData.roundId;
+                const isSameRound = existingParticipant && existingParticipant.roundId === effectiveRoundId;
                 const newTotalDamage = (isSameRound ? (existingParticipant.totalDamage || 0) : 0) + damage;
 
                 transaction.update(roundRef, {
-                    [damageField]: firebase.firestore.FieldValue.increment(damage)
+                    [damageField]: firebase.firestore.FieldValue.increment(damage),
+                    roundId: effectiveRoundId // يثبّت الحقل لو كان مفقوداً، ولا يغيّر شيئاً لو كان موجوداً أصلاً
                 });
                 transaction.set(participantRef, {
                     name: (playerData.name || 'لاعب').trim(),
                     role: selectedCombatRole, // 'attacker' | 'defender'
                     totalDamage: newTotalDamage,
-                    roundId: roundData.roundId
+                    roundId: effectiveRoundId
                 });
                 transaction.update(playerRef, {
                     combatEnergy: 0,
