@@ -90,6 +90,14 @@ const RESOURCE_TYPES = {
     diamond: { label: 'ماس',  icon: '💎' }
 };
 
+// أنواع الموارد القابلة للبيع/الشراء في السوق العالمي بين اللاعبين — الذهب مستبعد عمداً (عملة أساسية، ليس سلعة سوق)
+const MARKET_RESOURCE_TYPES = {
+    oil:     { label: 'نفط',  icon: '🛢️' },
+    iron:    { label: 'حديد', icon: '⚙️' },
+    wheat:   { label: 'قمح',  icon: '🌾' },
+    diamond: { label: 'ماس',  icon: '💎' }
+};
+
 // تكلفة فتح مصنع جديد (ثابتة بغض النظر عن نوع المصنع المختار) — تُخصم من محفظة اللاعب الشخصية
 const FACTORY_OPEN_COST = { gold: 50, iron: 100, money: 1000, oil: 2000 };
 
@@ -1399,7 +1407,7 @@ function renderMarketListings() {
 
     container.innerHTML = '';
     sorted.forEach(listing => {
-        const resInfo = RESOURCE_TYPES[listing.resourceType];
+        const resInfo = MARKET_RESOURCE_TYPES[listing.resourceType];
         const totalCost = listing.quantity * listing.pricePerUnit;
         const card = document.createElement('div');
         card.style.cssText = 'display:flex;align-items:center;gap:10px;background:#0f1620;border:1px solid #2d3748;border-radius:10px;padding:10px;';
@@ -1436,7 +1444,7 @@ function renderMyMarketListings() {
 
     container.innerHTML = '';
     mine.forEach(listing => {
-        const resInfo = RESOURCE_TYPES[listing.resourceType];
+        const resInfo = MARKET_RESOURCE_TYPES[listing.resourceType];
         const soldPortion = listing.originalQuantity - listing.quantity;
         const card = document.createElement('div');
         card.style.cssText = 'display:flex;align-items:center;gap:10px;background:#0f1620;border:1px solid #2d3748;border-radius:10px;padding:10px;';
@@ -1484,7 +1492,7 @@ async function submitCreateListing() {
     const quantity = parseInt(document.getElementById('listing-quantity-input')?.value, 10);
     const pricePerUnit = parseInt(document.getElementById('listing-price-input')?.value, 10);
 
-    if (!RESOURCE_TYPES[resourceType]) { if (errorEl) errorEl.textContent = 'اختر نوع المورد'; return; }
+    if (!MARKET_RESOURCE_TYPES[resourceType]) { if (errorEl) errorEl.textContent = 'اختر نوع المورد'; return; }
     if (!Number.isFinite(quantity) || quantity <= 0) { if (errorEl) errorEl.textContent = 'أدخل كمية صحيحة'; return; }
     if (!Number.isFinite(pricePerUnit) || pricePerUnit <= 0) { if (errorEl) errorEl.textContent = 'أدخل سعراً صحيحاً لكل وحدة'; return; }
 
@@ -1492,7 +1500,7 @@ async function submitCreateListing() {
     if (!user || !localPlayerData) { if (errorEl) errorEl.textContent = 'حدث خطأ، أعد تحميل الصفحة'; return; }
 
     if ((localPlayerData[resourceType] ?? 0) < quantity) {
-        if (errorEl) errorEl.textContent = `لا تملك ${quantity} ${RESOURCE_TYPES[resourceType].label} كافية في محفظتك`;
+        if (errorEl) errorEl.textContent = `لا تملك ${quantity} ${MARKET_RESOURCE_TYPES[resourceType].label} كافية في محفظتك`;
         return;
     }
 
@@ -1574,7 +1582,7 @@ function openBuyModal(listingId) {
     const qtyInput = document.getElementById('buy-quantity-input');
     const errorEl = document.getElementById('buy-modal-error');
 
-    const resInfo = RESOURCE_TYPES[listing.resourceType];
+    const resInfo = MARKET_RESOURCE_TYPES[listing.resourceType];
     if (infoEl) {
         infoEl.innerHTML = `
             البائع: <b>${escapeHtml(listing.sellerName || 'لاعب')}</b><br>
@@ -1671,7 +1679,7 @@ async function confirmBuyListing() {
             return { totalCost, taxAmount, resourceType: listing.resourceType, purchaseQty };
         });
 
-        const resInfo = RESOURCE_TYPES[result.resourceType];
+        const resInfo = MARKET_RESOURCE_TYPES[result.resourceType];
         alert(`✅ اشتريت ${result.purchaseQty} ${resInfo?.label || ''} بـ ${result.totalCost} مال (ضريبة الدولة: ${result.taxAmount})`);
         closeBuyModal();
     } catch (err) {
