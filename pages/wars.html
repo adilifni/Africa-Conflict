@@ -49,7 +49,8 @@
         <!-- عداد جولة التدريب فوق الشريط مباشرة -->
         <p id="training-round-countdown" style="color:#fc8181;font-weight:bold;font-size:13px;margin:0 0 8px 0;"></p>
 
-        <!-- شريط جولة التدريب الدائم الخاص بدولة اللاعب (أحمر=مهاجمون / أزرق=مدافعون، والأرقام داخل كل قسم) -->
+        <!-- شريط جولة التدريب الدائم الخاص بدولة اللاعب (أحمر=مهاجمون / أزرق=مدافعون، والأرقام داخل كل قسم)
+             — أصبح قابلاً للضغط: يفتح نافذة ترتيب المشاركين (انظر training-round-details-modal بالأسفل) -->
         <div id="training-round-bar-container" style="margin-bottom:15px;"></div>
 
         <!-- اختيار الدور -->
@@ -95,5 +96,26 @@
         </div>
 
         <button onclick="closeWarDetailsModal()" style="width:100%;background:#2d3748;color:#fff;border:none;padding:12px;border-radius:8px;cursor:pointer;font-weight:bold;margin-top:15px;">إغلاق</button>
+    </div>
+</div>
+
+<!-- نافذة ترتيب مشاركي جولة التدريب — جديدة: تُفتح بالضغط على شريط training-round-bar-container -->
+<div id="training-round-details-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:9998;justify-content:center;align-items:center;padding:20px;box-sizing:border-box;">
+    <div style="background:#1a1f26;border:1px solid #2d3748;border-radius:14px;padding:20px;width:100%;max-width:400px;max-height:85vh;overflow-y:auto;text-align:center;">
+        <h3 style="color:#fff;margin:0 0 5px 0;font-size:18px;">ترتيب مشاركي التدريب</h3>
+        <p id="training-round-details-countdown" style="color:#fc8181;font-weight:bold;font-size:13px;margin:0 0 15px 0;"></p>
+
+        <div style="display:flex;gap:10px;">
+            <div style="flex:1;">
+                <div style="color:#e53e3e;font-weight:bold;font-size:13px;margin-bottom:8px;">👊 المهاجمون</div>
+                <div id="training-round-attackers-list"></div>
+            </div>
+            <div style="flex:1;">
+                <div style="color:#3182ce;font-weight:bold;font-size:13px;margin-bottom:8px;">🛡️ المدافعون</div>
+                <div id="training-round-defenders-list"></div>
+            </div>
+        </div>
+
+        <button onclick="closeTrainingRoundDetailsModal()" style="width:100%;background:#2d3748;color:#fff;border:none;padding:12px;border-radius:8px;cursor:pointer;font-weight:bold;margin-top:15px;">إغلاق</button>
     </div>
 </div>
