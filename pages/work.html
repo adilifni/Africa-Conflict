@@ -118,14 +118,14 @@
 
 </div>
 
-<!-- نافذة نشر إعلان بيع جديد -->
+<!-- نافذة نشر إعلان بيع جديد — قائمة الموارد هنا محصورة بموارد السوق فقط (بدون الذهب، مع النفط) -->
 <div id="listing-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:9998;justify-content:center;align-items:center;padding:20px;box-sizing:border-box;">
     <div style="background:#1a1f26;border:1px solid #2d3748;border-radius:14px;padding:25px 20px;width:100%;max-width:360px;max-height:85vh;overflow-y:auto;text-align:center;">
         <h3 style="color:#fff;margin:0 0 20px 0;font-size:18px;">نشر إعلان بيع</h3>
 
         <select id="listing-resource-input" style="width:100%;box-sizing:border-box;background:#0f1620;border:1px solid #2d3748;color:#fff;padding:10px 12px;border-radius:8px;font-size:15px;margin-bottom:10px;text-align:center;">
             <option value="">-- اختر المورد --</option>
-            <option value="gold">🪙 ذهب</option>
+            <option value="oil">🛢️ نفط</option>
             <option value="iron">⚙️ حديد</option>
             <option value="wheat">🌾 قمح</option>
             <option value="diamond">💎 ماس</option>
@@ -159,7 +159,7 @@
     </div>
 </div>
 
-<!-- نافذة إنشاء / تعديل مصنع -->
+<!-- نافذة إنشاء / تعديل مصنع — تبقى تشمل الذهب لأن المصنع لا يزال بإمكانه إنتاج الذهب (السوق فقط لا يتاجر به) -->
 <div id="factory-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:9998;justify-content:center;align-items:center;padding:20px;box-sizing:border-box;">
     <div style="background:#1a1f26;border:1px solid #2d3748;border-radius:14px;padding:25px 20px;width:100%;max-width:360px;max-height:85vh;overflow-y:auto;text-align:center;">
         <h3 id="factory-modal-title" style="color:#fff;margin:0 0 20px 0;font-size:18px;">إنشاء مصنع جديد</h3>
