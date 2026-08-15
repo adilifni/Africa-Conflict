@@ -150,6 +150,11 @@ function getNextUtcMidnightMs() {
     const now = new Date();
     return Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 0, 0, 0);
 }
+
+// معرّف فريد لكل جولة تدريب — يميّز مشاركي الجولة الحالية عن جولات سابقة انتهت وتصفّرت
+function generateRoundId() {
+    return `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+}
 const COMBAT_ENERGY_REGEN_AMOUNT = 10;
 const COMBAT_ENERGY_REGEN_MINUTES = 10;
 const MIN_ENERGY_TO_FIGHT = 10;
@@ -235,6 +240,7 @@ let selectedCombatWeaponId = null; // معرف السلاح المختار من 
 let currentTrainingRound = null;   // جولة التدريب الدائمة الخاصة بدولة اللاعب الحالية
 let unsubscribeTrainingRound = null;
 let trainingRoundCountdownInterval = null;
+let trainingRoundDetailsCountdownInterval = null; // عداد نافذة ترتيب مشاركي التدريب
 
 let currentFactoriesCache = [];
 let unsubscribeCountryResources = null;
@@ -392,6 +398,8 @@ export function initGameSystem() {
             window.onTrainingWeaponChange = onTrainingWeaponChange;
             window.openWarDetailsModal = openWarDetailsModal;
             window.closeWarDetailsModal = closeWarDetailsModal;
+            window.openTrainingRoundDetailsModal = openTrainingRoundDetailsModal;
+            window.closeTrainingRoundDetailsModal = closeTrainingRoundDetailsModal;
 
         } else {
             setTimeout(waitForFirebase, 100);
@@ -1708,7 +1716,8 @@ function subscribeTrainingRound(countryKey) {
                 countryKey,
                 attackerDamage: 0,
                 defenderDamage: 0,
-                roundEndAt: getNextUtcMidnightMs()
+                roundEndAt: getNextUtcMidnightMs(),
+                roundId: generateRoundId()
             }).catch(err => console.error("خطأ أثناء إنشاء جولة التدريب:", err));
             return;
         }
@@ -1734,7 +1743,8 @@ async function maybeResetTrainingRound() {
             transaction.update(roundRef, {
                 attackerDamage: 0,
                 defenderDamage: 0,
-                roundEndAt: getNextUtcMidnightMs()
+                roundEndAt: getNextUtcMidnightMs(),
+                roundId: generateRoundId() // جولة جديدة = معرّف جديد، لتمييز مشاركي الجولة الجديدة عن السابقة
             });
         });
     } catch (err) {
@@ -1747,7 +1757,16 @@ function renderTrainingRoundBar() {
     const countdownEl = document.getElementById('training-round-countdown');
     if (!barContainer || !currentTrainingRound) return;
 
-    barContainer.innerHTML = renderTwoToneBarHtml(currentTrainingRound.attackerDamage || 0, currentTrainingRound.defenderDamage || 0);
+    barContainer.innerHTML = `
+        <div onclick="openTrainingRoundDetailsModal()" style="cursor:pointer;" title="اضغط لعرض ترتيب المشاركين">
+            ${renderTwoToneBarHtml(currentTrainingRound.attackerDamage || 0, currentTrainingRound.defenderDamage || 0)}
+            <div style="display:flex;justify-content:space-between;margin-top:5px;color:#a0aec0;font-size:11px;">
+                <span>👊 المهاجمون</span>
+                <span>🛡️ المدافعون</span>
+            </div>
+            <div style="text-align:center;color:#4a5568;font-size:10px;margin-top:2px;">اضغط لعرض ترتيب المشاركين</div>
+        </div>
+    `;
 
     if (trainingRoundCountdownInterval) clearInterval(trainingRoundCountdownInterval);
     trainingRoundCountdownInterval = setInterval(() => {
@@ -1938,6 +1957,69 @@ function closeWarDetailsModal() {
     if (warDetailsCountdownInterval) { clearInterval(warDetailsCountdownInterval); warDetailsCountdownInterval = null; }
 }
 
+// نافذة ترتيب مشاركي جولة التدريب الدائمة — نفس فكرة تفاصيل الحرب، بس على مستوى الدولة/التدريب
+async function openTrainingRoundDetailsModal() {
+    if (!currentTrainingRound) return;
+
+    const modal = document.getElementById('training-round-details-modal');
+    const attackersList = document.getElementById('training-round-attackers-list');
+    const defendersList = document.getElementById('training-round-defenders-list');
+    const countdownEl = document.getElementById('training-round-details-countdown');
+
+    if (attackersList) attackersList.innerHTML = '<p style="color:#718096;font-size:12px;text-align:center;">جاري التحميل...</p>';
+    if (defendersList) defendersList.innerHTML = '<p style="color:#718096;font-size:12px;text-align:center;">جاري التحميل...</p>';
+
+    if (modal) modal.style.display = 'flex';
+
+    // عداد تنازلي حي (نفس عداد الجولة، لكن داخل النافذة) طالما هي مفتوحة
+    if (trainingRoundDetailsCountdownInterval) clearInterval(trainingRoundDetailsCountdownInterval);
+    trainingRoundDetailsCountdownInterval = setInterval(() => {
+        if (!currentTrainingRound || !countdownEl) return;
+        const msLeft = Math.max(0, currentTrainingRound.roundEndAt - Date.now());
+        countdownEl.textContent = msLeft > 0 ? `⏳ جولة جديدة خلال ${formatTimeShort(msLeft)}` : "⏳ جاري بدء جولة جديدة...";
+        if (msLeft <= 0) clearInterval(trainingRoundDetailsCountdownInterval);
+    }, 1000);
+
+    try {
+        const snapshot = await firebase.firestore()
+            .collection('training_rounds').doc(currentTrainingRound.id).collection('participants')
+            .orderBy('totalDamage', 'desc')
+            .get();
+
+        // الكولكشن يحتفظ بمشاركي كل الجولات القديمة أيضاً — نعرض فقط من ينتمي لمعرّف الجولة الحالية
+        const currentRoundId = currentTrainingRound.roundId;
+        const attackers = [];
+        const defenders = [];
+        snapshot.forEach(doc => {
+            const p = doc.data();
+            if (p.roundId !== currentRoundId) return;
+            (p.role === 'attacker' ? attackers : defenders).push(p);
+        });
+
+        const renderList = (list) => list.length === 0
+            ? '<p style="color:#718096;font-size:12px;text-align:center;">لا يوجد مشاركون بعد</p>'
+            : list.map((p, i) => `
+                <div style="display:flex;justify-content:space-between;padding:6px 8px;background:#0f1620;border-radius:6px;margin-bottom:4px;font-size:12px;">
+                    <span style="color:#fff;">${i + 1}. ${escapeHtml(p.name || 'لاعب')}</span>
+                    <span style="color:#fc8181;font-weight:bold;">${p.totalDamage || 0}</span>
+                </div>
+            `).join('');
+
+        if (attackersList) attackersList.innerHTML = renderList(attackers);
+        if (defendersList) defendersList.innerHTML = renderList(defenders);
+    } catch (err) {
+        console.error("خطأ أثناء جلب ترتيب مشاركي التدريب:", err);
+        if (attackersList) attackersList.innerHTML = '<p style="color:#fc8181;font-size:12px;text-align:center;">تعذر التحميل</p>';
+        if (defendersList) defendersList.innerHTML = '<p style="color:#fc8181;font-size:12px;text-align:center;">تعذر التحميل</p>';
+    }
+}
+
+function closeTrainingRoundDetailsModal() {
+    const modal = document.getElementById('training-round-details-modal');
+    if (modal) modal.style.display = 'none';
+    if (trainingRoundDetailsCountdownInterval) { clearInterval(trainingRoundDetailsCountdownInterval); trainingRoundDetailsCountdownInterval = null; }
+}
+
 // إعلان حرب — آلية مؤقتة: أي لاعب بالدولة يقدر يعلنها لحين نظام الرئيس/البرلمان
 async function declareWar() {
     if (currentCountryWar) { alert('⚠️ دولتك بحرب نشطة أصلاً!'); return; }
@@ -2121,10 +2203,19 @@ async function executeCombatRound() {
             if (!currentTrainingRound) { alert('⚠️ جولة التدريب لسه ما جهزت، انتظر ثانية وحاول مجدداً'); return; }
 
             const roundRef = db.collection('training_rounds').doc(currentTrainingRound.id);
+            const participantRef = roundRef.collection('participants').doc(user.uid);
 
             const result = await db.runTransaction(async (transaction) => {
-                const playerDoc = await transaction.get(playerRef);
+                // كل القراءات أولاً (متطلب إلزامي بمعاملات Firestore) قبل أي كتابة بالأسفل
+                const [playerDoc, roundDoc, participantDoc] = await Promise.all([
+                    transaction.get(playerRef),
+                    transaction.get(roundRef),
+                    transaction.get(participantRef)
+                ]);
+
                 const playerData = playerDoc.data() || {};
+                const roundData = roundDoc.data();
+                if (!roundData) throw new Error('جولة التدريب غير موجودة، حاول مجدداً');
 
                 const spentEnergy = playerData.combatEnergy ?? getCombatEnergyCap(playerData.energyLevel);
                 if (spentEnergy < MIN_ENERGY_TO_FIGHT) throw new Error(`تحتاج ${MIN_ENERGY_TO_FIGHT} طاقة قتال على الأقل`);
@@ -2140,8 +2231,20 @@ async function executeCombatRound() {
                 const xpGain = Math.round(damage * TRAINING_XP_PER_DAMAGE);
                 const damageField = selectedCombatRole === 'attacker' ? 'attackerDamage' : 'defenderDamage';
 
+                // إجمالي ضرر المشارك: يتراكم فقط إذا كان من نفس الجولة الحالية (roundId مطابق)،
+                // وإلا يبدأ من الصفر لأن مستنده يعود لجولة قديمة انتهت وتصفّرت
+                const existingParticipant = participantDoc.exists ? participantDoc.data() : null;
+                const isSameRound = existingParticipant && existingParticipant.roundId === roundData.roundId;
+                const newTotalDamage = (isSameRound ? (existingParticipant.totalDamage || 0) : 0) + damage;
+
                 transaction.update(roundRef, {
                     [damageField]: firebase.firestore.FieldValue.increment(damage)
+                });
+                transaction.set(participantRef, {
+                    name: (playerData.name || 'لاعب').trim(),
+                    role: selectedCombatRole, // 'attacker' | 'defender'
+                    totalDamage: newTotalDamage,
+                    roundId: roundData.roundId
                 });
                 transaction.update(playerRef, {
                     combatEnergy: 0,
