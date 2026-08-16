@@ -298,6 +298,9 @@
 
         <!-- صفحة الحروب: تُحمَّل ديناميكياً وقت التشغيل من pages/wars.html (fetch + حقن HTML) -->
         <div id="wars-page-container"></div>
+
+        <!-- صفحة الخريطة + صفحة الدولة: تُحمَّلان ديناميكياً وقت التشغيل من pages/map.html (fetch + حقن HTML) -->
+        <div id="map-page-container"></div>
     </main>
 
     <!-- شريط التنقل السفلي الثابت بالترتيب الصحيح -->
@@ -420,6 +423,7 @@
     <script type="module">
         import { initGameSystem } from './js/game.js';
         import { setupSliderSystem, setupChatSystem, setupInteractiveElements } from './js/app.js';
+        import { initMapSystem } from './js/map.js';
 
         // تحميل جزء HTML من ملف خارجي وحقنه داخل حاوية معيّنة بالصفحة
         async function loadPageFragment(url, containerId) {
@@ -451,7 +455,8 @@
             // التحميل بالتوازي (وليس بالتسلسل) لتسريع بدء التشغيل
             await Promise.all([
                 loadPageFragment('pages/work.html', 'work-page-container'),
-                loadPageFragment('pages/wars.html', 'wars-page-container')
+                loadPageFragment('pages/wars.html', 'wars-page-container'),
+                loadPageFragment('pages/map.html', 'map-page-container')
             ]);
 
             if (loader) loader.style.display = 'none';
@@ -460,6 +465,7 @@
             setupSliderSystem();
             setupChatSystem();
             setupInteractiveElements();
+            initMapSystem();
         }
 
         document.addEventListener('DOMContentLoaded', bootstrapApp);
