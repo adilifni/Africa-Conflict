@@ -1,0 +1,70 @@
+<!-- صفحة الخريطة التفاعلية -->
+<div id="view-continent-map" class="game-view" style="display:none; flex-direction:column; gap:15px;">
+
+    <!-- بلوك عرض العلم المحدد — يظهر فقط بعد الضغط على أي دولة بالخريطة -->
+    <div id="map-selected-flag-box" style="display:none; align-items:center; gap:14px; background:#1a1f26; border:1px solid #2d3748; border-radius:12px; padding:15px; cursor:pointer;">
+        <div id="map-selected-flag-emoji" style="font-size:42px; line-height:1;"></div>
+        <div style="flex:1; text-align:right;">
+            <div id="map-selected-country-name" style="color:#fff; font-weight:bold; font-size:17px;"></div>
+            <div style="color:#a0aec0; font-size:12px; margin-top:4px;">اضغط على الدولة مرة أخرى (أو هنا) للدخول إلى صفحتها</div>
+        </div>
+    </div>
+
+    <!-- الخريطة نفسها -->
+    <div style="background:#1a1f26; border:1px solid #2d3748; border-radius:12px; padding:15px;">
+        <div style="color:#fff; font-weight:bold; margin-bottom:12px; font-size:15px;">🗺️ خريطة القارة الإفريقية</div>
+        <div style="position:relative; width:100%; padding-top:100%; background:#0f1620; border-radius:10px; overflow:hidden;">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/8/86/Africa_%28orthographic_projection%29.svg" alt="Africa" style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:contain; opacity:0.9; pointer-events:none;">
+            <div id="map-pins-container" style="position:absolute; top:0; left:0; width:100%; height:100%;"></div>
+        </div>
+        <p style="color:#718096; font-size:11px; text-align:center; margin-top:10px;">مواقع الدول تقريبية حالياً، وستُضاف بقية دول القارة لاحقاً</p>
+    </div>
+
+</div>
+
+<!-- صفحة الدولة — مؤقتة حالياً (Placeholder)، سنطورها بالتفصيل لاحقاً -->
+<div id="view-country-detail" class="game-view" style="display:none; flex-direction:column; gap:15px;">
+    <div style="background:#1a1f26; border:1px solid #2d3748; border-radius:12px; padding:25px; text-align:center;">
+        <div id="country-detail-flag" style="font-size:64px; margin-bottom:10px;"></div>
+        <div id="country-detail-name" style="color:#fff; font-weight:bold; font-size:22px; margin-bottom:15px;"></div>
+        <p style="color:#a0aec0; font-size:14px; line-height:1.8;">
+            صفحة الدولة قيد التطوير حالياً 🚧<br>
+            ستحتوي مستقبلاً على معلومات الدولة، رئيسها، برلمانها، واقتصادها.
+        </p>
+        <button onclick="switchView('continent-map')" style="margin-top:15px; background:#2d3748; color:#fff; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; font-weight:bold;">⬅️ رجوع للخريطة</button>
+    </div>
+</div>
+
+<style>
+.map-country-pin {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    width: 26px;
+    height: 26px;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+}
+.map-pin-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #e53e3e;
+    border: 2px solid #fff;
+    box-shadow: 0 0 6px rgba(0,0,0,.6);
+    transition: transform .15s ease, background .15s ease;
+    display: block;
+}
+.map-country-pin:active .map-pin-dot {
+    transform: scale(0.85);
+}
+.map-country-pin.selected .map-pin-dot {
+    background: #38a169;
+    transform: scale(1.35);
+}
+</style>
