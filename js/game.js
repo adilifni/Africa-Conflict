@@ -1732,7 +1732,7 @@ function subscribeTrainingRound(countryKey) {
 
         currentTrainingRound = { id: doc.id, ...doc.data() };
         maybeResetTrainingRound();
-        renderTrainingRoundBar();
+        renderCombatModalBar(); // تُقرر تلقائياً عرض شريط الحرب أو شريط التدريب حسب currentCountryWar
     }, (err) => console.error("خطأ في جلب جولة التدريب:", err));
 }
 
@@ -1785,6 +1785,40 @@ function renderTrainingRoundBar() {
     }, 1000);
 }
 
+// يقرر أي شريط يُعرض داخل نافذة "التدريب/القتال": شريط الحرب الفعلية لو كانت دولتك بحرب نشطة،
+// أو شريط جولة التدريب الدائمة لو لم تكن — الخطأ السابق كان يعرض شريط التدريب دائماً بغض النظر عن الحالة
+function renderCombatModalBar() {
+    const barContainer = document.getElementById('training-round-bar-container');
+    const countdownEl = document.getElementById('training-round-countdown');
+    if (!barContainer) return;
+
+    if (trainingRoundCountdownInterval) { clearInterval(trainingRoundCountdownInterval); trainingRoundCountdownInterval = null; }
+
+    if (currentCountryWar) {
+        const war = currentCountryWar;
+        barContainer.innerHTML = `
+            <div onclick="openWarDetailsModal('${war.id}')" style="cursor:pointer;" title="اضغط لعرض ترتيب المشاركين">
+                ${renderTwoToneBarHtml(war.countryADamage || 0, war.countryBDamage || 0)}
+                <div style="display:flex;justify-content:space-between;margin-top:5px;color:#a0aec0;font-size:11px;">
+                    <span>${war.countryAFlag || '🏳️'} ${escapeHtml(war.countryAName || war.countryA)}</span>
+                    <span>${war.countryBFlag || '🏳️'} ${escapeHtml(war.countryBName || war.countryB)}</span>
+                </div>
+                <div style="text-align:center;color:#4a5568;font-size:10px;margin-top:2px;">اضغط لعرض ترتيب المشاركين</div>
+            </div>
+        `;
+
+        const endAt = war.endAt?.toMillis ? war.endAt.toMillis() : war.endAt;
+        trainingRoundCountdownInterval = setInterval(() => {
+            if (!currentCountryWar || !countdownEl) return;
+            const msLeft = Math.max(0, (endAt || 0) - Date.now());
+            countdownEl.textContent = msLeft > 0 ? `⏳ تنتهي الحرب خلال ${formatTimeShort(msLeft)}` : "⏳ انتهت الحرب";
+            if (msLeft <= 0) clearInterval(trainingRoundCountdownInterval);
+        }, 1000);
+    } else {
+        renderTrainingRoundBar();
+    }
+}
+
 // اشتراك مزدوج (بلد كـ"دولة أ" أو "دولة ب") لأن Firestore ما يدعم OR مباشر بين حقلين
 function subscribeCountryWar(countryKey) {
     if (unsubscribeCountryWarA) { unsubscribeCountryWarA(); unsubscribeCountryWarA = null; }
@@ -1796,6 +1830,7 @@ function subscribeCountryWar(countryKey) {
     const updateCombined = () => {
         currentCountryWar = warFromA || warFromB || null;
         renderCountryWarBlock(countryKey);
+        renderAllWarsList(); // إعادة رسم القائمة العامة فوراً لاستبعاد/إعادة إدراج حرب دولتك بمجرد تغيّر حالتها
     };
 
     unsubscribeCountryWarA = db.collection('wars')
@@ -1885,12 +1920,16 @@ function renderAllWarsList() {
     const container = document.getElementById('all-wars-container');
     if (!container) return;
 
-    if (currentAllWarsCache.length === 0) {
-        container.innerHTML = '<p style="color:#718096;font-size:13px;text-align:center;margin:10px 0;">لا توجد حروب نشطة بالقارة حالياً</p>';
+    // نستبعد حرب دولتك الحالية من هذه القائمة لأنها معروضة أصلاً ببلوك "حرب دولتك الحالية" أعلاه
+    // بزر "ادخل الحرب" الصحيح — عرضها هنا أيضاً بأزرار سفر كان يسبب تكراراً مربكاً (خصوصاً وأنت أصلاً بنفس الدولة)
+    const otherWars = currentAllWarsCache.filter(war => !currentCountryWar || war.id !== currentCountryWar.id);
+
+    if (otherWars.length === 0) {
+        container.innerHTML = '<p style="color:#718096;font-size:13px;text-align:center;margin:10px 0;">لا توجد حروب نشطة أخرى بالقارة حالياً</p>';
         return;
     }
 
-    container.innerHTML = currentAllWarsCache.map(war => renderWarCardHtml(war, false)).join('<div style="height:10px;"></div>');
+    container.innerHTML = otherWars.map(war => renderWarCardHtml(war, false)).join('<div style="height:10px;"></div>');
 }
 
 let warDetailsCountdownInterval = null;
@@ -2111,7 +2150,7 @@ function openTrainingModal() {
         weaponWarning.style.display = canFight ? 'none' : 'block';
     }
 
-    renderTrainingRoundBar();
+    renderCombatModalBar();
     refreshCombatEnergyDisplay(localPlayerData);
 
     if (modal) modal.style.display = 'flex';
