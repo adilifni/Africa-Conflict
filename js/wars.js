@@ -243,6 +243,7 @@ function subscribeCountryWar(countryKey) {
 
     const updateCombined = () => {
         currentCountryWar = warFromA || warFromB || null;
+        maybeEndWar(currentCountryWar); // تفحص فوراً هل انتهى وقت الحرب لتصفيرها تلقائياً (بدل بقائها active للأبد)
         renderCountryWarBlock(countryKey);
         renderAllWarsList(); // إعادة رسم القائمة العامة فوراً لاستبعاد/إعادة إدراج حرب دولتك بمجرد تغيّر حالتها
     };
@@ -264,12 +265,43 @@ function subscribeCountryWar(countryKey) {
         }, (err) => console.error("خطأ في جلب حرب الدولة (ب):", err));
 }
 
+// إنهاء الحرب تلقائياً لما ينتهي وقتها (endAt) — بمعاملة آمنة تمنع الإنهاء المزدوج من أكثر من لاعب بنفس اللحظة
+// الفائز = صاحب الضرر الأعلى، أو null في حال التعادل
+async function maybeEndWar(war) {
+    if (!war) return;
+    const endAt = war.endAt?.toMillis ? war.endAt.toMillis() : war.endAt;
+    if (!endAt || Date.now() < endAt) return;
+
+    const warRef = firebase.firestore().collection('wars').doc(war.id);
+    try {
+        await firebase.firestore().runTransaction(async (transaction) => {
+            const doc = await transaction.get(warRef);
+            const data = doc.data();
+            if (!data || data.status !== 'active') return; // انتهت أصلاً أو لاعب آخر سبقنا بالإنهاء
+
+            const aDamage = data.countryADamage || 0;
+            const bDamage = data.countryBDamage || 0;
+            let winner = null;
+            if (aDamage > bDamage) winner = data.countryA;
+            else if (bDamage > aDamage) winner = data.countryB;
+
+            transaction.update(warRef, { status: 'ended', winner });
+        });
+    } catch (err) {
+        console.error("خطأ أثناء إنهاء الحرب:", err);
+    }
+}
+
 function subscribeAllWars() {
     unsubscribeAllWars = firebase.firestore().collection('wars')
         .where('status', '==', 'active')
         .onSnapshot((snapshot) => {
             currentAllWarsCache = [];
-            snapshot.forEach(doc => currentAllWarsCache.push({ id: doc.id, ...doc.data() }));
+            snapshot.forEach(doc => {
+                const war = { id: doc.id, ...doc.data() };
+                currentAllWarsCache.push(war);
+                maybeEndWar(war); // فحص نفس الآلية لكل حروب القارة أيضاً، وليس فقط حرب دولتي
+            });
             renderAllWarsList();
         }, (err) => console.error("خطأ في جلب كل الحروب:", err));
 }
@@ -296,6 +328,11 @@ function renderWarCardHtml(war, showOpenButton) {
     const msLeft = Math.max(0, (endAt || 0) - Date.now());
     const timeLeftText = msLeft > 0 ? formatTimeShort(msLeft) : "انتهت";
 
+    // نعرض زر السفر لدولة فقط لو اللاعب ليس موجوداً بها أصلاً — لا داعي لزر سفر لدولة أنت فيها بالفعل
+    const playerLocation = getPlayerData()?.current_location;
+    const showTravelToA = playerLocation !== war.countryA;
+    const showTravelToB = playerLocation !== war.countryB;
+
     return `
         <div style="background:#0f1620;border:1px solid #2d3748;border-radius:10px;padding:12px;">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
@@ -320,10 +357,10 @@ function renderWarCardHtml(war, showOpenButton) {
                 </div>
                 <div style="text-align:center;color:#4a5568;font-size:10px;margin-top:2px;">اضغط لعرض ترتيب المشاركين</div>
             </div>
-            ${!showOpenButton ? `
+            ${!showOpenButton && (showTravelToA || showTravelToB) ? `
             <div style="display:flex;gap:8px;margin-top:10px;">
-                <button onclick="travelToCountry('${war.countryA}')" style="flex:1;background:#2d3748;color:#fff;border:none;padding:8px;border-radius:6px;font-size:12px;cursor:pointer;">✈️ سافر لـ ${escapeHtml(war.countryAName || war.countryA)}</button>
-                <button onclick="travelToCountry('${war.countryB}')" style="flex:1;background:#2d3748;color:#fff;border:none;padding:8px;border-radius:6px;font-size:12px;cursor:pointer;">✈️ سافر لـ ${escapeHtml(war.countryBName || war.countryB)}</button>
+                ${showTravelToA ? `<button onclick="travelToCountry('${war.countryA}')" style="flex:1;background:#2d3748;color:#fff;border:none;padding:8px;border-radius:6px;font-size:12px;cursor:pointer;">✈️ سافر لـ ${escapeHtml(war.countryAName || war.countryA)}</button>` : ''}
+                ${showTravelToB ? `<button onclick="travelToCountry('${war.countryB}')" style="flex:1;background:#2d3748;color:#fff;border:none;padding:8px;border-radius:6px;font-size:12px;cursor:pointer;">✈️ سافر لـ ${escapeHtml(war.countryBName || war.countryB)}</button>` : ''}
             </div>` : ''}
         </div>
     `;
@@ -623,6 +660,9 @@ export async function executeCombatRound() {
                 const warData = warDoc.data();
 
                 if (!warData || warData.status !== 'active') throw new Error('الحرب لم تعد نشطة');
+
+                const warEndAt = warData.endAt?.toMillis ? warData.endAt.toMillis() : warData.endAt;
+                if (warEndAt && Date.now() >= warEndAt) throw new Error('انتهت الحرب، لم يعد بالإمكان القتال بها');
 
                 const spentEnergy = playerData.combatEnergy ?? getCombatEnergyCap(playerData.energyLevel);
                 if (spentEnergy < MIN_ENERGY_TO_FIGHT) throw new Error(`تحتاج ${MIN_ENERGY_TO_FIGHT} طاقة قتال على الأقل`);
