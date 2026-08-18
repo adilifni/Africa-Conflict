@@ -100,7 +100,8 @@ let unsubscribeCountryWarB = null;
 let currentAllWarsCache = [];
 let unsubscribeAllWars = null;
 let lastSubscribedWarLocation = null;
-let selectedCombatRole = null; // 'attacker' | 'defender'
+let selectedCombatMode = null;   // 'war' | 'training' — اختيار صريح كل مرة، مستقل تماماً عن حالة الحرب
+let selectedCombatRole = null; // 'attacker' | 'defender' — يخص وضع التدريب فقط، حرية اختيار كاملة كل مرة
 let selectedCombatWeaponId = null; // معرف السلاح المختار من مخزون اللاعب (إلزامي، لا يوجد قتال بدون سلاح)
 let currentTrainingRound = null;   // جولة التدريب الدائمة الخاصة بدولة اللاعب الحالية
 let unsubscribeTrainingRound = null;
@@ -199,8 +200,8 @@ function renderTrainingRoundBar() {
     }, 1000);
 }
 
-// يقرر أي شريط يُعرض داخل نافذة "التدريب/القتال": شريط الحرب الفعلية لو كانت دولتك بحرب نشطة،
-// أو شريط جولة التدريب الدائمة لو لم تكن — الخطأ السابق كان يعرض شريط التدريب دائماً بغض النظر عن الحالة
+// يقرر أي شريط يُعرض داخل نافذة "التدريب/القتال": شريط الحرب الفعلية فقط لو اختار اللاعب صراحةً وضع "الحرب"،
+// وإلا شريط جولة التدريب الدائمة دائماً — الاختيار صريح الآن، لا يُفرض تلقائياً لمجرد وجود حرب نشطة
 function renderCombatModalBar() {
     const barContainer = document.getElementById('training-round-bar-container');
     const countdownEl = document.getElementById('training-round-countdown');
@@ -208,7 +209,7 @@ function renderCombatModalBar() {
 
     if (trainingRoundCountdownInterval) { clearInterval(trainingRoundCountdownInterval); trainingRoundCountdownInterval = null; }
 
-    if (currentCountryWar) {
+    if (selectedCombatMode === 'war' && currentCountryWar) {
         const war = currentCountryWar;
         barContainer.innerHTML = `
             <div onclick="openWarDetailsModal('${war.id}')" style="cursor:pointer;" title="اضغط لعرض ترتيب المشاركين">
@@ -232,6 +233,25 @@ function renderCombatModalBar() {
         renderTrainingRoundBar();
     }
 }
+
+// تحديث نص السياق (توضيح الوضع الحالي) وإظهار/إخفاء اختيار الدور (مهاجم/مدافع) — الدور يخص التدريب فقط
+function updateCombatContextUI() {
+    const contextNote = document.getElementById('training-context-note');
+    const roleSelectBox = document.getElementById('training-role-select');
+    const roleNote = document.getElementById('training-role-note');
+
+    if (selectedCombatMode === 'war') {
+        if (contextNote) contextNote.textContent = '⚔️ ستشارك بالحرب الفعلية الآن — ضررك يُحتسب مباشرة لصالح دولتك';
+        if (roleSelectBox) roleSelectBox.style.display = 'none'; // لا معنى لمهاجم/مدافع بحرب حقيقية بين دولتين، الضرر يُحتسب تلقائياً لصف دولتك
+    } else {
+        if (contextNote) contextNote.textContent = '🥋 وضع تدريب دائم لدولتك — الضرر يُحتسب بجولة التدريب، وتكسب XP فعلي';
+        if (roleSelectBox) roleSelectBox.style.display = 'flex';
+        if (roleNote) roleNote.textContent = selectedCombatRole
+            ? `دورك المختار: ${selectedCombatRole === 'attacker' ? '⚔️ مهاجم' : '🛡️ مدافع'}`
+            : 'اختر دورك أولاً';
+    }
+}
+
 
 // اشتراك مزدوج (بلد كـ"دولة أ" أو "دولة ب") لأن Firestore ما يدعم OR مباشر بين حقلين
 function subscribeCountryWar(countryKey) {
@@ -267,28 +287,44 @@ function subscribeCountryWar(countryKey) {
 
 // إنهاء الحرب تلقائياً لما ينتهي وقتها (endAt) — بمعاملة آمنة تمنع الإنهاء المزدوج من أكثر من لاعب بنفس اللحظة
 // الفائز = صاحب الضرر الأعلى، أو null في حال التعادل
+// محاولتان: الأولى تسجّل الفائز، ولو رفضتها قواعد Firestore (حقل winner غير مسموح بعد) نعيد المحاولة
+// بتحديث status فقط — حتى لا تبقى الحرب عالقة للأبد بانتظار تعديل القواعد يدوياً
 async function maybeEndWar(war) {
     if (!war) return;
     const endAt = war.endAt?.toMillis ? war.endAt.toMillis() : war.endAt;
     if (!endAt || Date.now() < endAt) return;
 
     const warRef = firebase.firestore().collection('wars').doc(war.id);
+
+    const computeWinner = (data) => {
+        const aDamage = data.countryADamage || 0;
+        const bDamage = data.countryBDamage || 0;
+        if (aDamage > bDamage) return data.countryA;
+        if (bDamage > aDamage) return data.countryB;
+        return null;
+    };
+
     try {
         await firebase.firestore().runTransaction(async (transaction) => {
             const doc = await transaction.get(warRef);
             const data = doc.data();
             if (!data || data.status !== 'active') return; // انتهت أصلاً أو لاعب آخر سبقنا بالإنهاء
-
-            const aDamage = data.countryADamage || 0;
-            const bDamage = data.countryBDamage || 0;
-            let winner = null;
-            if (aDamage > bDamage) winner = data.countryA;
-            else if (bDamage > aDamage) winner = data.countryB;
-
-            transaction.update(warRef, { status: 'ended', winner });
+            transaction.update(warRef, { status: 'ended', winner: computeWinner(data) });
         });
+        return; // نجحت المحاولة الأولى، لا حاجة للخطة البديلة
     } catch (err) {
-        console.error("خطأ أثناء إنهاء الحرب:", err);
+        console.warn("تعذر إنهاء الحرب مع تسجيل الفائز (على الأرجح حقل winner غير مسموح بقواعد Firestore بعد) — إعادة المحاولة بدونه:", err.message);
+    }
+
+    try {
+        await firebase.firestore().runTransaction(async (transaction) => {
+            const doc = await transaction.get(warRef);
+            const data = doc.data();
+            if (!data || data.status !== 'active') return;
+            transaction.update(warRef, { status: 'ended' });
+        });
+    } catch (err2) {
+        console.error("فشل إنهاء الحرب حتى بدون حقل الفائز — تحقق من قواعد Firestore لمجموعة wars:", err2);
     }
 }
 
@@ -555,24 +591,27 @@ export async function declareWar() {
     }
 }
 
-// نافذة التدريب/القتال
+// نافذة التدريب/القتال — يختار اللاعب صراحةً كل مرة: تدريب أم مشاركة بالحرب الفعلية (لو كانت موجودة)
 export function openTrainingModal() {
+    // لو لا توجد حرب نشطة بدولتك، الوضع تدريب تلقائياً (لا حاجة لإلزام اللاعب باختيار من نافذة فارغة)
+    // لو توجد حرب، لا نفرض شيئاً — اللاعب يختار صراحةً كل مرة بين الاثنين
+    selectedCombatMode = currentCountryWar ? null : 'training';
     selectedCombatRole = null;
     selectedCombatWeaponId = null;
 
     const modal = document.getElementById('training-modal');
-    const roleNote = document.getElementById('training-role-note');
-    const contextNote = document.getElementById('training-context-note');
+    const modeSelectBox = document.getElementById('training-mode-select');
+    const modeNote = document.getElementById('training-mode-note');
     const weaponSelect = document.getElementById('training-weapon-select');
     const executeBtn = document.getElementById('btn-execute-combat');
     const weaponWarning = document.getElementById('training-no-weapon-warning');
 
-    if (contextNote) {
-        contextNote.textContent = currentCountryWar
-            ? '⚔️ دولتك بحرب فعلية — ضررك الآن يُحتسب حقيقياً بنتيجة الحرب!'
-            : '🥋 وضع تدريب دائم لدولتك — الضرر يُحتسب بجولة التدريب، وتكسب XP فعلي';
-    }
-    if (roleNote) roleNote.textContent = 'اختر دورك أولاً';
+    // بلوك اختيار الوضع (حرب فعلية / تدريب) يظهر فقط لو توجد حرب نشطة بدولتك — وإلا لا داعي له إطلاقاً
+    if (modeSelectBox) modeSelectBox.style.display = currentCountryWar ? 'flex' : 'none';
+    if (modeNote) modeNote.textContent = currentCountryWar ? 'اختر أولاً: المشاركة بالحرب الفعلية أم التدريب؟' : '';
+    document.querySelectorAll('.btn-combat-mode').forEach(btn => { btn.style.outline = 'none'; });
+
+    updateCombatContextUI();
 
     const inventory = getPlayerData()?.weaponInventory || {};
     const ownedWeapons = WEAPONS_CATALOG.filter(w => (inventory[w.id] ?? 0) > 0);
@@ -607,6 +646,19 @@ export function openTrainingModal() {
     if (modal) modal.style.display = 'flex';
 }
 
+// اختيار صريح بين "المشاركة بالحرب الفعلية" و"التدريب" — يظهر فقط لو توجد حرب نشطة بدولتك
+export function selectCombatMode(mode) {
+    selectedCombatMode = mode;
+
+    document.querySelectorAll('.btn-combat-mode').forEach(btn => {
+        const isSelected = btn.getAttribute('data-mode') === mode;
+        btn.style.outline = isSelected ? '2px solid #fff' : 'none';
+    });
+
+    updateCombatContextUI();
+    renderCombatModalBar();
+}
+
 export function onTrainingWeaponChange(weaponId) {
     selectedCombatWeaponId = weaponId;
 }
@@ -629,7 +681,12 @@ export function selectCombatRole(role) {
 }
 
 export async function executeCombatRound() {
-    if (!selectedCombatRole) { alert('⚠️ اختر دورك (مهاجم أو مدافع) أولاً'); return; }
+    // الاختيار الآن صريح: لو توجد حرب نشطة بدولتك، يجب اختيار وضع (حرب/تدريب) أولاً قبل أي شيء
+    if (currentCountryWar && !selectedCombatMode) { alert('⚠️ اختر أولاً: المشاركة بالحرب الفعلية أم التدريب؟'); return; }
+    const effectiveMode = selectedCombatMode || 'training'; // لا توجد حرب أصلاً ← تدريب دائماً
+
+    // الدور (مهاجم/مدافع) مطلوب فقط بوضع التدريب — لا معنى له بحرب حقيقية بين دولتين
+    if (effectiveMode === 'training' && !selectedCombatRole) { alert('⚠️ اختر دورك (مهاجم أو مدافع) أولاً'); return; }
     if (!selectedCombatWeaponId) { alert('🔴 يجب اختيار سلاح من مخزونك لتتمكن من القتال! اشترِ سلاحاً أولاً من سوق الأسلحة'); return; }
 
     const user = firebase.auth().currentUser;
@@ -647,7 +704,9 @@ export async function executeCombatRound() {
     const playerRef = db.collection('players').doc(user.uid);
 
     try {
-        if (currentCountryWar) {
+        if (effectiveMode === 'war') {
+            if (!currentCountryWar) { alert('⚠️ لم تعد هناك حرب نشطة بدولتك، أعد فتح النافذة وحاول مجدداً'); return; }
+
             const warRef = db.collection('wars').doc(currentCountryWar.id);
             const participantRef = warRef.collection('participants').doc(user.uid);
 
