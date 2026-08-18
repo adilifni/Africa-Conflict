@@ -44,17 +44,24 @@
 <div id="training-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:9998;justify-content:center;align-items:center;padding:20px;box-sizing:border-box;">
     <div style="background:#1a1f26;border:1px solid #2d3748;border-radius:14px;padding:25px 20px;width:100%;max-width:360px;max-height:85vh;overflow-y:auto;text-align:center;">
         <h3 style="color:#fff;margin:0 0 8px 0;font-size:18px;">⚔️ التدريب / القتال</h3>
+
+        <!-- اختيار صريح بين المشاركة بالحرب الفعلية أو التدريب — يظهر فقط لو توجد حرب نشطة بدولتك -->
+        <div id="training-mode-select" style="display:none;gap:10px;margin-bottom:8px;">
+            <button class="btn-combat-mode" data-mode="war" onclick="selectCombatMode('war')" style="flex:1;background:#9c2a2a;color:#fff;border:none;padding:12px;border-radius:8px;cursor:pointer;font-weight:bold;font-size:13px;">⚔️ المشاركة بالحرب الفعلية</button>
+            <button class="btn-combat-mode" data-mode="training" onclick="selectCombatMode('training')" style="flex:1;background:#2b6cb0;color:#fff;border:none;padding:12px;border-radius:8px;cursor:pointer;font-weight:bold;font-size:13px;">🥋 التدريب فقط</button>
+        </div>
+        <p id="training-mode-note" style="color:#a0aec0;font-size:12px;margin:0 0 10px 0;"></p>
+
         <p id="training-context-note" style="color:#a0aec0;font-size:12px;margin:0 0 15px 0;"></p>
 
-        <!-- عداد جولة التدريب فوق الشريط مباشرة -->
+        <!-- عداد جولة التدريب أو عداد انتهاء الحرب (حسب الوضع المختار) فوق الشريط مباشرة -->
         <p id="training-round-countdown" style="color:#fc8181;font-weight:bold;font-size:13px;margin:0 0 8px 0;"></p>
 
-        <!-- شريط جولة التدريب الدائم الخاص بدولة اللاعب (أحمر=مهاجمون / أزرق=مدافعون، والأرقام داخل كل قسم)
-             — أصبح قابلاً للضغط: يفتح نافذة ترتيب المشاركين (انظر training-round-details-modal بالأسفل) -->
+        <!-- شريط الوضع المختار (تدريب أو حرب فعلية) — أحمر=مهاجمون / أزرق=مدافعون، والأرقام داخل كل قسم -->
         <div id="training-round-bar-container" style="margin-bottom:15px;"></div>
 
-        <!-- اختيار الدور -->
-        <div style="display:flex;gap:10px;margin-bottom:8px;">
+        <!-- اختيار الدور — يظهر فقط بوضع التدريب (لا معنى لمهاجم/مدافع بحرب حقيقية بين دولتين) -->
+        <div id="training-role-select" style="display:flex;gap:10px;margin-bottom:8px;">
             <button class="btn-combat-role" data-role="attacker" onclick="selectCombatRole('attacker')" style="flex:1;background:#e53e3e;color:#fff;border:none;padding:12px;border-radius:8px;cursor:pointer;font-weight:bold;">⚔️ مهاجم</button>
             <button class="btn-combat-role" data-role="defender" onclick="selectCombatRole('defender')" style="flex:1;background:#3182ce;color:#fff;border:none;padding:12px;border-radius:8px;cursor:pointer;font-weight:bold;">🛡️ مدافع</button>
         </div>
@@ -99,7 +106,7 @@
     </div>
 </div>
 
-<!-- نافذة ترتيب مشاركي جولة التدريب — جديدة: تُفتح بالضغط على شريط training-round-bar-container -->
+<!-- نافذة ترتيب مشاركي جولة التدريب -->
 <div id="training-round-details-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:9998;justify-content:center;align-items:center;padding:20px;box-sizing:border-box;">
     <div style="background:#1a1f26;border:1px solid #2d3748;border-radius:14px;padding:20px;width:100%;max-width:400px;max-height:85vh;overflow-y:auto;text-align:center;">
         <h3 style="color:#fff;margin:0 0 5px 0;font-size:18px;">ترتيب مشاركي التدريب</h3>
