@@ -21,7 +21,7 @@ import {
 
 import {
     handleWarsViewUpdate, declareWar, openTrainingModal, closeTrainingModal, selectCombatRole,
-    executeCombatRound, onTrainingWeaponChange, openWarDetailsModal, closeWarDetailsModal,
+    selectCombatMode, executeCombatRound, onTrainingWeaponChange, openWarDetailsModal, closeWarDetailsModal,
     openTrainingRoundDetailsModal, closeTrainingRoundDetailsModal
 } from './wars.js';
 
@@ -155,6 +155,7 @@ export function initGameSystem() {
             window.openTrainingModal = openTrainingModal;
             window.closeTrainingModal = closeTrainingModal;
             window.selectCombatRole = selectCombatRole;
+            window.selectCombatMode = selectCombatMode;
             window.executeCombatRound = executeCombatRound;
             window.onTrainingWeaponChange = onTrainingWeaponChange;
             window.openWarDetailsModal = openWarDetailsModal;
