@@ -137,20 +137,42 @@ function subscribeToChatMessages(container) {
 
 function renderSingleMessage(container, msg, isMe) {
     const msgDate = new Date(msg.time);
+
     let hours = msgDate.getHours();
     const minutes = String(msgDate.getMinutes()).padStart(2, '0');
     const ampm = hours >= 12 ? 'م' : 'ص';
     hours = hours % 12 || 12;
 
     const messageDiv = document.createElement('div');
-    messageDiv.className = isMe ? 'chat-message me' : 'chat-message others';
-    messageDiv.innerHTML = `
-        <div class="msg-header">
-            <span>${msg.sender} ${isMe ? '(أنت)' : ''}</span>
-            <span>${hours}:${minutes} ${ampm}</span>
-        </div>
-        ${msg.text}
-    `;
+    messageDiv.className = isMe
+        ? 'chat-message me'
+        : 'chat-message others';
+
+    // Header
+    const header = document.createElement('div');
+    header.className = 'msg-header';
+
+    const senderSpan = document.createElement('span');
+    senderSpan.textContent =
+        `${msg.sender || 'لاعب مجهول'} ${isMe ? '(أنت)' : ''}`;
+
+    const timeSpan = document.createElement('span');
+    timeSpan.textContent = `${hours}:${minutes} ${ampm}`;
+
+    header.appendChild(senderSpan);
+    header.appendChild(timeSpan);
+
+    // Message text
+    const textDiv = document.createElement('div');
+    textDiv.className = 'msg-text';
+
+    // مهم جداً:
+    // textContent يمنع تنفيذ HTML/JavaScript القادم من اللاعبين
+    textDiv.textContent = msg.text || '';
+
+    messageDiv.appendChild(header);
+    messageDiv.appendChild(textDiv);
+
     container.appendChild(messageDiv);
 }
 
