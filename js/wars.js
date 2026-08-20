@@ -1,5 +1,5 @@
 // ==========================================
-// ⚔️ نظام الحروب والتدريب والقتال وسوق الأسلحة
+// ⚔️ نظام الحروب والتدريب والقتال وسوق الأسلحة (كامل)
 // ==========================================
 import { africanCountries } from './config.js';
 import { formatTimeShort } from './app.js';
@@ -93,7 +93,7 @@ let lastSubscribedWarLocation = null;
 let selectedTrainingRole = 'attacker'; // 'attacker' | 'defender'
 let selectedTrainingWeaponId = null;
 
-let selectedWarRole = 'attacker'; // للدفاع أو الهجوم في الحرب
+let selectedWarRole = 'attacker'; 
 let selectedWarWeaponId = null;
 
 let currentTrainingRound = null;
@@ -323,7 +323,6 @@ function renderAllWarsList() {
     const container = document.getElementById('all-wars-container');
     if (!container) return;
 
-    // عرض جميع حروب القارة لكي تظهر حرب مصر والمغرب وباقي الحروب بشكل دائم
     const allWars = currentAllWarsCache;
 
     if (allWars.length === 0) {
@@ -337,4 +336,57 @@ function renderAllWarsList() {
 function findWarById(warId) {
     if (currentCountryWar && currentCountryWar.id === warId) return currentCountryWar;
     return currentAllWarsCache.find(w => w.id === warId) || null;
+}
+
+function refreshCombatEnergyDisplay(data) {
+    const energyBar = document.getElementById('combat-energy-bar');
+    const energyText = document.getElementById('combat-energy-text');
+    if (!energyBar || !data) return;
+
+    const currentEnergy = data.combat_energy ?? 100;
+    const maxEnergy = getCombatEnergyCap(data.skills?.energy);
+    const pct = Math.max(0, Math.min(100, (currentEnergy / maxEnergy) * 100));
+
+    energyBar.style.width = `${pct}%`;
+    if (energyText) energyText.textContent = `${currentEnergy} / ${maxEnergy}`;
+}
+
+function maybeRegenCombatEnergy(data) {
+    // إدارة تجديد طاقة القتال تلقائياً
+    const lastRegen = data.last_combat_energy_regen || Date.now();
+    const now = Date.now();
+    const diffMinutes = (now - lastRegen) / (1000 * 60);
+
+    if (diffMinutes >= COMBAT_ENERGY_REGEN_MINUTES) {
+        const intervalsPassed = Math.floor(diffMinutes / COMBAT_ENERGY_REGEN_MINUTES);
+        const maxEnergy = getCombatEnergyCap(data.skills?.energy);
+        const newEnergy = Math.min(maxEnergy, (data.combat_energy ?? 100) + intervalsPassed * COMBAT_ENERGY_REGEN_AMOUNT);
+        
+        firebase.firestore().collection('users').doc(firebase.auth().currentUser.uid).update({
+            combat_energy: newEnergy,
+            last_combat_energy_regen: now
+        }).catch(err => console.error("خطأ في تجديد طاقة القتال:", err));
+    }
+}
+
+function renderWeaponsMarket(data) {
+    const marketContainer = document.getElementById('weapons-market-container');
+    if (!marketContainer) return;
+
+    const weapons = data.weapons || {};
+    marketContainer.innerHTML = WEAPONS_CATALOG.map(w => {
+        const owned = weapons[w.id] || 0;
+        const price = getWeaponPrice(w.basePrice, data.skills?.education);
+        return `
+            <div style="background:#1a202c;border:1px solid #2d3748;border-radius:8px;padding:10px;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                <div>
+                    <span style="font-size:20px;">${w.icon}</span>
+                    <span style="color:#fff;font-weight:bold;margin-right:8px;">${w.name}</span>
+                    <span style="color:#a0aec0;font-size:12px;">(ضرر: ${w.damage})</span>
+                    <div style="color:#e2e8f0;font-size:11px;margin-top:2px;">الممتلك: ${owned} | السعر: ${price} عملة</div>
+                </div>
+                <button onclick="buyWeapon('${w.id}', ${price})" style="background:#3182ce;color:#fff;border:none;padding:6px 12px;border-radius:6px;font-size:12px;cursor:pointer;">شراء</button>
+            </div>
+        `;
+    }).join('');
 }
