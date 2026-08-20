@@ -1,5 +1,5 @@
 // ==========================================
-// ⚔️ نظام الحروب والتدريب والقتال وسوق الأسلحة (كامل)
+// ⚔️ نظام الحروب والتدريب والقتال وسوق الأسلحة — مستخرج من game.js
 // ==========================================
 import { africanCountries } from './config.js';
 import { formatTimeShort } from './app.js';
@@ -8,23 +8,25 @@ import { getPlayerData } from './player-state.js';
 import { LEVEL_BONUS_PER_LEVEL } from './skills-config.js';
 
 const WAR_DURATION_HOURS = 24;
-const TRAINING_ROUND_DURATION_HOURS = 24;
+const TRAINING_ROUND_DURATION_HOURS = 24; // جولة التدريب الخاصة بكل دولة تتجدد كل 24 ساعة، دائماً عند 00:00 غرينتش
 
+// يرجع توقيت منتصف الليل القادم بتوقيت غرينتش (00:00 UTC) — تبدأ عنده كل جولة تدريب جديدة
 function getNextUtcMidnightMs() {
     const now = new Date();
     return Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 0, 0, 0);
 }
 
+// معرّف فريد لكل جولة تدريب — يميّز مشاركي الجولة الحالية عن جولات سابقة انتهت وتصفّرت
 function generateRoundId() {
     return `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 }
-
 const COMBAT_ENERGY_REGEN_AMOUNT = 10;
 const COMBAT_ENERGY_REGEN_MINUTES = 10;
 const MIN_ENERGY_TO_FIGHT = 10;
-const TRAINING_XP_PER_DAMAGE = 0.5;
-const WAR_XP_PER_DAMAGE = 0.6;
+const TRAINING_XP_PER_DAMAGE = 0.5;  // كل نقطة ضرر بالتدريب = 0.5 XP
+const WAR_XP_PER_DAMAGE = 0.6;       // كل نقطة ضرر بحرب حقيقية = 0.6 XP (أعلى شوي من التدريب)
 
+// شريط ثنائي اللون مشترك (أحمر=مهاجمين، أزرق=مدافعين) والأرقام تظهر داخل كل قسم مباشرة
 function renderTwoToneBarHtml(attackerValue, defenderValue) {
     const total = attackerValue + defenderValue;
     const pctA = total > 0 ? (attackerValue / total) * 100 : 50;
@@ -42,6 +44,7 @@ function renderTwoToneBarHtml(attackerValue, defenderValue) {
     `;
 }
 
+// كتالوج الأسلحة الثابت — كل ما زاد الضرر زاد السعر الأساسي
 const WEAPONS_CATALOG = [
     { id: 'knife',   name: 'سكين',        icon: '🔪', damage: 5,   basePrice: 200 },
     { id: 'pistol',  name: 'مسدس',        icon: '🔫', damage: 15,  basePrice: 800 },
@@ -50,24 +53,31 @@ const WEAPONS_CATALOG = [
     { id: 'tank',    name: 'دبابة',       icon: '🛡️', damage: 200, basePrice: 20000 }
 ];
 
-const EDUCATION_PRICE_DISCOUNT_PER_LEVEL = 0.002;
-const MAX_EDUCATION_DISCOUNT = 0.5;
+// خصم سعر السلاح من التعليم ينمو بسرعة (ضعف سرعة مضاعف الإنتاجية أعلاه)
+const EDUCATION_PRICE_DISCOUNT_PER_LEVEL = 0.002; // 0.2% خصم لكل مستوى تعليم
+const MAX_EDUCATION_DISCOUNT = 0.5;               // سقف الخصم 50%
 
+// سعة مخزون طاقة القتال: نفس معادلة طاقة العمل بالضبط، وعلى أساس مستوى الطاقة (وليس القوة القتالية)
+// توحيد الطاقة: نفس المهارة (energyLevel) تتحكم بسعة طاقة العمل وطاقة القتال معاً
 function getCombatEnergyCap(energyLevel) {
     const lvl = energyLevel ?? 1;
     return 100 + Math.floor(lvl / 50) * 5;
 }
 
+// سعر السلاح بعد خصم مستوى التعليم
 function getWeaponPrice(basePrice, educationLevel) {
     const lvl = educationLevel ?? 1;
     const discount = Math.min(MAX_EDUCATION_DISCOUNT, lvl * EDUCATION_PRICE_DISCOUNT_PER_LEVEL);
     return Math.round(basePrice * (1 - discount));
 }
 
+// حساب الضرر: (القوة + ضرر السلاح) × مضاعف مستوى اللاعب × وحدات الطاقة المستهلكة
+// ملاحظة: القوة القتالية تؤثر فقط عبر قيمتها الخام (power) — لا يوجد مضاعف إضافي مرتبط بمستوى الطاقة بعد الآن
 function calculateCombatDamage(playerData, energySpent, weaponId, availableWeaponUnits) {
-    const rawEnergyUnits = Math.floor(energySpent / 10);
+    const rawEnergyUnits = Math.floor(energySpent / 10); // كل 10 طاقة = وحدة واحدة كحد أقصى نظري
     if (rawEnergyUnits <= 0) return { damage: 0, energyUnits: 0 };
 
+    // الوحدات الفعلية المستخدمة = الأقل بين ما تسمح به الطاقة وما تملكه فعلياً من السلاح
     const energyUnits = Math.max(0, Math.min(rawEnergyUnits, availableWeaponUnits ?? rawEnergyUnits));
     if (energyUnits <= 0) return { damage: 0, energyUnits: 0 };
 
@@ -75,6 +85,7 @@ function calculateCombatDamage(playerData, energySpent, weaponId, availableWeapo
     const weapon = WEAPONS_CATALOG.find(w => w.id === weaponId);
     const weaponDamage = weapon?.damage ?? 0;
 
+    // نفس معادلة حساب مستوى اللاعب المستخدمة بشريط الـXP، ومطبَّقة أيضاً على إنتاجية العمل
     const playerLevel = Math.floor(Math.sqrt((playerData.experience ?? 1) / 100)) + 1;
     const levelMultiplier = 1 + (playerLevel - 1) * LEVEL_BONUS_PER_LEVEL;
 
@@ -89,18 +100,13 @@ let unsubscribeCountryWarB = null;
 let currentAllWarsCache = [];
 let unsubscribeAllWars = null;
 let lastSubscribedWarLocation = null;
-
-let selectedTrainingRole = 'attacker'; // 'attacker' | 'defender'
-let selectedTrainingWeaponId = null;
-
-let selectedWarRole = 'attacker'; 
-let selectedWarWeaponId = null;
-
-let currentTrainingRound = null;
+let selectedCombatMode = null;   // 'war' | 'training' — اختيار صريح كل مرة، مستقل تماماً عن حالة الحرب
+let selectedCombatRole = null; // 'attacker' | 'defender' — يخص وضع التدريب فقط، حرية اختيار كاملة كل مرة
+let selectedCombatWeaponId = null; // معرف السلاح المختار من مخزون اللاعب (إلزامي، لا يوجد قتال بدون سلاح)
+let currentTrainingRound = null;   // جولة التدريب الدائمة الخاصة بدولة اللاعب الحالية
 let unsubscribeTrainingRound = null;
 let trainingRoundCountdownInterval = null;
-let trainingRoundDetailsCountdownInterval = null;
-let warCombatCountdownInterval = null;
+let trainingRoundDetailsCountdownInterval = null; // عداد نافذة ترتيب مشاركي التدريب
 
 export function handleWarsViewUpdate(data) {
     const countryKey = data.current_location || "morocco";
@@ -120,6 +126,7 @@ export function handleWarsViewUpdate(data) {
     renderWeaponsMarket(data);
 }
 
+// جولة التدريب الدائمة الخاصة بدولة اللاعب — مستند واحد لكل دولة، يتجدد تلقائياً كل 24 ساعة
 function subscribeTrainingRound(countryKey) {
     if (unsubscribeTrainingRound) { unsubscribeTrainingRound(); unsubscribeTrainingRound = null; }
 
@@ -127,6 +134,7 @@ function subscribeTrainingRound(countryKey) {
 
     unsubscribeTrainingRound = roundRef.onSnapshot((doc) => {
         if (!doc.exists) {
+            // أول جولة لهذه الدولة — ينشئها أول لاعب يفتح صفحة الحروب فيها
             roundRef.set({
                 countryKey,
                 attackerDamage: 0,
@@ -139,10 +147,11 @@ function subscribeTrainingRound(countryKey) {
 
         currentTrainingRound = { id: doc.id, ...doc.data() };
         maybeResetTrainingRound();
-        renderTrainingRoundBar();
+        renderCombatModalBar(); // تُقرر تلقائياً عرض شريط الحرب أو شريط التدريب حسب currentCountryWar
     }, (err) => console.error("خطأ في جلب جولة التدريب:", err));
 }
 
+// إعادة تدوير الجولة تلقائياً لما ينتهي وقتها (بمعاملة آمنة تمنع التصفير المزدوج من أكثر من لاعب بنفس اللحظة)
 async function maybeResetTrainingRound() {
     if (!currentTrainingRound) return;
     if (Date.now() < currentTrainingRound.roundEndAt) return;
@@ -152,13 +161,13 @@ async function maybeResetTrainingRound() {
         await firebase.firestore().runTransaction(async (transaction) => {
             const doc = await transaction.get(roundRef);
             const data = doc.data();
-            if (!data || Date.now() < data.roundEndAt) return;
+            if (!data || Date.now() < data.roundEndAt) return; // لاعب ثاني سبقنا بالتصفير
 
             transaction.update(roundRef, {
                 attackerDamage: 0,
                 defenderDamage: 0,
                 roundEndAt: getNextUtcMidnightMs(),
-                roundId: generateRoundId()
+                roundId: generateRoundId() // جولة جديدة = معرّف جديد، لتمييز مشاركي الجولة الجديدة عن السابقة
             });
         });
     } catch (err) {
@@ -191,6 +200,60 @@ function renderTrainingRoundBar() {
     }, 1000);
 }
 
+// يقرر أي شريط يُعرض داخل نافذة "التدريب/القتال": شريط الحرب الفعلية فقط لو اختار اللاعب صراحةً وضع "الحرب"،
+// وإلا شريط جولة التدريب الدائمة دائماً — الاختيار صريح الآن، لا يُفرض تلقائياً لمجرد وجود حرب نشطة
+function renderCombatModalBar() {
+    const barContainer = document.getElementById('training-round-bar-container');
+    const countdownEl = document.getElementById('training-round-countdown');
+    if (!barContainer) return;
+
+    if (trainingRoundCountdownInterval) { clearInterval(trainingRoundCountdownInterval); trainingRoundCountdownInterval = null; }
+
+    if (selectedCombatMode === 'war' && currentCountryWar) {
+        const war = currentCountryWar;
+        barContainer.innerHTML = `
+            <div onclick="openWarDetailsModal('${war.id}')" style="cursor:pointer;" title="اضغط لعرض ترتيب المشاركين">
+                ${renderTwoToneBarHtml(war.countryADamage || 0, war.countryBDamage || 0)}
+                <div style="display:flex;justify-content:space-between;margin-top:5px;color:#a0aec0;font-size:11px;">
+                    <span>${war.countryAFlag || '🏳️'} ${escapeHtml(war.countryAName || war.countryA)}</span>
+                    <span>${war.countryBFlag || '🏳️'} ${escapeHtml(war.countryBName || war.countryB)}</span>
+                </div>
+                <div style="text-align:center;color:#4a5568;font-size:10px;margin-top:2px;">اضغط لعرض ترتيب المشاركين</div>
+            </div>
+        `;
+
+        const endAt = war.endAt?.toMillis ? war.endAt.toMillis() : war.endAt;
+        trainingRoundCountdownInterval = setInterval(() => {
+            if (!currentCountryWar || !countdownEl) return;
+            const msLeft = Math.max(0, (endAt || 0) - Date.now());
+            countdownEl.textContent = msLeft > 0 ? `⏳ تنتهي الحرب خلال ${formatTimeShort(msLeft)}` : "⏳ انتهت الحرب";
+            if (msLeft <= 0) clearInterval(trainingRoundCountdownInterval);
+        }, 1000);
+    } else {
+        renderTrainingRoundBar();
+    }
+}
+
+// تحديث نص السياق (توضيح الوضع الحالي) وإظهار/إخفاء اختيار الدور (مهاجم/مدافع) — الدور يخص التدريب فقط
+function updateCombatContextUI() {
+    const contextNote = document.getElementById('training-context-note');
+    const roleSelectBox = document.getElementById('training-role-select');
+    const roleNote = document.getElementById('training-role-note');
+
+    if (selectedCombatMode === 'war') {
+        if (contextNote) contextNote.textContent = '⚔️ ستشارك بالحرب الفعلية الآن — ضررك يُحتسب مباشرة لصالح دولتك';
+        if (roleSelectBox) roleSelectBox.style.display = 'none'; // لا معنى لمهاجم/مدافع بحرب حقيقية بين دولتين، الضرر يُحتسب تلقائياً لصف دولتك
+    } else {
+        if (contextNote) contextNote.textContent = '🥋 وضع تدريب دائم لدولتك — الضرر يُحتسب بجولة التدريب، وتكسب XP فعلي';
+        if (roleSelectBox) roleSelectBox.style.display = 'flex';
+        if (roleNote) roleNote.textContent = selectedCombatRole
+            ? `دورك المختار: ${selectedCombatRole === 'attacker' ? '⚔️ مهاجم' : '🛡️ مدافع'}`
+            : 'اختر دورك أولاً';
+    }
+}
+
+
+// اشتراك مزدوج (بلد كـ"دولة أ" أو "دولة ب") لأن Firestore ما يدعم OR مباشر بين حقلين
 function subscribeCountryWar(countryKey) {
     if (unsubscribeCountryWarA) { unsubscribeCountryWarA(); unsubscribeCountryWarA = null; }
     if (unsubscribeCountryWarB) { unsubscribeCountryWarB(); unsubscribeCountryWarB = null; }
@@ -200,9 +263,9 @@ function subscribeCountryWar(countryKey) {
 
     const updateCombined = () => {
         currentCountryWar = warFromA || warFromB || null;
-        maybeEndWar(currentCountryWar);
+        maybeEndWar(currentCountryWar); // تفحص فوراً هل انتهى وقت الحرب لتصفيرها تلقائياً (بدل بقائها active للأبد)
         renderCountryWarBlock(countryKey);
-        renderAllWarsList();
+        renderAllWarsList(); // إعادة رسم القائمة العامة فوراً لاستبعاد/إعادة إدراج حرب دولتك بمجرد تغيّر حالتها
     };
 
     unsubscribeCountryWarA = db.collection('wars')
@@ -222,12 +285,17 @@ function subscribeCountryWar(countryKey) {
         }, (err) => console.error("خطأ في جلب حرب الدولة (ب):", err));
 }
 
+// إنهاء الحرب تلقائياً لما ينتهي وقتها (endAt) — بمعاملة آمنة تمنع الإنهاء المزدوج من أكثر من لاعب بنفس اللحظة
+// الفائز = صاحب الضرر الأعلى، أو null في حال التعادل
+// محاولتان: الأولى تسجّل الفائز، ولو رفضتها قواعد Firestore (حقل winner غير مسموح بعد) نعيد المحاولة
+// بتحديث status فقط — حتى لا تبقى الحرب عالقة للأبد بانتظار تعديل القواعد يدوياً
 async function maybeEndWar(war) {
     if (!war) return;
     const endAt = war.endAt?.toMillis ? war.endAt.toMillis() : war.endAt;
     if (!endAt || Date.now() < endAt) return;
 
     const warRef = firebase.firestore().collection('wars').doc(war.id);
+
     const computeWinner = (data) => {
         const aDamage = data.countryADamage || 0;
         const bDamage = data.countryBDamage || 0;
@@ -240,11 +308,23 @@ async function maybeEndWar(war) {
         await firebase.firestore().runTransaction(async (transaction) => {
             const doc = await transaction.get(warRef);
             const data = doc.data();
-            if (!data || data.status !== 'active') return;
+            if (!data || data.status !== 'active') return; // انتهت أصلاً أو لاعب آخر سبقنا بالإنهاء
             transaction.update(warRef, { status: 'ended', winner: computeWinner(data) });
         });
+        return; // نجحت المحاولة الأولى، لا حاجة للخطة البديلة
     } catch (err) {
-        console.warn("تعذر إنهاء الحرب مع تسجيل الفائز:", err.message);
+        console.warn("تعذر إنهاء الحرب مع تسجيل الفائز (على الأرجح حقل winner غير مسموح بقواعد Firestore بعد) — إعادة المحاولة بدونه:", err.message);
+    }
+
+    try {
+        await firebase.firestore().runTransaction(async (transaction) => {
+            const doc = await transaction.get(warRef);
+            const data = doc.data();
+            if (!data || data.status !== 'active') return;
+            transaction.update(warRef, { status: 'ended' });
+        });
+    } catch (err2) {
+        console.error("فشل إنهاء الحرب حتى بدون حقل الفائز — تحقق من قواعد Firestore لمجموعة wars:", err2);
     }
 }
 
@@ -256,12 +336,13 @@ function subscribeAllWars() {
             snapshot.forEach(doc => {
                 const war = { id: doc.id, ...doc.data() };
                 currentAllWarsCache.push(war);
-                maybeEndWar(war);
+                maybeEndWar(war); // فحص نفس الآلية لكل حروب القارة أيضاً، وليس فقط حرب دولتي
             });
             renderAllWarsList();
         }, (err) => console.error("خطأ في جلب كل الحروب:", err));
 }
 
+// بلوك 1: حالة حرب دولة اللاعب الحالية
 function renderCountryWarBlock(countryKey) {
     const container = document.getElementById('country-war-container');
     if (!container) return;
@@ -269,7 +350,7 @@ function renderCountryWarBlock(countryKey) {
     if (!currentCountryWar) {
         container.innerHTML = `
             <p style="color:#718096;font-size:14px;text-align:center;margin:10px 0;">لا توجد حروب قائمة في دولتك حالياً</p>
-            <button onclick="declareWar()" style="width:100%;background:#742a2a;color:#fff;border:none;padding:12px;border-radius:8px;font-weight:bold;font-size:14px;cursor:pointer;">🚨 إعلان حرب</button>
+            <button onclick="declareWar()" style="width:100%;background:#742a2a;color:#fff;border:none;padding:12px;border-radius:8px;font-weight:bold;font-size:14px;cursor:pointer;">🚨 إعلان حرب (مؤقت لحين نظام الرئيس/البرلمان)</button>
         `;
         return;
     }
@@ -277,11 +358,13 @@ function renderCountryWarBlock(countryKey) {
     container.innerHTML = renderWarCardHtml(currentCountryWar, true);
 }
 
+// بطاقة حرب موحّدة (تُستخدم ببلوك 1 وبلوك 3 معاً)
 function renderWarCardHtml(war, showOpenButton) {
     const endAt = war.endAt?.toMillis ? war.endAt.toMillis() : war.endAt;
     const msLeft = Math.max(0, (endAt || 0) - Date.now());
     const timeLeftText = msLeft > 0 ? formatTimeShort(msLeft) : "انتهت";
 
+    // نعرض زر السفر لدولة فقط لو اللاعب ليس موجوداً بها أصلاً — لا داعي لزر سفر لدولة أنت فيها بالفعل
     const playerLocation = getPlayerData()?.current_location;
     const showTravelToA = playerLocation !== war.countryA;
     const showTravelToB = playerLocation !== war.countryB;
@@ -294,7 +377,7 @@ function renderWarCardHtml(war, showOpenButton) {
                     <div style="color:#fff;font-size:12px;font-weight:bold;">${escapeHtml(war.countryAName || war.countryA)}</div>
                 </div>
                 <div style="text-align:center;flex:1;">
-                    ${showOpenButton ? `<button onclick="openWarCombatModal()" style="background:#742a2a;color:#fff;border:none;padding:8px 14px;border-radius:8px;font-weight:bold;font-size:13px;cursor:pointer;">⚔️ ادخل الحرب</button>` : ''}
+                    ${showOpenButton ? `<button onclick="openTrainingModal()" style="background:#742a2a;color:#fff;border:none;padding:8px 14px;border-radius:8px;font-weight:bold;font-size:13px;cursor:pointer;">⚔️ ادخل الحرب</button>` : ''}
                 </div>
                 <div style="text-align:center;flex:1;">
                     <div style="font-size:28px;">${war.countryBFlag || '🏳️'}</div>
@@ -310,83 +393,4 @@ function renderWarCardHtml(war, showOpenButton) {
                 </div>
                 <div style="text-align:center;color:#4a5568;font-size:10px;margin-top:2px;">اضغط لعرض ترتيب المشاركين</div>
             </div>
-            ${!showOpenButton && (showTravelToA || showTravelToB) ? `
-            <div style="display:flex;gap:8px;margin-top:10px;">
-                ${showTravelToA ? `<button onclick="travelToCountry('${war.countryA}')" style="flex:1;background:#2d3748;color:#fff;border:none;padding:8px;border-radius:6px;font-size:12px;cursor:pointer;">✈️ سافر لـ ${escapeHtml(war.countryAName || war.countryA)}</button>` : ''}
-                ${showTravelToB ? `<button onclick="travelToCountry('${war.countryB}')" style="flex:1;background:#2d3748;color:#fff;border:none;padding:8px;border-radius:6px;font-size:12px;cursor:pointer;">✈️ سافر لـ ${escapeHtml(war.countryBName || war.countryB)}</button>` : ''}
-            </div>` : ''}
-        </div>
-    `;
-}
-
-function renderAllWarsList() {
-    const container = document.getElementById('all-wars-container');
-    if (!container) return;
-
-    const allWars = currentAllWarsCache;
-
-    if (allWars.length === 0) {
-        container.innerHTML = '<p style="color:#718096;font-size:13px;text-align:center;margin:10px 0;">لا توجد حروب نشطة أخرى بالقارة حالياً</p>';
-        return;
-    }
-
-    container.innerHTML = allWars.map(war => renderWarCardHtml(war, false)).join('<div style="height:10px;"></div>');
-}
-
-function findWarById(warId) {
-    if (currentCountryWar && currentCountryWar.id === warId) return currentCountryWar;
-    return currentAllWarsCache.find(w => w.id === warId) || null;
-}
-
-function refreshCombatEnergyDisplay(data) {
-    const energyBar = document.getElementById('combat-energy-bar');
-    const energyText = document.getElementById('combat-energy-text');
-    if (!energyBar || !data) return;
-
-    const currentEnergy = data.combat_energy ?? 100;
-    const maxEnergy = getCombatEnergyCap(data.skills?.energy);
-    const pct = Math.max(0, Math.min(100, (currentEnergy / maxEnergy) * 100));
-
-    energyBar.style.width = `${pct}%`;
-    if (energyText) energyText.textContent = `${currentEnergy} / ${maxEnergy}`;
-}
-
-function maybeRegenCombatEnergy(data) {
-    // إدارة تجديد طاقة القتال تلقائياً
-    const lastRegen = data.last_combat_energy_regen || Date.now();
-    const now = Date.now();
-    const diffMinutes = (now - lastRegen) / (1000 * 60);
-
-    if (diffMinutes >= COMBAT_ENERGY_REGEN_MINUTES) {
-        const intervalsPassed = Math.floor(diffMinutes / COMBAT_ENERGY_REGEN_MINUTES);
-        const maxEnergy = getCombatEnergyCap(data.skills?.energy);
-        const newEnergy = Math.min(maxEnergy, (data.combat_energy ?? 100) + intervalsPassed * COMBAT_ENERGY_REGEN_AMOUNT);
-        
-        firebase.firestore().collection('users').doc(firebase.auth().currentUser.uid).update({
-            combat_energy: newEnergy,
-            last_combat_energy_regen: now
-        }).catch(err => console.error("خطأ في تجديد طاقة القتال:", err));
-    }
-}
-
-function renderWeaponsMarket(data) {
-    const marketContainer = document.getElementById('weapons-market-container');
-    if (!marketContainer) return;
-
-    const weapons = data.weapons || {};
-    marketContainer.innerHTML = WEAPONS_CATALOG.map(w => {
-        const owned = weapons[w.id] || 0;
-        const price = getWeaponPrice(w.basePrice, data.skills?.education);
-        return `
-            <div style="background:#1a202c;border:1px solid #2d3748;border-radius:8px;padding:10px;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-                <div>
-                    <span style="font-size:20px;">${w.icon}</span>
-                    <span style="color:#fff;font-weight:bold;margin-right:8px;">${w.name}</span>
-                    <span style="color:#a0aec0;font-size:12px;">(ضرر: ${w.damage})</span>
-                    <div style="color:#e2e8f0;font-size:11px;margin-top:2px;">الممتلك: ${owned} | السعر: ${price} عملة</div>
-                </div>
-                <button onclick="buyWeapon('${w.id}', ${price})" style="background:#3182ce;color:#fff;border:none;padding:6px 12px;border-radius:6px;font-size:12px;cursor:pointer;">شراء</button>
-            </div>
-        `;
-    }).join('');
-}
+            ${!showOpenButton && (showTravelToA || showTravelToB)
