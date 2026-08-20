@@ -419,7 +419,7 @@ function renderAllWarsList() {
     container.innerHTML = otherWars.map(war => renderWarCardHtml(war, false)).join('<div style="height:10px;"></div>');
 }
 
-
+let warDetailsCountdownInterval = null;
 
 // البحث عن حرب في أي من الكاشات المتاحة (حرب دولتي، أو كل حروب القارة)
 function findWarById(warId) {
