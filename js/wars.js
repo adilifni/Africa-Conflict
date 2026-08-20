@@ -403,9 +403,22 @@ function renderWarCardHtml(war, showOpenButton) {
 }
 
 // بلوك 3: كل الحروب النشطة بأفريقيا
+// بلوك 3: كل الحروب النشطة بأفريقيا
 function renderAllWarsList() {
     const container = document.getElementById('all-wars-container');
     if (!container) return;
+
+    // عرض جميع الحروب النشطة في القارة دون استثناء حرب الدولة الحالية، 
+    // لكي تظهر حرب مصر والمغرب وباقي حروب القارة بشكل دائم.
+    const allWars = currentAllWarsCache;
+
+    if (allWars.length === 0) {
+        container.innerHTML = '<p style="color:#718096;font-size:13px;text-align:center;margin:10px 0;">لا توجد حروب نشطة أخرى بالقارة حالياً</p>';
+        return;
+    }
+
+    container.innerHTML = allWars.map(war => renderWarCardHtml(war, false)).join('<div style="height:10px;"></div>');
+}
 
     // نستبعد حرب دولتك الحالية من هذه القائمة لأنها معروضة أصلاً ببلوك "حرب دولتك الحالية" أعلاه
     // بزر "ادخل الحرب" الصحيح — عرضها هنا أيضاً بأزرار سفر كان يسبب تكراراً مربكاً (خصوصاً وأنت أصلاً بنفس الدولة)
