@@ -22,9 +22,8 @@ import {
 
 import {
     handleWarsViewUpdate, declareWar, openTrainingModal, closeTrainingModal, selectCombatRole,
-    executeCombatRound, onTrainingWeaponChange, openWarDetailsModal, closeWarDetailsModal,
-    openTrainingRoundDetailsModal, closeTrainingRoundDetailsModal,
-    openWarCombatModal, closeWarCombatModal, onWarCombatWeaponChange, executeWarCombat
+    selectCombatMode, executeCombatRound, onTrainingWeaponChange, openWarDetailsModal, closeWarDetailsModal,
+    openTrainingRoundDetailsModal, closeTrainingRoundDetailsModal
 } from './wars.js';
 
 export function initGameSystem() {
@@ -159,16 +158,13 @@ export function initGameSystem() {
             window.openTrainingModal = openTrainingModal;
             window.closeTrainingModal = closeTrainingModal;
             window.selectCombatRole = selectCombatRole;
+            window.selectCombatMode = selectCombatMode;
             window.executeCombatRound = executeCombatRound;
             window.onTrainingWeaponChange = onTrainingWeaponChange;
             window.openWarDetailsModal = openWarDetailsModal;
             window.closeWarDetailsModal = closeWarDetailsModal;
             window.openTrainingRoundDetailsModal = openTrainingRoundDetailsModal;
             window.closeTrainingRoundDetailsModal = closeTrainingRoundDetailsModal;
-            window.openWarCombatModal = openWarCombatModal;
-            window.closeWarCombatModal = closeWarCombatModal;
-            window.onWarCombatWeaponChange = onWarCombatWeaponChange;
-            window.executeWarCombat = executeWarCombat;
 
             startTravelWatcher(); // مؤقّت دائم يراقب رحلات السفر ويُتمّها تلقائياً فور انتهاء وقتها
 
