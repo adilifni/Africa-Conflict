@@ -1,14 +1,64 @@
 // ==========================================
 // 🌍 البيانات العالمية والمتغيرات الأساسية للعبة
 // ==========================================
-// mapPosition: موقع تقريبي (نسبة مئوية top/left) لكل دولة فوق صورة خريطة القارة — قابل للضبط بدقة أكبر لاحقاً
+// lat/lon: إحداثيات عاصمة كل دولة (تُستخدم لحساب موضعها على الخريطة ووقت السفر الحقيقي بينها وبين أي دولة أخرى)
+// ⚠️ مفاتيح الدول الثماني الأصلية (morocco, algeria, egypt, tunisia, libya, south_africa, nigeria, senegal)
+// أُبقيت بلا أي تغيير عمداً — تغييرها كان سيكسر بيانات اللاعبين الحاليين المخزّنة بـFirestore (current_location، الحروب، المصانع...)
 export const africanCountries = {
-    morocco:      { name: "المغرب",          flag: "🇲🇦", mapPosition: { top: "20%", left: "22%" } },
-    algeria:      { name: "الجزائر",         flag: "🇩🇿", mapPosition: { top: "28%", left: "33%" } },
-    tunisia:      { name: "تونس",            flag: "🇹🇳", mapPosition: { top: "20%", left: "41%" } },
-    libya:        { name: "ليبيا",           flag: "🇱🇾", mapPosition: { top: "27%", left: "49%" } },
-    egypt:        { name: "مصر",             flag: "🇪🇬", mapPosition: { top: "26%", left: "58%" } },
-    senegal:      { name: "السنغال",         flag: "🇸🇳", mapPosition: { top: "45%", left: "12%" } },
-    nigeria:      { name: "نيجيريا",         flag: "🇳🇬", mapPosition: { top: "54%", left: "33%" } },
-    south_africa: { name: "جنوب إفريقيا",    flag: "🇿🇦", mapPosition: { top: "87%", left: "43%" } }
+    morocco:            { name: "المغرب",                  flag: "🇲🇦", lat: 34.02,  lon: -6.83 },
+    algeria:             { name: "الجزائر",                 flag: "🇩🇿", lat: 36.75,  lon: 3.06 },
+    tunisia:             { name: "تونس",                    flag: "🇹🇳", lat: 36.81,  lon: 10.18 },
+    libya:                { name: "ليبيا",                    flag: "🇱🇾", lat: 32.89,  lon: 13.19 },
+    egypt:               { name: "مصر",                     flag: "🇪🇬", lat: 30.04,  lon: 31.24 },
+    senegal:             { name: "السنغال",                 flag: "🇸🇳", lat: 14.72,  lon: -17.47 },
+    nigeria:             { name: "نيجيريا",                 flag: "🇳🇬", lat: 9.08,   lon: 7.40 },
+    south_africa:       { name: "جنوب إفريقيا",             flag: "🇿🇦", lat: -25.75, lon: 28.19 },
+
+    // بقية دول القارة الـ46 (54 دولة إجمالاً، أعضاء الأمم المتحدة — بدون الصحراء الغربية المتنازع عليها)
+    angola:               { name: "أنغولا",                   flag: "🇦🇴", lat: -8.84,  lon: 13.23 },
+    benin:                { name: "بنين",                     flag: "🇧🇯", lat: 6.50,   lon: 2.60 },
+    botswana:             { name: "بوتسوانا",                 flag: "🇧🇼", lat: -24.63, lon: 25.90 },
+    burkina_faso:        { name: "بوركينا فاسو",              flag: "🇧🇫", lat: 12.37,  lon: -1.53 },
+    burundi:              { name: "بوروندي",                  flag: "🇧🇮", lat: -7.37,  lon: 29.93 },
+    cabo_verde:          { name: "الرأس الأخضر",              flag: "🇨🇻", lat: 14.93,  lon: -23.51 },
+    cameroon:             { name: "الكاميرون",                flag: "🇨🇲", lat: 3.87,   lon: 11.52 },
+    car:                   { name: "جمهورية إفريقيا الوسطى",   flag: "🇨🇫", lat: 4.37,   lon: 18.56 },
+    chad:                  { name: "تشاد",                     flag: "🇹🇩", lat: 12.10,  lon: 15.03 },
+    comoros:              { name: "جزر القمر",                 flag: "🇰🇲", lat: -11.70, lon: 43.26 },
+    congo_brazzaville:  { name: "الكونغو",                    flag: "🇨🇬", lat: -4.26,  lon: 15.28 },
+    congo_kinshasa:     { name: "الكونغو الديمقراطية",        flag: "🇨🇩", lat: -4.32,  lon: 15.31 },
+    djibouti:             { name: "جيبوتي",                    flag: "🇩🇯", lat: 11.59,  lon: 43.15 },
+    equatorial_guinea:  { name: "غينيا الاستوائية",           flag: "🇬🇶", lat: 3.75,   lon: 8.78 },
+    eritrea:              { name: "إريتريا",                   flag: "🇪🇷", lat: 15.32,  lon: 38.93 },
+    eswatini:             { name: "إسواتيني",                  flag: "🇸🇿", lat: -26.32, lon: 31.13 },
+    ethiopia:             { name: "إثيوبيا",                   flag: "🇪🇹", lat: 9.03,   lon: 38.74 },
+    gabon:                { name: "الغابون",                   flag: "🇬🇦", lat: 0.42,   lon: 9.45 },
+    gambia:               { name: "غامبيا",                    flag: "🇬🇲", lat: 13.45,  lon: -16.58 },
+    ghana:                 { name: "غانا",                      flag: "🇬🇭", lat: 5.60,   lon: -0.19 },
+    guinea:                { name: "غينيا",                     flag: "🇬🇳", lat: 9.51,   lon: -13.71 },
+    guinea_bissau:       { name: "غينيا بيساو",               flag: "🇬🇼", lat: 11.86,  lon: -15.60 },
+    ivory_coast:          { name: "ساحل العاج",                 flag: "🇨🇮", lat: 6.83,   lon: -5.29 },
+    kenya:                 { name: "كينيا",                     flag: "🇰🇪", lat: -1.29,  lon: 36.82 },
+    lesotho:               { name: "ليسوتو",                    flag: "🇱🇸", lat: -29.32, lon: 27.48 },
+    liberia:               { name: "ليبيريا",                   flag: "🇱🇷", lat: 6.30,   lon: -10.80 },
+    madagascar:           { name: "مدغشقر",                    flag: "🇲🇬", lat: -18.88, lon: 47.51 },
+    malawi:                { name: "مالاوي",                    flag: "🇲🇼", lat: -13.96, lon: 33.79 },
+    mali:                   { name: "مالي",                      flag: "🇲🇱", lat: 12.65,  lon: -8.00 },
+    mauritania:           { name: "موريتانيا",                 flag: "🇲🇷", lat: 18.09,  lon: -15.98 },
+    mauritius:            { name: "موريشيوس",                  flag: "🇲🇺", lat: -20.16, lon: 57.50 },
+    mozambique:           { name: "موزمبيق",                   flag: "🇲🇿", lat: -25.97, lon: 32.57 },
+    namibia:               { name: "ناميبيا",                   flag: "🇳🇦", lat: -22.56, lon: 17.08 },
+    niger:                  { name: "النيجر",                    flag: "🇳🇪", lat: 13.51,  lon: 2.11 },
+    rwanda:                { name: "رواندا",                    flag: "🇷🇼", lat: -1.94,  lon: 30.06 },
+    sao_tome:             { name: "ساو تومي وبرينسيبي",        flag: "🇸🇹", lat: 0.33,   lon: 6.73 },
+    seychelles:           { name: "سيشل",                      flag: "🇸🇨", lat: -4.62,  lon: 55.45 },
+    sierra_leone:         { name: "سيراليون",                  flag: "🇸🇱", lat: 8.48,   lon: -13.23 },
+    somalia:               { name: "الصومال",                   flag: "🇸🇴", lat: 2.04,   lon: 45.34 },
+    south_sudan:          { name: "جنوب السودان",               flag: "🇸🇸", lat: 4.85,   lon: 31.58 },
+    sudan:                  { name: "السودان",                   flag: "🇸🇩", lat: 15.50,  lon: 32.56 },
+    tanzania:              { name: "تنزانيا",                    flag: "🇹🇿", lat: -6.16,  lon: 35.75 },
+    togo:                   { name: "توغو",                       flag: "🇹🇬", lat: 6.13,   lon: 1.22 },
+    uganda:                { name: "أوغندا",                     flag: "🇺🇬", lat: 0.31,   lon: 32.58 },
+    zambia:                 { name: "زامبيا",                     flag: "🇿🇲", lat: -15.39, lon: 28.32 },
+    zimbabwe:               { name: "زيمبابوي",                   flag: "🇿🇼", lat: -17.83, lon: 31.05 }
 };
