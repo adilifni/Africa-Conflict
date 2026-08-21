@@ -11,6 +11,7 @@ import { uploadImageToCloudinary } from './cloudinary.js';
 import { setPlayerData } from './player-state.js';
 
 import { updateXPProgressBar, refreshUpgradeCards, checkActiveTraining, startStatUpgrade } from './profile.js';
+import { startTravel, checkTravelArrival, startTravelWatcher } from './travel.js';
 
 import {
     handleWorkViewUpdate, doWork, openFactoryModal, closeFactoryModal, saveFactory,
@@ -21,8 +22,9 @@ import {
 
 import {
     handleWarsViewUpdate, declareWar, openTrainingModal, closeTrainingModal, selectCombatRole,
-    selectCombatMode, executeCombatRound, onTrainingWeaponChange, openWarDetailsModal, closeWarDetailsModal,
-    openTrainingRoundDetailsModal, closeTrainingRoundDetailsModal
+    executeCombatRound, onTrainingWeaponChange, openWarDetailsModal, closeWarDetailsModal,
+    openTrainingRoundDetailsModal, closeTrainingRoundDetailsModal,
+    openWarCombatModal, closeWarCombatModal, onWarCombatWeaponChange, executeWarCombat
 } from './wars.js';
 
 export function initGameSystem() {
@@ -99,6 +101,7 @@ export function initGameSystem() {
                         checkActiveTraining(data);
                         handleWorkViewUpdate(data);
                         handleWarsViewUpdate(data);
+                        checkTravelArrival(data); // يعرض شريط السفر إن كان بمنتصف رحلة، ويُتمّها تلقائياً فور انتهاء وقتها
                     });
 
                     db.collection('players').doc(userUid).update({
@@ -133,6 +136,7 @@ export function initGameSystem() {
             // ربط الدوال بالنافذة لكي تعمل مباشرة من ملف الـ HTML عند الحاجة (onclick="...")
             window.startStatUpgrade = startStatUpgrade;
             window.travelToCountry = travelToCountry;
+            window.startTravel = startTravel;
             window.changePlayerName = changePlayerName;
             window.saveProfileChanges = saveProfileChanges;
             window.doWork = doWork;
@@ -155,13 +159,18 @@ export function initGameSystem() {
             window.openTrainingModal = openTrainingModal;
             window.closeTrainingModal = closeTrainingModal;
             window.selectCombatRole = selectCombatRole;
-            window.selectCombatMode = selectCombatMode;
             window.executeCombatRound = executeCombatRound;
             window.onTrainingWeaponChange = onTrainingWeaponChange;
             window.openWarDetailsModal = openWarDetailsModal;
             window.closeWarDetailsModal = closeWarDetailsModal;
             window.openTrainingRoundDetailsModal = openTrainingRoundDetailsModal;
             window.closeTrainingRoundDetailsModal = closeTrainingRoundDetailsModal;
+            window.openWarCombatModal = openWarCombatModal;
+            window.closeWarCombatModal = closeWarCombatModal;
+            window.onWarCombatWeaponChange = onWarCombatWeaponChange;
+            window.executeWarCombat = executeWarCombat;
+
+            startTravelWatcher(); // مؤقّت دائم يراقب رحلات السفر ويُتمّها تلقائياً فور انتهاء وقتها
 
         } else {
             setTimeout(waitForFirebase, 100);
@@ -258,16 +267,10 @@ function updateCountryBlockOnScreen(countryKey) {
     }
 }
 
+// السفر أصبح عبر مؤقّت زمني حقيقي (نظام travel.js) بدل النقل الفوري — نُبقي نفس اسم الدالة المُصدَّرة
+// (travelToCountry) بلا تغيير حتى تستمر كل أزرار onclick="travelToCountry(...)" الموجودة بالصفحات (wars.html) بالعمل دون أي تعديل عليها
 export function travelToCountry(targetCountryKey) {
-    if (!africanCountries[targetCountryKey]) return;
-    const user = firebase.auth().currentUser;
-    if (!user) return alert("يجب عليك تسجيل الدخول أولاً لتتمكن من السفر!");
-
-    firebase.firestore().collection('players').doc(user.uid).update({
-        current_location: targetCountryKey
-    })
-    .then(() => alert(`✈️ تم السفر بنجاح إلى ${africanCountries[targetCountryKey].name}!`))
-    .catch(err => console.error(err));
+    startTravel(targetCountryKey);
 }
 
 // حفظ تعديلات البروفايل: الاسم الجديد + رفع صورة جديدة (إن وُجدت) إلى Firebase Storage
